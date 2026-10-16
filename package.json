@@ -1,0 +1,69 @@
+{
+  "name": "dsh-netease-lyrics",
+  "version": "0.2.0",
+  "description": "Top floating lyric island for DeepSeek Harness: reads the current SMTC media session (NetEase Cloud Music via BetterNCM + InfLink-rs, QQ Music, or any SMTC player), matches the track against NetEase's public search with QQ Music as automatic fallback, and renders the current lyric line in a hover-expandable capsule. Zero dependencies.",
+  "type": "module",
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">=18",
+    "dsh": ">=0.1.5-rc.1"
+  },
+  "scripts": {
+    "test": "node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/client-ui.test.mjs && node test/playback-clock.test.mjs && node test/drag-position.test.mjs && node test/lyric-transition.test.mjs",
+    "test:bridge": "powershell -File test/media-selection.test.ps1",
+    "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/lyric-service.js"
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/lyric-service.js",
+    "lib/smtc-bridge.ps1",
+    "cordis.patch.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "netease",
+    "cloudmusic",
+    "qqmusic",
+    "lyrics",
+    "smtc",
+    "dynamic-island"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mostimadesi/dsh-netease-lyrics.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mostimadesi/dsh-netease-lyrics/issues"
+  },
+  "homepage": "https://github.com/Mostimadesi/dsh-netease-lyrics#readme",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "react": "^18.2.0"
+  },
+  "license": "MIT"
+}

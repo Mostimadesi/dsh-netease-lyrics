@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / toolchain
+.vscode/
+.idea/
+*.swp
+*.tmp

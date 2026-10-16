@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    # 桥脚本与 PS5.1 测试仅对 Windows 有意义,单跑 windows-latest。
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax check
+        run: npm run check
+
+      - name: Node unit tests
+        run: npm test
+
+      # shell: powershell = Windows PowerShell 5.1(桥进程的真实运行时)
+      - name: Bridge session-selection tests (PowerShell 5.1)
+        shell: powershell
+        run: |
+          "PSVersion: $($PSVersionTable.PSVersion)"
+          & .\test\media-selection.test.ps1
+
+      # test/live-qq-fallback.mjs 访问真实外网 QQ 接口,仅手动运行,不进 CI。

@@ -1,0 +1,22 @@
+# dsh-netease-lyrics bundle patch.
+#
+# Adds ONE host row: the plugin that supervises the SMTC bridge child
+# process, matches the current track against NetEase search, fetches and
+# caches lyrics, and serves state/cover/rematch routes. The browser half
+# (declared via the `dsh.client` manifest in package.json) renders the
+# floating lyric island into `shell.overlay`.
+#
+# Additive `insert` only — no shipped row is overridden.
+# All knobs live in this row's config (see lib/index.js normalizeConfig):
+#   pollMs, appPatterns, apiBase, showTranslation.
+
+- insert:
+    - id: dsh-netease-lyrics
+      name: dsh-netease-lyrics
+      config:
+        # 译文：拉词时已按时间戳合并进缓存，开关即时生效、不重新请求。
+        showTranslation: true
+        # 其余可用项（省略即用代码默认值）：
+        #   pollMs: 500                # 轮询间隔，钳制 200 ~ 5000
+        #   appPatterns: [cloudmusic, netease, com.netease]
+        #   apiBase: 'https://music.163.com'
