@@ -1,7 +1,7 @@
 {
   "name": "dsh-netease-lyrics",
-  "version": "0.2.0",
-  "description": "Top floating lyric island for DeepSeek Harness: reads the current SMTC media session (NetEase Cloud Music via BetterNCM + InfLink-rs, QQ Music, or any SMTC player), matches the track against NetEase's public search with QQ Music as automatic fallback, and renders the current lyric line in a hover-expandable capsule. Zero dependencies.",
+  "version": "0.3.0",
+  "description": "Lyrics companion for DeepSeek Harness: reads the current SMTC media session (NetEase Cloud Music via BetterNCM + InfLink-rs, QQ Music, or any SMTC player), matches the track against NetEase's public search with QQ Music as automatic fallback, and renders BOTH a hover-expandable top capsule and limpbus-style ambient floating lyrics — random side-band placement, per-character choreography, five motion presets, four text styles. Zero dependencies.",
   "type": "module",
   "main": "lib/index.js",
   "engines": {
@@ -9,7 +9,7 @@
     "dsh": ">=0.1.5-rc.1"
   },
   "scripts": {
-    "test": "node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/client-ui.test.mjs && node test/playback-clock.test.mjs && node test/drag-position.test.mjs && node test/lyric-transition.test.mjs",
+    "test": "node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/ambient-client.test.mjs && node test/motion-frame.test.mjs",
     "test:bridge": "powershell -File test/media-selection.test.ps1",
     "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/lyric-service.js"
   },
@@ -38,7 +38,9 @@
     "qqmusic",
     "lyrics",
     "smtc",
-    "dynamic-island"
+    "dynamic-island",
+    "ambient",
+    "floating-lyrics"
   ],
   "repository": {
     "type": "git",
