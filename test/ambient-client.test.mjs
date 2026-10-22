@@ -28,6 +28,28 @@ const React = {
 const context = { window: { __ModuleLoader__: { load: ({ factory }) => { plugin = factory(() => ({ default: React })); } }, dispatchEvent() {} },
 	localStorage: { getItem: k => store.get(k) || null, setItem: (k, v) => store.set(k, v) }, Event: class {}, document: undefined, console };
 vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), context);
+
+// 0. One-time migration: an empty new-key + populated legacy key carries the
+//    ambient-branch tuning over; an already-populated new key is untouched.
+{
+	const NEW_KEY = 'dsh.netease-lyrics.ambient.prefs.v1';
+	const LEGACY_KEY = 'dsh.netease-lyrics-ambient.prefs.v1';
+	store.set(LEGACY_KEY, JSON.stringify({ enabled: true, anim: 'drop-wave', jump: 6, fall: 96, angle: 20, colorMode: 'preset', preset: 'neon' }));
+	const entries0 = new Map();
+	plugin.apply({ slots: { inject: (_, cb) => cb(), register: (opts, component) => { entries0.set(opts.key || opts.id || opts.name, component); return () => {}; } } });
+	hookIndex = 0; states = []; refs = []; dirty = false;
+	entries0.get('dsh-netease-lyrics')({ view: 'page' });
+	assert.equal(JSON.parse(store.get(NEW_KEY)).anim, 'drop-wave', 'legacy prefs migrated to the new key');
+	assert.equal(JSON.parse(store.get(NEW_KEY)).fall, 96, 'legacy fall value migrated');
+	assert.equal(JSON.parse(store.get(NEW_KEY)).preset, 'neon', 'legacy preset migrated');
+	// second read: new key now populated, legacy is never consulted again
+	store.set(LEGACY_KEY, JSON.stringify({ anim: 'classic-fade' }));
+	hookIndex = 0; states = []; refs = []; dirty = false;
+	entries0.get('dsh-netease-lyrics')({ view: 'page' });
+	assert.equal(JSON.parse(store.get(NEW_KEY)).anim, 'drop-wave', 'populated new key wins over legacy');
+	store.clear();
+}
+
 plugin.apply({ slots: { inject: (_, cb) => cb(), register: (opts, component) => { entries.set(opts.key || opts.id || opts.name, component); return () => {}; } } });
 assert(entries.has('dsh-netease-lyrics-island'), 'island overlay entry');
 assert(entries.has('dsh-netease-lyrics-layer'), 'ambient layer entry');
