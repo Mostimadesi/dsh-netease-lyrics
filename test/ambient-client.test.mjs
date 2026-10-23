@@ -286,10 +286,7 @@ assert(tree.props.className.includes('dnla-anim-drop-jitter'), 'drop-jitter anim
 animSelect.props.onChange({ target: { value: 'classic-fade' } });
 tree = render('dsh-netease-lyrics-layer');
 assert(tree.props.className.includes('dnla-anim-classic-fade'), 'classic-fade anim class on layer');
-// The single-line toggle has no aria-label (label text is a sibling span);
-// pulse/custom toggles DO carry aria-labels, so exclude them.
-const singleToggle = nodes(renderCfg()).filter(n => n.type === 'input' && n.props.type === 'checkbox'
-	&& n.props['aria-label'] === undefined)
+const singleToggle = nodes(renderCfg()).filter(n => n.type === 'input' && n.props.type === 'checkbox')
 	.find(n => n.props.checked === false);
 assert(singleToggle, 'single-line toggle exists (off by default)');
 singleToggle.props.onChange({ target: { checked: true } });
