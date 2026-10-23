@@ -152,7 +152,17 @@ QQ Base64 歌词与 HTML 实体会先解码，译文按 100ms 容差合并。不
       - qqmusic
     apiBase: 'https://music.163.com'   # 可指向自建 NeteaseCloudMusicApi 实例
     showTranslation: false  # 歌词译文（原文下方小字）
+    retryDelayMs: 15000    # 首轮未匹配后的自动重试间隔（毫秒，钳制 5000 ~ 60000）
+    maxAutoRetries: 2      # 每曲自动重试上限（0 关闭；成功/切歌/手动重匹配即复位）
 ```
+
+### 首轮未匹配自动重试
+
+QQ 音乐的 SMTC 会话可能先于在线曲库就绪，瞬时失败此前会被 10 分钟负缓存钉死，
+只能手动重试。现在首轮 `unmatched` / `error` 后按 `retryDelayMs` 自动重试
+（默认 15 秒，重试前自动清掉该曲目的负缓存，确保真出网），每曲封顶
+`maxAutoRetries` 次；匹配成功、切歌或手动「重新匹配」都会复位重试预算。
+`state.json` 的 `retry` 字段（`attempts` / `pending` / `pendingAttempt`）可观测当前状态。
 
 ## 故障排查
 

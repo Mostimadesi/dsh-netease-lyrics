@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 - 2026-10-22 (dev)
+
+- **首轮未匹配自动重试**:歌词 `unmatched` / `error` 后按 `retryDelayMs`(默认 15s,
+  可配 5–60s)自动重试,重试前先清掉该曲目的负缓存确保真出网;每曲封顶
+  `maxAutoRetries` 次(默认 2,设 0 关闭),成功、切歌或手动「重新匹配」即复位预算。
+  动机:QQ 音乐 SMTC 会话可能先于在线曲库就绪,瞬时失败曾被 10 分钟负缓存钉死,
+  只能手动重试。新增 `lib/lyric-retry.js`(定时器注入、独立单测 8 场景);
+  `state.json` 暴露 `retry.{delayMs,maxAutoRetries,attempts,pending,pendingAttempt}`。
+
 ## 0.3.0 - 2026-10-21 (dev)
 
 新增**环境悬浮歌词**（灵感来自 limpbus-lyrics「都市回响」）,与顶部胶囊并存、共用同一状态链路:

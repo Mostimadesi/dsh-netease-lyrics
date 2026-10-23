@@ -1,6 +1,6 @@
 {
   "name": "dsh-netease-lyrics",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Lyrics companion for DeepSeek Harness: reads the current SMTC media session (NetEase Cloud Music via BetterNCM + InfLink-rs, QQ Music, or any SMTC player), matches the track against NetEase's public search with QQ Music as automatic fallback, and renders BOTH a hover-expandable top capsule and limpbus-style ambient floating lyrics — random side-band placement, per-character choreography, five motion presets, four text styles. Zero dependencies.",
   "type": "module",
   "main": "lib/index.js",
@@ -9,9 +9,9 @@
     "dsh": ">=0.1.5-rc.1"
   },
   "scripts": {
-    "test": "node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/ambient-client.test.mjs && node test/motion-frame.test.mjs",
+    "test": "node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/lyric-retry.test.mjs && node test/ambient-client.test.mjs && node test/motion-frame.test.mjs",
     "test:bridge": "powershell -File test/media-selection.test.ps1",
-    "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/lyric-service.js"
+    "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/lyric-service.js && node --check lib/lyric-retry.js"
   },
   "exports": {
     ".": "./lib/index.js",
@@ -23,6 +23,7 @@
     "lib/index.js",
     "lib/client.js",
     "lib/lyric-service.js",
+    "lib/lyric-retry.js",
     "lib/smtc-bridge.ps1",
     "cordis.patch.yml",
     "README.md",
