@@ -45,7 +45,7 @@ param(
   # Comma-separated, case-insensitive substrings matched against the SMTC
   # SourceAppUserModelId. The NetEase desktop client reports an ASCII app id,
   # so ASCII patterns are sufficient and encoding-proof.
-  [string]$AppPattern = 'cloudmusic,netease,com.netease,qqmusic',
+  [string]$AppPattern = 'cloudmusic,netease,com.netease,qqmusic,kugou',
   # Emit a single state line and exit. Used by the host for one-shot probes.
   [switch]$Once,
   # Define the helper functions and return without emitting a ready line,
@@ -102,6 +102,119 @@ function Write-Line($object) {
 
 function Write-Error-Line($message) {
   Write-Line @{ type = 'error'; message = [string]$message }
+}
+
+# ------------------------------------------------------- timeline staleness --
+# The timeline is a *snapshot*: GetTimelineProperties() returns the value the
+# manager captured when it was requested, and a long-lived manager does not
+# refresh it on its own unless the player's updates keep being pushed into this
+# process. When that push path goes quiet - observed after a cold boot, where the
+# player's SMTC session registers while the broker is not pushing yet - the
+# position freezes at the startup value and the lyric line, which is derived from
+# it, sits still mid-song. Nothing throws, so this failure is completely silent.
+# Requesting the manager a second time pulls a current snapshot, so the timeline
+# is re-synced on demand instead of paying for a request on every tick.
+#
+# 2200 ms is a measured, not guessed, threshold: players report the position in
+# steps (QQ Music: 1.0 s and 2.05 s steps, i.e. up to ~1.5 s of unchanged value),
+# and the browser client already extrapolates for 2 s before it has to stop. A
+# window below the reporting step would fire on a healthy player; this one stays
+# quiet while normal, and when the snapshot really is frozen it lands a refresh
+# just as the client's 2 s of extrapolation runs out.
+$script:timelineSyncMs = 2200
+$script:timelineRefreshes = 0
+$script:timelineLastPos = $null
+# Milliseconds since the epoch. NOT [Environment]::TickCount64: that property does
+# not exist in .NET Framework, which is what Windows PowerShell 5.1 runs on - it
+# silently evaluates to $null, which makes every interval below read as 0 and
+# disables the stall detection entirely (v0.3.2 shipped with that regression).
+$script:timelineLastChangeAt = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+
+# Some players publish no timeline at all. KuGou is one: Position, EndTime and
+# PlaybackRate are all 0 and IsPlaybackPositionEnabled is false, so no amount of
+# re-requesting produces a moving position - the lyric line would sit on t=0
+# forever. For those sessions (EndTime unknown) a local clock is advanced from the
+# track identity + play state instead. A real timeline always wins over it.
+$script:estimate = @{ key = $null; pos = 0.0; at = 0; playing = $false }
+
+# Pure state machine (unit-tested by test/timeline-sync.test.ps1). Mutates $State
+# (a hashtable, hence by reference) and returns the position in seconds.
+function Get-EstimatedPosition {
+  param($State, [string]$Key, [bool]$Playing, [long]$NowMs)
+  if ($null -eq $State -or $NowMs -le 0) { return 0.0 }
+  if ($State.key -ne $Key) {
+    # New track: restart from zero and remember the play state of this sample.
+    $State.key = $Key
+    $State.pos = 0.0
+    $State.at = $NowMs
+    $State.playing = $Playing
+    return 0.0
+  }
+  # Credit the interval only when both ends of it were playing: a pause or a
+  # resume therefore costs at most one poll interval (<= 500 ms), and a paused
+  # gap is never credited as playback.
+  if ($State.playing -and $Playing -and $NowMs -gt $State.at) {
+    $State.pos = $State.pos + (($NowMs - $State.at) / 1000.0)
+  }
+  $State.at = $NowMs
+  $State.playing = $Playing
+  return [Math]::Round([double]$State.pos, 3)
+}
+
+# Pure decision helper (unit-tested by test/timeline-sync.test.ps1): is the
+# snapshot stale enough to be worth a fresh manager request?
+function Test-TimelineStalled {
+  param(
+    [bool]$Playing,
+    [double]$Position,
+    $LastPosition,
+    [long]$UnchangedMs,
+    [int]$AfterMs = 2200
+  )
+  if (-not $Playing) { return $false }            # paused: standing still is correct
+  if ($null -eq $LastPosition) { return $false }  # first sample: nothing to compare
+  if ([math]::Abs($Position - [double]$LastPosition) -ge 0.05) { return $false }
+  return ($UnchangedMs -ge $AfterMs)
+}
+
+# Re-request the manager when the position has stopped moving. Returns $true only
+# when a new manager was actually obtained, so the caller can re-read the
+# timeline within the same tick and publish the live position immediately.
+function Sync-TimelineSnapshot {
+  param([bool]$Playing, [double]$Position)
+  $now = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+  if ($now -le 0) { return $false }   # clock unavailable: never refresh on a bad interval
+  $moved = $true
+  if ($null -ne $script:timelineLastPos) {
+    $moved = ([math]::Abs($Position - [double]$script:timelineLastPos) -ge 0.05)
+  }
+  if ($moved) {
+    # Movement in either direction (playback, seek, loop wrap) proves the
+    # snapshot is live, so restart the stall window.
+    $script:timelineLastPos = $Position
+    $script:timelineLastChangeAt = $now
+    return $false
+  }
+  $unchangedMs = $now - $script:timelineLastChangeAt
+  # Positional call: this runs twice a second, and named-argument binding is the
+  # expensive half of it.
+  if (-not (Test-TimelineStalled $Playing $Position $script:timelineLastPos $unchangedMs $script:timelineSyncMs)) {
+    return $false
+  }
+  try {
+    $fresh = Await ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]::RequestAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager])
+    if ($null -ne $fresh) {
+      $script:manager = $fresh
+      $script:timelineRefreshes += 1
+      # Rate limit: a still-frozen snapshot is retried once per window, not per tick.
+      $script:timelineLastChangeAt = $now
+      return $true
+    }
+  } catch {
+    Add-Note ('timeline refresh failed: ' + $_.Exception.Message)
+  }
+  $script:timelineLastChangeAt = $now
+  return $false
 }
 
 # ------------------------------------------------------------ session lookup --
@@ -270,6 +383,29 @@ function Get-State {
     } catch { Add-Note 'GetTimelineProperties failed' }
   }
 
+  # A frozen snapshot looks exactly like a paused track downstream: the client
+  # stops extrapolating after two seconds and the lyrics sit on one line. Detect
+  # it here, refresh the manager, and publish the live position in this same tick.
+  # Only meaningful when the session actually publishes a timeline (EndTime > 0);
+  # for players that publish none, re-requesting cannot help and the local clock
+  # below takes over instead.
+  try {
+    if ($durSec -gt 0) {
+      $refreshed = Sync-TimelineSnapshot -Playing ($status -eq 'Playing') -Position $posSec
+      if ($refreshed) {
+        $freshSession = Select-Session @($manager.GetSessions())
+        if ($null -ne $freshSession -and ([string]$freshSession.SourceAppUserModelId) -eq $appId) {
+          $session = $freshSession
+          $freshTl = $session.GetTimelineProperties()
+          $posSec = [double]$freshTl.Position.TotalSeconds
+          $durSec = [double]$freshTl.EndTime.TotalSeconds
+        }
+      }
+    }
+  } catch {
+    Add-Note ('timeline resync failed: ' + $_.Exception.Message)
+  }
+
   $title = ''; $artist = ''; $album = ''
   $thumbnail = $null
   try {
@@ -281,6 +417,19 @@ function Get-State {
       $thumbnail = $props.Thumbnail
     }
   } catch { Add-Note ('media properties failed: ' + $_.Exception.Message) }
+
+  # No timeline published (KuGou): advance a local clock so the lyric line still
+  # moves. The identity is what the client uses for its own clock, so a track
+  # change restarts both together.
+  $positionEstimated = $false
+  if ($durSec -le 0) {
+    $estimateKey = $appId + '|' + $title + '|' + $artist + '|' + $album
+    $posSec = Get-EstimatedPosition $script:estimate $estimateKey ($status -eq 'Playing') ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
+    $positionEstimated = $true
+  } else {
+    # A real timeline is back (or a different player): drop any stale estimate.
+    $script:estimate.key = $null
+  }
 
   # Re-read the artwork only when the identity of the track changes; the raw
   # thumbnail stream reference has no stable id of its own.
@@ -321,6 +470,12 @@ function Get-State {
     canNext      = $canNext
     canPrev      = $canPrev
     canSeek      = $canSeek
+    # Diagnostics: how many times a stalled timeline had to be re-requested.
+    timelineRefreshes = $script:timelineRefreshes
+    # True when the player publishes no timeline and the position is our own work
+    # clock (KuGou): seeking in that player will not be reflected until the track
+    # changes.
+    positionEstimated = $positionEstimated
     atMs         = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
   }
   if ($script:notes.Count -gt 0) { $state.notes = @($script:notes) }

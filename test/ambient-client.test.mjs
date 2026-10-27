@@ -324,5 +324,65 @@ assert.notEqual(M.noise(11, 2, 1, 0.2, 6), M.noise(11, 3, 1, 0.2, 6), 'per-glyph
 // amplitude matches jump*(.35+.65*energy) at the reference's wave energy
 assert(Math.abs(M.AMPLITUDE - 10 * (0.35 + 0.65 * 0.32)) < 1e-9);
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; entry/exit choreography math matches the reference.');
+// 10. Breathing halo on the capsule: four layers by default, theme accent in
+//     --dnl-halo, colour source and pace from the settings page, absent when off.
+snapshot = { active: true, playing: true, title: 'T', coverSerial: 0,
+	lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊 对了' }] } };
+store.clear();
+let islandTree = render('dsh-netease-lyrics-island');
+const halo = nodes(islandTree).find(n => String(n.props.className).startsWith('dnl-halo'));
+assert(halo, 'halo rendered by default');
+assert(nodes(islandTree).some(n => n.props.className === 'dnl-shell'), 'island wrapped in the halo shell');
+assert.equal(nodes(islandTree).find(n => n.props.className === 'dnl-host').props.style['--dnl-halo'], 'var(--dsw-alias-brand-primary)', 'theme accent drives the halo');
+const haloLayers = nodes(halo).filter(n => /^h[1234]$/.test(String(n.props.className)));
+assert.equal(haloLayers.length, 4, 'four halo layers (incl. hue drift)');
+assert(!halo.props.className.includes('dnl-halo-hold'), 'playing track breathes');
+assert.equal(halo.props.style['--dnl-glow-dur'], '5.6s', 'normal pace period');
+assert(nodes(halo).some(n => n.props.className === 'dnl-kick'), 'line ripple mounted while a line is active');
+snapshot = { ...snapshot, playing: false };
+const heldHalo = nodes(render('dsh-netease-lyrics-island')).find(n => String(n.props.className).startsWith('dnl-halo'));
+assert(heldHalo.props.className.includes('dnl-halo-hold'), 'paused track holds the breath');
+assert(!nodes(heldHalo).some(n => n.props.className === 'dnl-kick'), 'no line ripple while paused');
 
+snapshot = null;
+const glowSelect = nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源');
+assert(glowSelect, 'glow colour-source selector exists');
+assert.equal(glowSelect.props.value, 'theme', 'default follows the theme');
+const paceSelect = nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏');
+assert(paceSelect, 'pace selector exists while the halo is on');
+assert.equal(paceSelect.props.value, 'normal', 'default pace is normal');
+paceSelect.props.onChange({ target: { value: 'calm' } });
+assert.equal(JSON.parse(store.get('dsh.netease-lyrics.display.v1')).glowPace, 'calm', 'pace persisted');
+snapshot = { active: true, playing: true, title: 'T', coverSerial: 0, lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
+const calmHalo = nodes(render('dsh-netease-lyrics-island')).find(n => String(n.props.className).startsWith('dnl-halo'));
+assert.equal(calmHalo.props.style['--dnl-glow-dur'], '8.4s', 'calm pace slows the period');
+assert.equal(calmHalo.props.style['--dnl-glow-amp'], '.8', 'calm pace dims the lamp');
+snapshot = null;
+nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
+	.props.onChange({ target: { value: 'cover' } });
+assert.equal(JSON.parse(store.get('dsh.netease-lyrics.display.v1')).glow, 'cover', 'cover mode persisted');
+snapshot = { active: true, playing: true, title: 'T', coverSerial: 9, lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
+assert(nodes(render('dsh-netease-lyrics-island')).some(n => String(n.props.className).startsWith('dnl-halo')), 'cover mode keeps the halo');
+snapshot = null;
+nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
+	.props.onChange({ target: { value: 'off' } });
+assert(!nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏'), 'pace selector hides when the halo is off');
+snapshot = { active: true, playing: true, title: 'T', lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
+assert(!nodes(render('dsh-netease-lyrics-island')).some(n => String(n.props.className).startsWith('dnl-halo')), 'off removes the halo');
+
+// 11. The halo geometry/motion lives in the injected CSS (the Node harness cannot
+//     paint): border-only layers, outward relay, hue drift, ripple, pace scaling.
+const haloCss = plugin.__test.CSS;
+assert(haloCss.includes('.dnl-halo{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:var(--dnl-glow-amp,1)}'), 'halo is an unfilled box scaled by the pace preset');
+assert(!/\.dnl-halo[^{]*\{[^}]*background:/.test(haloCss), 'no halo layer paints a background');
+assert(haloCss.includes('.dnl-halo>.h1{inset:-2px;border-width:2px'), 'rim is a 2px hairline at the edge');
+assert(haloCss.includes('.dnl-halo>.h2{inset:-7px;border-width:5px'), 'mid halo layer');
+assert(haloCss.includes('.dnl-halo>.h3{inset:-16px;border-width:9px'), 'outer bloom layer');
+assert(haloCss.includes('.dnl-halo>.h4{inset:-7px;border-width:5px;filter:blur(9px) hue-rotate(18deg)'), 'hue-drift layer');
+assert(haloCss.includes('animation-delay:0s') && haloCss.includes('calc(var(--dnl-glow-dur,5.6s) * .05)') && haloCss.includes('calc(var(--dnl-glow-dur,5.6s) * .1)'), 'layers lag proportionally to the period');
+assert(haloCss.includes('@keyframes dnl-glow-drift') && haloCss.includes('@keyframes dnl-kick'), 'drift and ripple keyframes exist');
+assert(haloCss.includes('.dnl-halo-hold>span{animation:none}') && haloCss.includes('.dnl-halo-hold>.dnl-kick{display:none}'), 'paused state freezes the breath and hides the ripple');
+const rimTrack = haloCss.slice(haloCss.indexOf('@keyframes dnl-glow-rim'), haloCss.indexOf('@keyframes dnl-glow-mid'));
+assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTrack), 'fast inhale, then a hold');
+
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); entry/exit choreography math matches the reference.');
