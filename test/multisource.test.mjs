@@ -10,17 +10,25 @@ const lrc='[00:01.00]Hello\n[00:03.00]World';
 const base64=x=>Buffer.from(x).toString('base64');
 const ok=x=>({ok:true,json:async()=>x});
 const KG_HASH='b3a52a7a958bf0aed0ebfba2e9a818b7';
-function make({ncm='hit',qq='hit',kugou='hit',ncmLyrics='hit',qqLyrics='hit',kgLyrics='hit',...opts}={}){
+const MIGU_LRC_URL='https://d.musicapp.migu.cn/data/oss/resource/aa/bb/cc/hello.lrc';
+function make({ncm='hit',qq='hit',kugou='hit',migu='hit',ncmLyrics='hit',qqLyrics='hit',kgLyrics='hit',miguLyrics='hit',...opts}={}){
  const calls=[];
  const fetchImpl=async(url,options)=>{
   const u=new URL(url);calls.push(u);
-  const source=u.hostname==='c.y.qq.com'?'qq':u.hostname.includes('kugou')?'kugou':'netease';
-  const referer=source==='qq'?'https://y.qq.com/':source==='kugou'?'https://www.kugou.com/':'https://music.163.com/';
+  const source=u.hostname==='c.y.qq.com'?'qq'
+   :u.hostname.includes('kugou')?'kugou'
+   :u.hostname.includes('migu')?'migu':'netease';
+  const referer=source==='qq'?'https://y.qq.com/'
+   :source==='kugou'?'https://www.kugou.com/'
+   :source==='migu'?'https://music.migu.cn/v3/':'https://music.163.com/';
   assert.equal(options.headers.referer,referer);
   const kgSearch=u.hostname==='songsearch.kugou.com';
   const kgCandidates=u.hostname==='krcs.kugou.com';
+  const miguSearch=u.hostname==='app.u.nf.migu.cn';
   const search=u.pathname.includes('search');
-  const mode=source==='kugou'?(kgSearch?kugou:kgLyrics):source==='qq'?(search?qq:qqLyrics):(search?ncm:ncmLyrics);
+  const mode=source==='kugou'?(kgSearch?kugou:kgLyrics)
+   :source==='migu'?(miguSearch?migu:miguLyrics)
+   :source==='qq'?(search?qq:qqLyrics):(search?ncm:ncmLyrics);
   if(mode==='network')throw Error('network down');
   if(mode==='http')return {ok:false,status:503};
   if(mode==='api')return ok({code:429});
@@ -30,6 +38,22 @@ function make({ncm='hit',qq='hit',kugou='hit',ncmLyrics='hit',qqLyrics='hit',kgL
    const timer=setTimeout(()=>reject(Error('timeout not enforced')),200);
    options.signal.addEventListener('abort',()=>{clearTimeout(timer);reject(options.signal.reason);},{once:true});
   });
+  if(source==='migu'){
+   if(miguSearch){
+    // Bare array, no envelope; `duration` is SECONDS here.
+    const song={songName:'Hello',singerList:[{name:'Adele'}],copyrightId:'60054701941',
+     duration:295,lrcUrl:MIGU_LRC_URL,contentId:'c1'};
+    if(mode==='wrong-title')song.songName='Other';
+    if(mode==='wrong-artist')song.singerList=[{name:'Another Singer'}];
+    if(mode==='wrong-duration')song.duration=900;
+    if(mode==='no-lrc')song.lrcUrl='';
+    return ok(mode==='empty'?[]:[song]);
+   }
+   // The lyric URL returns LRC text, not JSON.
+   const raw=mode==='empty'?'':mode==='untimed'?'Plain lyrics without timestamps'
+    :mode==='bom'?'\ufeff[00:01.00]Hello\r\n[00:03.00]World\r\n':lrc;
+   return {ok:true,status:200,text:async()=>raw,json:async()=>{throw Error('migu lyric is text');}};
+  }
   if(source==='kugou'){
    if(kgSearch){
     const song={FileHash:KG_HASH,SongName:'Hello',SingerName:'Adele',Duration:295,FileName:'Adele - Hello'};
@@ -76,22 +100,22 @@ for(const mode of ['empty','untimed','network','http','api','json']){
   const {service}=make({ncmLyrics:mode});assert.equal((await service.resolve(facts)).source,'qq');
  });
 }
-await check('三源无匹配且无本地文件 -> unmatched',async()=>{
- const {service,calls}=make({ncm:'empty',qq:'empty',kugou:'empty'});const r=await service.resolve(facts);
- assert.equal(r.status,'unmatched');assert.equal(r.attempts.length,4);
- assert.equal(r.attempts[3].source,'local');assert.equal(r.attempts[3].reason,'no-search-dirs');
- await service.resolve(facts);assert.equal(calls.length,3,'negative cache prevents repeated requests');
- service.invalidate(fingerprintOf(facts.title,facts.artist));await service.resolve(facts);assert.equal(calls.length,6);
+await check('四源无匹配且无本地文件 -> unmatched',async()=>{
+ const {service,calls}=make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty'});const r=await service.resolve(facts);
+ assert.equal(r.status,'unmatched');assert.equal(r.attempts.length,5);
+ assert.equal(r.attempts[4].source,'local');assert.equal(r.attempts[4].reason,'no-search-dirs');
+ await service.resolve(facts);assert.equal(calls.length,4,'negative cache prevents repeated requests');
+ service.invalidate(fingerprintOf(facts.title,facts.artist));await service.resolve(facts);assert.equal(calls.length,8);
 });
-await check('三源故障 -> error 保留原因',async()=>{
- const {service}=make({ncm:'network',qq:'api',kugou:'network'});const r=await service.resolve(facts);
+await check('四源故障 -> error 保留原因',async()=>{
+ const {service}=make({ncm:'network',qq:'api',kugou:'network',migu:'network'});const r=await service.resolve(facts);
  assert.equal(r.status,'error');assert(r.message.includes('network down'));assert(r.message.includes('429'));
 });
 await check('无匹配 + QQ 故障 -> error',async()=>{
- assert.equal((await make({ncm:'empty',qq:'network',kugou:'network'}).service.resolve(facts)).status,'error');
+ assert.equal((await make({ncm:'empty',qq:'network',kugou:'network',migu:'network'}).service.resolve(facts)).status,'error');
 });
 await check('QQ 无带时间歌词不伪装成功',async()=>{
- const r=await make({ncm:'empty',kugou:'empty',qqLyrics:'untimed'}).service.resolve(facts);
+ const r=await make({ncm:'empty',kugou:'empty',migu:'empty',qqLyrics:'untimed'}).service.resolve(facts);
  assert.equal(r.status,'unmatched');assert.equal(r.attempts[1].reason,'no-timed-lyrics');
 });
 await check('网易云/QQ 未命中 -> 酷狗歌词',async()=>{
@@ -103,24 +127,55 @@ await check('网易云/QQ 未命中 -> 酷狗歌词',async()=>{
  assert.equal(calls.length,5,'netease search, qq search, kugou search + candidates + download');
 });
 await check('酷狗无候选 -> 继续回退且记录原因',async()=>{
- const r=await make({ncm:'empty',qq:'empty',kugou:'empty'}).service.resolve(facts);
+ const r=await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty'}).service.resolve(facts);
  assert.equal(r.status,'unmatched');assert.equal(r.attempts[2].source,'kugou');
  assert.equal(r.attempts[2].reason,'no-confident-match');
 });
 await check('酷狗无带时间歌词不伪装成功',async()=>{
- const r=await make({ncm:'empty',qq:'empty',kgLyrics:'untimed'}).service.resolve(facts);
+ const r=await make({ncm:'empty',qq:'empty',migu:'empty',kgLyrics:'untimed'}).service.resolve(facts);
  assert.equal(r.status,'unmatched');assert.equal(r.attempts[2].reason,'no-timed-lyrics');
+});
+await check('网易云/QQ/酷狗未命中 -> 咪咕歌词',async()=>{
+ const {service,calls}=make({ncm:'empty',qq:'empty',kugou:'empty'});
+ const r=await service.resolve(facts);
+ assert.equal(r.status,'matched');assert.equal(r.source,'migu');assert.equal(r.sourceLabel,'咪咕音乐');
+ assert.equal(r.fallbackUsed,true);assert.equal(r.attempts.length,4);
+ assert.equal(r.lines[0].text,'Hello');assert.equal(r.songId,'60054701941');
+ // duration is reported in seconds and must be converted to ms for the scorer
+ assert.equal(calls.length,5,'netease/qq/kugou searches + migu search + migu lyric text');
+});
+await check('咪咕无候选 -> 继续回退且记录原因',async()=>{
+ const r=await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty'}).service.resolve(facts);
+ assert.equal(r.attempts[3].source,'migu');assert.equal(r.attempts[3].reason,'no-confident-match');
+});
+await check('咪咕无带时间歌词不伪装成功',async()=>{
+ const r=await make({ncm:'empty',qq:'empty',kugou:'empty',miguLyrics:'untimed'}).service.resolve(facts);
+ assert.equal(r.attempts[3].source,'migu');assert.equal(r.attempts[3].reason,'no-timed-lyrics');
+});
+await check('咪咕缺 lrcUrl 的候选被丢弃（歌词地址只能来自搜索响应）',async()=>{
+ const r=await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'no-lrc'}).service.resolve(facts);
+ assert.equal(r.attempts[3].reason,'no-confident-match');
+});
+await check('咪咕错歌手/错时长不匹配（硬过滤 + 版本校验）',async()=>{
+ assert.equal((await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'wrong-artist'}).service.resolve(facts)).attempts[3].reason,'no-confident-match');
+ assert.equal((await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'wrong-duration'}).service.resolve(facts)).attempts[3].reason,'no-confident-match');
+});
+await check('咪咕 LRC 的 BOM 与 CRLF 被清洗',async()=>{
+ const r=await make({ncm:'empty',qq:'empty',kugou:'empty',miguLyrics:'bom'}).service.resolve(facts);
+ assert.equal(r.status,'matched');assert.equal(r.source,'migu');
+ assert.equal(r.lines.length,2);assert.equal(r.lines[0].text,'Hello');
+ assert(!r.lines[0].text.includes('\ufeff'),'BOM stripped');
 });
 await check('三源失败 -> 读取歌曲旁的 .lrc',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dsh-lyrics-local-'));
  const file=path.join(dir,'Adele - Hello.lrc');
  try{
   await fs.writeFile(file,'[00:02.00]Sidecar line\n[00:05.50]Second line','utf8');
-  const {service,calls}=make({ncm:'empty',qq:'empty',kugou:'empty',localDirs:[dir]});
+  const {service,calls}=make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty',localDirs:[dir]});
   const r=await service.resolve(facts);
   assert.equal(r.status,'matched');assert.equal(r.source,'local');assert.equal(r.sourceLabel,'本地文件');
   assert.equal(r.lines.length,2);assert.equal(r.lines[0].t,2);assert.equal(r.lines[1].text,'Second line');
-  assert.equal(r.attempts.length,4);assert.equal(calls.length,3,'local pass issues no request');
+  assert.equal(r.attempts.length,5);assert.equal(calls.length,4,'local pass issues no request');
  }finally{
   await fs.unlink(file).catch(()=>{});await fs.rmdir(dir).catch(()=>{});
  }
@@ -130,7 +185,7 @@ await check('本地无时间轴歌词 -> 合成时间轴并标注',async()=>{
  const file=path.join(dir,'Adele - Hello.lrc');
  try{
   await fs.writeFile(file,'first line\nsecond line\nthird line','utf8');
-  const r=await make({ncm:'empty',qq:'empty',kugou:'empty',localDirs:[dir]}).service.resolve(facts);
+  const r=await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty',localDirs:[dir]}).service.resolve(facts);
   assert.equal(r.status,'matched');assert.equal(r.unsynced,true);
   assert(r.sourceLabel.includes('无时间轴'));
   assert.equal(r.lines.length,3);assert(r.lines[1].t>r.lines[0].t);assert.equal(r.lines[0].text,'first line');
@@ -143,14 +198,14 @@ await check('localLyrics=false 时不扫描本地',async()=>{
  const file=path.join(dir,'Adele - Hello.lrc');
  try{
   await fs.writeFile(file,'[00:02.00]Sidecar line','utf8');
-  const r=await make({ncm:'empty',qq:'empty',kugou:'empty',localDirs:[dir],localLyrics:false}).service.resolve(facts);
-  assert.equal(r.status,'unmatched');assert.equal(r.attempts[3].reason,'disabled');
+  const r=await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty',localDirs:[dir],localLyrics:false}).service.resolve(facts);
+  assert.equal(r.status,'unmatched');assert.equal(r.attempts[4].reason,'disabled');
  }finally{
   await fs.unlink(file).catch(()=>{});await fs.rmdir(dir).catch(()=>{});
  }
 });
 await check('QQ 成功缓存、并发去重和手动重试',async()=>{
- const {service,calls}=make({ncm:'empty'});
+ const {service,calls}=make({ncm:'empty',migu:'empty'});
  const result=await Promise.all([service.resolve(facts),service.resolve(facts),service.resolve(facts)]);
  assert(result.every(r=>r.source==='qq'));assert.equal(calls.length,3);
  await service.resolve(facts);assert.equal(calls.length,3);
@@ -167,7 +222,7 @@ await check('旧缓存不挡住新回退；新缓存可恢复 QQ 来源',async()
  const file=path.join(dir,'cache.json');
  try{
   await fs.writeFile(file,JSON.stringify({version:1,entries:{[fingerprintOf('Hello','Adele')]:{status:'unmatched',fetchedAt:Date.now()}}}));
-  const {service,calls}=make({ncm:'empty',cacheFile:file});assert.equal((await service.resolve(facts)).source,'qq');assert.equal(calls.length,3);
+  const {service,calls}=make({ncm:'empty',migu:'empty',cacheFile:file});assert.equal((await service.resolve(facts)).source,'qq');assert.equal(calls.length,3);
   await new Promise(resolve=>setTimeout(resolve,2200));
   const saved=JSON.parse(await fs.readFile(file,'utf8'));assert.equal(saved.version,2);
   const fresh=make({cacheFile:file});assert.equal((await fresh.service.resolve(facts)).source,'qq');assert.equal(fresh.calls.length,0);

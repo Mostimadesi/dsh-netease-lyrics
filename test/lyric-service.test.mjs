@@ -48,6 +48,8 @@ const fake = async (url) => {
 	if (url.includes('/soso/fcgi-bin/client_search_cp')) return { ok: true, json: async () => ({code: 0, data: {song: {list: []}}}) };
 	// KuGou search: no candidates (the chain only calls this after the others miss).
 	if (url.includes('songsearch.kugou.com')) return { ok: true, json: async () => ({status: 1, data: {lists: []}}) };
+	// Migu search: also empty - the response is a bare array, not an envelope.
+	if (url.includes('app.u.nf.migu.cn')) return { ok: true, json: async () => [] };
 	throw new Error('unexpected url ' + url);
 };
 
@@ -70,7 +72,7 @@ check('title-only does not match', r4.status === 'unmatched', JSON.stringify(r4)
 // network failure degrades to error, never throws
 const svcBad = createLyricService({ fetchImpl: async () => { throw new Error('boom'); }, cacheFile: '' });
 const r5 = await svcBad.resolve({ title: '晴天', artist: '周杰伦', durationSec: 269 });
-check('fetch failure -> error status', r5.status === 'error' && r5.attempts.filter(row => row.reason === 'boom').length === 3, JSON.stringify(r5));
+check('fetch failure -> error status', r5.status === 'error' && r5.attempts.filter(row => row.reason === 'boom').length === 4, JSON.stringify(r5));
 
 console.log(failed === 0 ? 'ALL PASS' : failed + ' FAILED');
 process.exit(failed === 0 ? 0 : 1);

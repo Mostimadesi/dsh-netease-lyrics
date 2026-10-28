@@ -4,14 +4,15 @@
 
 DSH 歌词伴侣，两个浮层并存：
 
-1. **顶部胶囊**：页面顶部居中，展示**当前播放歌曲的当前歌词句**；hover / 点击展开为封面 + 曲目信息 + 滚动歌词窗口 + 进度条；
+1. **顶部胶囊**：页面顶部居中，展示**当前播放歌曲的当前歌词句**；hover / 点击平滑展开为封面 + 曲目信息 +
+   滚动歌词窗口 + 进度条 + **播放控制**（上一首 / 播放暂停 / 下一首）；
 2. **环境悬浮歌词**（v0.3.0 新增，灵感来自 [limpbus-lyrics「都市回响」](https://github.com/Celine258/idea-from-limbus-company-dancing-lyrics)）：歌词句随机浮现在面板左右两侧，轻微倾斜、逐字浮现、随播放起伏、退场淡出或加速跌落——像桌面上飘过的歌词雨。
 
 无 SMTC 会话时整块隐藏；悬浮层 `pointer-events:none`，不遮挡任何面板操作。
 
 播放状态取自 Windows **SMTC**（系统媒体控件）——不登录、不读 cookie、不访问账号数据，
 网易云、QQ 音乐、酷狗音乐以及任何注册了 SMTC 的播放器都能作为播放来源。
-歌词按「标题 + 歌手 + 时长」匹配：依次尝试网易云、QQ 音乐、酷狗的在线接口，
+歌词按「标题 + 歌手 + 时长」匹配：依次尝试网易云、QQ 音乐、酷狗、咪咕的在线接口，
 未匹配、无带时间歌词或请求失败就换下一个；三家都失败时再读本机的 `.lrc` 侧车文件或音频内嵌歌词。
 播放器客户端都不承担歌词接口服务，不要求它们为了取词而启动。
 
@@ -158,18 +159,67 @@ QQ 音乐作为当前播放来源已加入默认识别（`qqmusic` appId 子串�
 注意：酷狗桌面端自己的 `.krc` 歌词文件是加密的（v20 已不是早年 `krc1` 的 XOR+deflate 方案，
 实测无法解出），插件不读取也不解析它，只从上面的在线接口取普通 LRC。
 
+## 咪咕音乐接入（第四歌词源）
+
+咪咕只需两次请求，而且**不需要签名、登录或任何特殊 header**：搜索响应里每条候选自带
+`lrcUrl`，该地址直接返回纯 UTF-8 LRC（不是 base64，也不转义）。
+
+```
+https://app.u.nf.migu.cn/pc/resource/song/item/search/v1.0?text=<关键词>&pageNo=1&pageSize=20
+  → 裸数组；songName / singerList[].name / duration(秒) / copyrightId / lrcUrl
+https://d.musicapp.migu.cn/data/oss/resource/...   ← lrcUrl 原样 GET，得到 LRC 正文
+```
+
+几个实测得到的约束（都已体现在实现里）：
+
+- `pageSize` 被服务端忽略，恒返 20 条；只能翻 `pageNo`，且深度有限。
+- **必须硬性过滤歌手**：咪咕没有某首歌时会返回同名别人的歌（例如未收录「艾辰 落」，却给 20 条别人的《落》），
+  只按标题匹配会配错人。
+- 歌词地址**只能从搜索响应里拿**，没有"用 id 查歌词"的端点。
+- `copyrightId` 不全是纯数字（含字母），一律按字符串处理；`duration` 是**秒**（内部统一换成毫秒参与打分）。
+- LRC 是 CRLF、个别带 BOM，读后统一清洗。
+- 不要用 `search_all.do` 系列端点：它们**没有 duration 字段**，时长校验会静默失效，原版与 Live 无法区分。
+
+咪咕的定位是 QQ 之后的补充源：它有周杰伦等原唱词条，但收录与 QQ 不重合，因此排在酷狗之后、
+本地文件之前，而不是替换前面的源。
+
+### 展开动画与播放控制
+
+**展开是真正的过渡，不是瞬间切换**。收起态只显示一行歌词，展开态显示整块面板；两者之间的高度变化由
+`grid-template-rows: 0fr → 1fr` 承担 —— 这个属性插值的是子元素的**固有高度**，所以歌词行数多少都不用测量，
+也不需要写死高度（早期版本用 `max-height` 过渡，而它只是一个上限：内容比上限矮时会在一帧内直接到顶，
+观感就是"啪"地弹开）。胶囊自身同时过渡 `max-width` / `padding` / `border-radius`，因此形状也是渐变的。
+
+收起的胶囊**宽度仍由歌词文字决定**：面板在收起时以 `width:0` 参与布局（而不是 `display:none` 或直接卸载），
+所以它的自然宽度撑不开胶囊，展开时再过渡到自然宽度。这是刻意的 —— 早先的写法让隐藏面板参与布局，
+收起态会被撑到面板宽度，看起来"明明没展开却很宽"。
+
+面板在收起时带 `inert` 且按钮 `disabled`，所以键盘和读屏不会聚焦到看不见的控件；`prefers-reduced-motion`
+下所有过渡关闭。
+
+**播放控制**走宿主新增的 `POST /dsh-netease-lyrics/control`：请求体 `{"cmd":"toggle"|"play"|"pause"|"next"|"prev"}`，
+宿主转成一行 JSON 写进 SMTC 桥的 stdin，桥调用 `TryTogglePlayPauseAsync` / `TrySkipNextAsync` /
+`TrySkipPreviousAsync` 等并把 ack 按 `id` 回传。要点：
+
+- 该路由**只允许 loopback**，且命令走白名单 —— 不是给桥开自由命令通道。
+- 播放器不支持的能力（`canToggle` / `canNext` / `canPrev` 为 false）会让按钮直接禁用，而不是点了没反应。
+- 命令进行中主按钮显示 `…` 并禁用，避免重复入队。
+- 桥的 ack 里 `ok:false` 是**真实拒绝**（例如 `no-session`），HTTP 仍是 200，界面据此给出提示。
+- 有些播放器（Edge 的 MediaSession 桥）会"假成功"：`TryPlayAsync` 返回 true 但状态不变，桥会等 1.5s
+  校验实际状态，失败则回退到 toggle。
+
 ## 多歌词源与失败回退
 
-固定顺序为 `netease → qq → kugou → local`。网易云搜索无可信匹配、取回歌词为空或没有时间戳，
+固定顺序为 `netease → qq → kugou → migu → local`。网易云搜索无可信匹配、取回歌词为空或没有时间戳，
 以及 HTTP、超时、API 错误和无效 JSON 都会进入下一个源；前一个源命中且有歌词时不请求后续源。
 所有在线源都失败时，最后从本机离线文件取词（见下节）。
 全部失败返回 `unmatched`；其中有请求故障则返回 `error` 并保留各自原因，浮层不崩溃。
 QQ Base64 歌词与 HTML 实体会先解码，译文按 100ms 容差合并。不会把不同歌曲的原文和译文拼接。
 主源已有原文但无译文时继续使用主源，不为了补译文切换录音版本。
 
-展开浮层会显示「网易云歌词」「QQ 音乐歌词」「酷狗音乐歌词」或「本地文件歌词」。
+展开浮层会显示「网易云歌词」「QQ 音乐歌词」「酷狗音乐歌词」「咪咕音乐歌词」或「本地文件歌词」。
 状态接口的 `lyric.source`、`lyric.fallbackUsed`、`lyric.attempts` 分别表示实际来源、是否使用后备源
-和每个来源的尝试结果（含 `local` 一条）。`service.policy` 应为 `netease > qq > kugou > local-file`，
+和每个来源的尝试结果（含 `local` 一条）。`service.policy` 应为 `netease > qq > kugou > migu > local-file`，
 `service.local` 会列出本地搜索目录与是否启用。
 
 ## 本地歌词兜底（离线）

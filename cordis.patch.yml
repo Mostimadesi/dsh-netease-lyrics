@@ -20,5 +20,5 @@
         #   pollMs: 500                # 轮询间隔，钳制 200 ~ 5000
         #   appPatterns: [cloudmusic, netease, com.netease, qqmusic, kugou]
         #   apiBase: 'https://music.163.com'
-        #   localLyrics: true          # 三家在线歌词源都失败后，读歌曲旁的 .lrc / 内嵌歌词
+        #   localLyrics: true          # 四家在线歌词源都失败后，读歌曲旁的 .lrc / 内嵌歌词
         #   localDirs: [<目录>, ...]   # 本地歌词搜索目录（默认 %USERPROFILE%\Music 与 \Downloads，最多 8 个）

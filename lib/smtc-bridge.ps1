@@ -499,12 +499,16 @@ function Wait-PlayStatus {
 }
 
 function Invoke-Control {
-  param([string]$Command, $Position)
+  param([string]$Command, $Position, [string]$RequestId)
 
   $sessions = @()
   try { $sessions = @($manager.GetSessions()) } catch { $sessions = @() }
   $session = Select-Session $sessions
-  if ($null -eq $session) { return @{ type = 'ack'; cmd = $Command; ok = $false; reason = 'no-session' } }
+  if ($null -eq $session) {
+    $miss = @{ type = 'ack'; cmd = $Command; ok = $false; reason = 'no-session' }
+    if ($RequestId) { $miss.id = $RequestId }
+    return $miss
+  }
 
   $ok = $false
   $reason = $null
@@ -552,6 +556,9 @@ function Invoke-Control {
   }
 
   $ack = @{ type = 'ack'; cmd = $Command; ok = $ok; via = $via }
+  # The id lets the host answer exactly the request the widget is waiting on,
+  # even when several commands are in flight at once.
+  if ($RequestId) { $ack.id = $RequestId }
   if ($Command -eq 'seek') { $ack.pos = [double]$Position }
   if ($null -ne $reason) { $ack.reason = $reason }
   return $ack
@@ -625,10 +632,11 @@ while ($running) {
       try {
         $msg = $line | ConvertFrom-Json
         if ($msg.cmd) {
+          $requestId = if ($msg.id) { [string]$msg.id } else { '' }
           $ack = if ($msg.cmd -eq 'seek') {
-            Invoke-Control -Command 'seek' -Position $msg.pos
+            Invoke-Control -Command 'seek' -Position $msg.pos -RequestId $requestId
           } else {
-            Invoke-Control -Command ([string]$msg.cmd)
+            Invoke-Control -Command ([string]$msg.cmd) -RequestId $requestId
           }
           Write-Line $ack
         }

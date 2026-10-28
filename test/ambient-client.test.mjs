@@ -25,8 +25,11 @@ const React = {
 	},
 	useEffect() {}, useRef: () => { const i = hookIndex++; if (!refs[i]) refs[i] = { current: null }; return refs[i]; },
 };
+// Mutable fetch stub: transport tests swap it to hold a command in flight.
+let fetchImpl = async () => ({ ok: true, json: async () => ({ ok: true }) });
 const context = { window: { __ModuleLoader__: { load: ({ factory }) => { plugin = factory(() => ({ default: React })); } }, dispatchEvent() {} },
-	localStorage: { getItem: k => store.get(k) || null, setItem: (k, v) => store.set(k, v) }, Event: class {}, document: undefined, console };
+	localStorage: { getItem: k => store.get(k) || null, setItem: (k, v) => store.set(k, v) }, Event: class {}, document: undefined, console,
+	fetch: (...args) => fetchImpl(...args), AbortSignal: { timeout: () => undefined } };
 vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), context);
 
 // 0. One-time migration: an empty new-key + populated legacy key carries the
@@ -385,4 +388,140 @@ assert(haloCss.includes('.dnl-halo-hold>span{animation:none}') && haloCss.includ
 const rimTrack = haloCss.slice(haloCss.indexOf('@keyframes dnl-glow-rim'), haloCss.indexOf('@keyframes dnl-glow-mid'));
 assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTrack), 'fast inhale, then a hold');
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); entry/exit choreography math matches the reference.');
+// 12. Expansion: one body at a time, driven by the capsule's own box so the
+//     collapsed capsule stays as narrow as the lyric line (a hidden panel in
+//     the flow used to stretch it), and the transition animates both ways.
+{
+	// `render` resets hook state on every call; interaction tests need the
+	// state a handler wrote to survive into the next render, so this keeps it.
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	snapshot = { active: true, playing: true, title: 'T', artist: 'A', durationSec: 200, positionSec: 10,
+		canToggle: true, canNext: true, canPrev: true, coverSerial: 0,
+		lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '第一句', trans: '译文' }, { t: 5, text: '第二句' }] } };
+	store.clear();
+	resetHooks();
+	let islandTree = rerender();
+	const islandEl = () => nodes(islandTree).find(n => String(n.props.className || '').startsWith('dnl-island'));
+	assert(islandEl(), 'island rendered');
+	assert(!islandEl().props.className.includes('dnl-expanded'), 'starts collapsed');
+	assert(nodes(islandTree).some(n => n.props.className === 'dnl-crossfade'), 'collapsed body is the lyric line');
+	const grow = nodes(islandTree).find(n => n.props.className === 'dnl-grow');
+	assert(grow, 'grow wrapper always mounted');
+	assert.equal(grow.props['aria-hidden'], 'true', 'collapsed wrapper is hidden from assistive tech');
+	assert(nodes(islandTree).some(n => n.props.className === 'dnl-panel'), 'panel stays mounted so its height can animate');
+	const collapsedCtl = nodes(islandTree).filter(n => String(n.props.className || '').includes('dnl-ctl'));
+	assert.equal(collapsedCtl.length, 3, 'transport controls exist inside the mounted panel');
+	assert(collapsedCtl.every(b => b.props.disabled === true), 'collapsed controls are disabled (unfocusable, unclickable)');
+	assert.equal(nodes(islandTree).find(n => n.props.className === 'dnl-grow').props.inert, '', 'collapsed wrapper is inert');
+	assert(nodes(islandTree).find(n => n.props.className === 'dnl-grow').props['aria-hidden'] === 'true', 'collapsed controls are hidden from assistive tech');
+
+	// Hover opens it through the island's own handler.
+	islandEl().props.onMouseEnter();
+	islandTree = rerender();
+	assert(islandEl().props.className.includes('dnl-expanded'), 'hover expands the capsule');
+	assert(nodes(islandTree).some(n => n.props.className === 'dnl-panel'), 'expanded shows the panel');
+	assert.equal(nodes(islandTree).find(n => n.props.className === 'dnl-grow').props['aria-hidden'], undefined, 'expanded wrapper is exposed');
+	// LyricTransition holds the outgoing content for one 240ms cross-fade, so the
+	// collapsed wrapper can still be present right after expanding; what matters
+	// is that the island has exactly one body of its own (the panel).
+	assert.equal(nodes(islandTree).filter(n => n.props.className === 'dnl-panel').length, 1, 'exactly one expanded body');
+
+	// Leaving the hover collapses again (nothing is pinned yet).
+	islandEl().props.onMouseLeave();
+	islandTree = rerender();
+	assert(!islandEl().props.className.includes('dnl-expanded'), 'leaving collapses an unpinned capsule');
+
+	// The CSS must actually carry the animation, in both directions.
+	const css = plugin.__test.CSS;
+	const islandRule = /\.dnl-island\{[^}]*\}/.exec(css);
+	assert(islandRule, 'island rule present');
+	assert(/max-width \.28s/.test(islandRule[0]) && /border-radius \.28s/.test(islandRule[0]), 'capsule shape transitions');
+	const growRule = /\.dnl-grow\{[^}]*\}/.exec(css);
+	assert(growRule, 'grow wrapper rule present');
+	assert(/grid-template-rows:0fr/.test(growRule[0]), 'collapsed wrapper has zero rows');
+	assert(/width:0/.test(growRule[0]), 'collapsed wrapper takes no width (keeps the pill narrow)');
+	assert(/grid-template-rows \.28s/.test(growRule[0]) && /width \.28s/.test(growRule[0]), 'both height and width transition');
+	const expandedGrow = /\.dnl-expanded \.dnl-grow\{[^}]*\}/.exec(css);
+	assert(expandedGrow && /grid-template-rows:1fr/.test(expandedGrow[0]), 'expanded wrapper has one row');
+	assert(/width:auto/.test(expandedGrow[0]), 'expanded wrapper takes its natural width');
+	assert(css.includes('.dnl-grow-inner{min-height:0'), 'inner clamps its height so 0fr really collapses');
+	assert(css.includes('.dnl-expanded .dnl-now{min-height:0;height:0'), 'collapsed row yields its height once open');
+	assert(!css.includes('.dnl-expanded .dnl-now{display:none}'), 'collapsed row keeps its width (display:none narrowed the capsule)');
+	// Regression guards against the two bugs this replaced.
+	assert(!/\.dnl-island\{[^}]*max-height/.test(css), 'no max-height animation (a bound cannot interpolate intrinsic height)');
+	assert(!css.includes('.dnl-collapsed{') && !css.includes('.dnl-expand{'), 'no stacked hidden bodies');
+}
+
+// 13. Transport controls: play/pause/next/prev, capability gating, in-flight state.
+{
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	snapshot = { active: true, playing: true, title: 'T', artist: 'A', durationSec: 200, positionSec: 10,
+		canToggle: true, canNext: true, canPrev: true, coverSerial: 0,
+		lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '第一句' }] } };
+	store.clear();
+	resetHooks();
+	let islandTree = rerender();
+	nodes(islandTree).find(n => String(n.props.className || '').startsWith('dnl-island')).props.onMouseEnter();
+	islandTree = rerender();
+	let all = nodes(islandTree);
+	const ctls = () => all.filter(n => String(n.props.className || '').includes('dnl-ctl'));
+	assert(nodes(islandTree).some(n => n.props.className === 'dnl-controls'), 'transport row rendered');
+	assert.equal(ctls().length, 3, 'three transport buttons');
+	const byLabel = label => all.find(n => n.props['aria-label'] === label);
+	assert(byLabel('上一首') && byLabel('下一首') && byLabel('暂停'), 'prev / next / pause labels');
+	assert.equal(byLabel('暂停').children[0], '⏸', 'playing shows the pause glyph');
+	for (const label of ['上一首', '暂停', '下一首']) {
+		assert(typeof byLabel(label).props.onClick === 'function', label + ' is clickable');
+		assert(!byLabel(label).props.disabled, label + ' enabled when the player supports it');
+	}
+
+	// Paused track: the main button offers play instead.
+	snapshot = { ...snapshot, playing: false };
+	islandTree = rerender();
+	all = nodes(islandTree);
+	assert(all.find(n => n.props['aria-label'] === '播放'), 'paused shows a play button');
+	assert.equal(all.find(n => n.props['aria-label'] === '播放').children[0], '▶', 'paused shows the play glyph');
+
+	// Players that report no capability: buttons disable rather than lying.
+	snapshot = { ...snapshot, playing: true, canToggle: false, canNext: false, canPrev: false };
+	islandTree = rerender();
+	all = nodes(islandTree);
+	assert(all.find(n => n.props['aria-label'] === '下一首').props.disabled, 'next disabled when canNext=false');
+	assert(all.find(n => n.props['aria-label'] === '上一首').props.disabled, 'prev disabled when canPrev=false');
+	assert(all.find(n => n.props['aria-label'] === '暂停').props.disabled, 'toggle disabled when canToggle=false');
+
+	// A click must not bubble into the island's pin toggle, and while the host
+	// is answering the button reports progress and refuses a second click.
+	// A never-resolving fetch keeps the command in flight for the assertion.
+	snapshot = { ...snapshot, canToggle: true, canNext: true, canPrev: true };
+	islandTree = rerender();
+	all = nodes(islandTree);
+	const mainBtn = all.find(n => n.props['aria-label'] === '暂停');
+	let stopped = false;
+	fetchImpl = () => new Promise(() => {});
+	mainBtn.props.onClick({ stopPropagation: () => { stopped = true; } });
+	assert(stopped, 'transport click stops propagation');
+	islandTree = rerender();
+	all = nodes(islandTree);
+	const pendingBtn = all.find(n => String(n.props.className || '').includes('dnl-ctl-main'));
+	assert.equal(pendingBtn.children[0], '…', 'in-flight command shows a pending glyph');
+	assert(pendingBtn.props.disabled, 'in-flight command blocks a second click');
+	// Restore the stub so it cannot leak into the next block.
+	fetchImpl = async () => ({ ok: true, json: async () => ({ ok: true }) });
+}
+
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, collapsed stays text-wide, collapsed controls inert); transport controls (play/pause/next/prev, capability gating, in-flight guard, propagation stop); entry/exit choreography math matches the reference.');

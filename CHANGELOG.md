@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.11 - 2026-10-28 (dev)
+
+- **胶囊展开改为真正的过渡**。收起态只显示一行歌词，展开态显示面板，高度变化由
+  `grid-template-rows: 0fr → 1fr` 承担（插值子元素固有高度，不用测量、不限行数）；胶囊同时过渡
+  `max-width` / `padding` / `border-radius`。此前用的是 `max-height` 过渡 —— 它只是上限，内容比上限矮时
+  一帧就到顶，观感是"啪"地弹开。
+- **修复收起态被撑宽**。面板在收起时以 `width:0` 参与布局（不再 `display:none`/卸载），所以它的自然宽度
+  撑不开胶囊：收起宽度重新由歌词文字决定。收起时面板带 `inert`、按钮 `disabled`，键盘与读屏不会聚焦到
+  看不见的控件；`prefers-reduced-motion` 下关闭全部过渡。
+- **新增播放控制**：展开面板底部增加上一首 / 播放暂停 / 下一首。宿主新增 `POST /control`
+  （仅 loopback + 命令白名单），转成一行 JSON 写入 SMTC 桥 stdin，桥调用 `TryTogglePlayPauseAsync` /
+  `TrySkipNextAsync` / `TrySkipPreviousAsync`，ack 按 `id` 回传。播放器不支持的能力会让按钮禁用；
+  命令进行中显示 `…` 并禁止重复点击；桥的 `ok:false`（如 `no-session`）按真实拒绝处理并提示。
+- **新增咪咕音乐作为第四歌词源**（顺序 `netease → qq → kugou → migu → local`）。两次请求即可：
+  搜索响应自带 `lrcUrl`，该地址直接返回 UTF-8 LRC，无需签名/登录/特殊 header。实现要点：硬性过滤歌手
+  （咪咕缺某歌时会返回同名别人的歌）、`duration` 按秒换算成毫秒参与打分、`copyrightId` 一律按字符串、
+  清洗 BOM/CRLF、跳过缺 `lrcUrl` 的候选。刻意不用 `search_all.do` 系列端点 —— 它们没有 duration，
+  时长校验会静默失效。
+- 测试：新增 `/control` 路由 7 项（方法/栅栏/白名单、id 关联 ack、拒绝上报、游离 ack 忽略、桥退出释放等待者）
+  与客户端 2 组（展开结构 + 过渡 CSS、播放控制的能力门控/进行中/事件冒泡）；`multisource` 增至 37 项
+  并覆盖咪咕的候选过滤、版本校验与 BOM 清洗。node 侧 64 项、PowerShell 侧 15 项全过。
+
 ## 0.3.10 - 2026-10-27 (dev)
 
 - **修复:进度停滞检测从未生效(0.3.2 起的回归)**。0.3.2 为了省一点开销把时间戳从 `DateTimeOffset`
