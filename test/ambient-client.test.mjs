@@ -29,7 +29,9 @@ const React = {
 let fetchImpl = async () => ({ ok: true, json: async () => ({ ok: true }) });
 const context = { window: { __ModuleLoader__: { load: ({ factory }) => { plugin = factory(() => ({ default: React })); } }, dispatchEvent() {} },
 	localStorage: { getItem: k => store.get(k) || null, setItem: (k, v) => store.set(k, v) }, Event: class {}, document: undefined, console,
-	fetch: (...args) => fetchImpl(...args), AbortSignal: { timeout: () => undefined } };
+	fetch: (...args) => fetchImpl(...args), AbortSignal: { timeout: () => undefined },
+	// The island defers its collapse (hover hysteresis); the sandbox needs timers.
+	setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: id => clearTimeout(id) };
 vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), context);
 
 // 0. One-time migration: an empty new-key + populated legacy key carries the
@@ -433,10 +435,24 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	// is that the island has exactly one body of its own (the panel).
 	assert.equal(nodes(islandTree).filter(n => n.props.className === 'dnl-panel').length, 1, 'exactly one expanded body');
 
-	// Leaving the hover collapses again (nothing is pinned yet).
+	// Leaving the hover collapses again, but only after the hysteresis delay, so a
+	// pointer that merely grazes the edge cannot start a collapse/expand loop.
 	islandEl().props.onMouseLeave();
 	islandTree = rerender();
-	assert(!islandEl().props.className.includes('dnl-expanded'), 'leaving collapses an unpinned capsule');
+	assert(islandEl().props.className.includes('dnl-expanded'), 'leaving does not collapse instantly (hysteresis)');
+	await new Promise(resolve => setTimeout(resolve, 320));
+	islandTree = rerender();
+	assert(!islandEl().props.className.includes('dnl-expanded'), 'leaving collapses an unpinned capsule after the delay');
+
+	// Re-entering before the delay expires cancels the pending collapse.
+	islandEl().props.onMouseEnter();
+	islandTree = rerender();
+	islandEl().props.onMouseLeave();
+	await new Promise(resolve => setTimeout(resolve, 60));
+	islandEl().props.onMouseEnter();
+	await new Promise(resolve => setTimeout(resolve, 320));
+	islandTree = rerender();
+	assert(islandEl().props.className.includes('dnl-expanded'), 'a re-entry cancels the pending collapse');
 
 	// The CSS must actually carry the animation, in both directions.
 	const css = plugin.__test.CSS;
@@ -452,7 +468,14 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert(expandedGrow && /grid-template-rows:1fr/.test(expandedGrow[0]), 'expanded wrapper has one row');
 	assert(/width:auto/.test(expandedGrow[0]), 'expanded wrapper takes its natural width');
 	assert(css.includes('.dnl-grow-inner{min-height:0'), 'inner clamps its height so 0fr really collapses');
-	assert(css.includes('.dnl-expanded .dnl-now{min-height:0;height:0'), 'collapsed row yields its height once open');
+	// The collapsed row now shrinks on the same clock as the panel grows; an
+	// instant height:0 made the capsule dip below a stationary pointer.
+	const nowWrap = /\.dnl-now-wrap\{[^}]*\}/.exec(css);
+	assert(nowWrap, 'collapsed row has its own track');
+	assert(/grid-template-rows:1fr/.test(nowWrap[0]) && /grid-template-rows \.28s/.test(nowWrap[0]), 'collapsed track transitions its height');
+	const nowCollapsed = /\.dnl-expanded \.dnl-now-wrap\{[^}]*\}/.exec(css);
+	assert(nowCollapsed && /grid-template-rows:0fr/.test(nowCollapsed[0]), 'expanded collapses the row through the track');
+	assert(!/\.dnl-expanded \.dnl-now\{[^}]*height:0/.test(css), 'no instant height:0 on the collapsed row (caused a hover loop)');
 	assert(!css.includes('.dnl-expanded .dnl-now{display:none}'), 'collapsed row keeps its width (display:none narrowed the capsule)');
 	// Regression guards against the two bugs this replaced.
 	assert(!/\.dnl-island\{[^}]*max-height/.test(css), 'no max-height animation (a bound cannot interpolate intrinsic height)');
@@ -524,4 +547,4 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	fetchImpl = async () => ({ ok: true, json: async () => ({ ok: true }) });
 }
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, collapsed stays text-wide, collapsed controls inert); transport controls (play/pause/next/prev, capability gating, in-flight guard, propagation stop); entry/exit choreography math matches the reference.');
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); transport controls (play/pause/next/prev, capability gating, in-flight guard, propagation stop); entry/exit choreography math matches the reference.');
