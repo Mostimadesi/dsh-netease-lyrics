@@ -141,6 +141,46 @@ const json = res => JSON.parse(res.body || '{}');
 	assert.equal(json(res).reason, 'no-session');
 }
 
+// 5b. seek: forwarded with the position, validated, and clamped to the track.
+{
+	const proc = spawned[spawned.length - 1];
+	const writtenBefore = proc.written.length;
+
+	// A bad position never reaches the bridge. `null` and a missing field matter
+	// most: Number(null) and Number('') are 0, so a naive conversion would accept
+	// them as "seek to 0" and then block on an ack that never comes.
+	for (const pos of ['abc', -5, null, undefined, '', {}, []]) {
+		const res = makeRes();
+		await registered.get('/dsh-netease-lyrics/control')(
+			makeReq('POST', JSON.stringify({ cmd: 'seek', pos })), res);
+		assert.equal(res.statusCode, 400, 'bad position rejected: ' + JSON.stringify(pos));
+	}
+	assert.equal(proc.written.length, writtenBefore, 'no stdin traffic for rejected positions');
+
+	// A valid seek carries `pos` through to the bridge.
+	const resSeek = makeRes();
+	const pending = registered.get('/dsh-netease-lyrics/control')(
+		makeReq('POST', JSON.stringify({ cmd: 'seek', pos: 42.5 })), resSeek);
+	await new Promise(resolve => setImmediate(resolve));
+	const sent = JSON.parse(proc.written[proc.written.length - 1]);
+	assert.equal(sent.cmd, 'seek', 'seek reaches the bridge');
+	assert.equal(sent.pos, 42.5, 'position forwarded verbatim (no duration known yet)');
+	proc.stdout.emit('data', JSON.stringify({ type: 'ack', id: sent.id, cmd: 'seek', ok: true }) + '\n');
+	await pending;
+	assert.equal(json(resSeek).ok, true, 'seek ack delivered');
+
+	// A player that cannot seek reports it rather than pretending.
+	const resNo = makeRes();
+	const pending2 = registered.get('/dsh-netease-lyrics/control')(
+		makeReq('POST', JSON.stringify({ cmd: 'seek', pos: 10 })), resNo);
+	await new Promise(resolve => setImmediate(resolve));
+	const sent2 = JSON.parse(proc.written[proc.written.length - 1]);
+	proc.stdout.emit('data', JSON.stringify({ type: 'ack', id: sent2.id, cmd: 'seek', ok: false, reason: 'no-seek' }) + '\n');
+	await pending2;
+	assert.equal(json(resNo).ok, false);
+	assert.equal(json(resNo).reason, 'no-seek', 'unsupported seek is surfaced, not hidden');
+}
+
 // 6. An ack with an unknown id is ignored rather than crashing.
 {
 	const proc = spawned[spawned.length - 1];
@@ -162,4 +202,4 @@ const json = res => JSON.parse(res.body || '{}');
 	assert.equal(json(res).reason, 'bridge-exited', 'waiter released when the bridge exits');
 }
 
-console.log('PASS: /control route (method + fence + whitelist, id-correlated ack, refusal reported, stray ack ignored, bridge exit releases waiter).');
+console.log('PASS: /control route (method + fence + whitelist, id-correlated ack, seek validation + clamping, refusal reported, stray ack ignored, bridge exit releases waiter).');

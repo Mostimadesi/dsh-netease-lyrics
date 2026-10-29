@@ -544,9 +544,20 @@ function Invoke-Control {
       'next' { $ok = [bool](Await ($session.TrySkipNextAsync()) ([bool])) }
       'prev' { $ok = [bool](Await ($session.TrySkipPreviousAsync()) ([bool])) }
       'seek' {
-        # SMTC positions are 100-nanosecond ticks.
-        $ticks = [long]([double]$Position * 10000000.0)
-        $ok = [bool](Await ($session.TryChangePlaybackPositionAsync($ticks)) ([bool]))
+        # Players that publish no seekable timeline (KuGou: canSeek false) simply
+        # refuse this call. Report that explicitly so the widget can say
+        # "this player cannot seek" instead of showing a generic failure.
+        $seekable = $false
+        try { $seekable = [bool]$session.GetPlaybackInfo().Controls.IsPlaybackPositionEnabled } catch { $seekable = $false }
+        if (-not $seekable) {
+          $ok = $false
+          $reason = 'no-seek'
+        } else {
+          # SMTC positions are 100-nanosecond ticks.
+          $ticks = [long]([double]$Position * 10000000.0)
+          $ok = [bool](Await ($session.TryChangePlaybackPositionAsync($ticks)) ([bool]))
+          if (-not $ok) { $reason = 'seek-failed' }
+        }
       }
       default { $reason = 'unknown-command' }
     }

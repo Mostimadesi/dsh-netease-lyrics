@@ -59,9 +59,14 @@ plugin.apply({ slots: { inject: (_, cb) => cb(), register: (opts, component) => 
 assert(entries.has('dsh-netease-lyrics-island'), 'island overlay entry');
 assert(entries.has('dsh-netease-lyrics-layer'), 'ambient layer entry');
 assert(entries.has('dsh-netease-lyrics'), 'config slot entry');
+// The fake createElement keeps children on the element, but a real component
+// receives them as props.children. Passing them through is what lets the walker
+// descend into components like LyricTransition instead of losing their subtree.
 function nodes(root) {
 	if (root && typeof root === 'object') {
-		if (typeof root.type === 'function') return nodes(root.type(root.props));
+		if (typeof root.type === 'function') {
+			return nodes(root.type({ ...root.props, children: root.children }));
+		}
 		return [root, ...(root.children || []).flatMap(nodes)];
 	}
 	return [];
@@ -419,7 +424,7 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert.equal(grow.props['aria-hidden'], 'true', 'collapsed wrapper is hidden from assistive tech');
 	assert(nodes(islandTree).some(n => n.props.className === 'dnl-panel'), 'panel stays mounted so its height can animate');
 	const collapsedCtl = nodes(islandTree).filter(n => String(n.props.className || '').includes('dnl-ctl'));
-	assert.equal(collapsedCtl.length, 3, 'transport controls exist inside the mounted panel');
+	assert.equal(collapsedCtl.length, 5, 'transport controls exist inside the mounted panel');
 	assert(collapsedCtl.every(b => b.props.disabled === true), 'collapsed controls are disabled (unfocusable, unclickable)');
 	assert.equal(nodes(islandTree).find(n => n.props.className === 'dnl-grow').props.inert, '', 'collapsed wrapper is inert');
 	assert(nodes(islandTree).find(n => n.props.className === 'dnl-grow').props['aria-hidden'] === 'true', 'collapsed controls are hidden from assistive tech');
@@ -503,7 +508,7 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	let all = nodes(islandTree);
 	const ctls = () => all.filter(n => String(n.props.className || '').includes('dnl-ctl'));
 	assert(nodes(islandTree).some(n => n.props.className === 'dnl-controls'), 'transport row rendered');
-	assert.equal(ctls().length, 3, 'three transport buttons');
+	assert.equal(ctls().length, 5, 'five transport buttons (incl. the two seek steps)');
 	const byLabel = label => all.find(n => n.props['aria-label'] === label);
 	assert(byLabel('上一首') && byLabel('下一首') && byLabel('暂停'), 'prev / next / pause labels');
 	assert.equal(byLabel('暂停').children[0], '⏸', 'playing shows the pause glyph');
@@ -547,4 +552,135 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	fetchImpl = async () => ({ ok: true, json: async () => ({ ok: true }) });
 }
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); transport controls (play/pause/next/prev, capability gating, in-flight guard, propagation stop); entry/exit choreography math matches the reference.');
+// 14. The active lyric line stays vertically centred even at the very end of a
+//     song. The window is computed by a pure helper, so this is exact rather
+//     than a guess at what the render happens to produce.
+{
+	const W = plugin.__test.lyricWindow;
+	assert.equal(typeof W, 'function', 'lyricWindow exposed for testing');
+
+	// Mid-song: four real lines either side.
+	const mid = W(20, 10, 4, 4);
+	assert.equal(mid.length, 9, 'window is always 9 slots');
+	assert.equal(JSON.stringify(mid), JSON.stringify([6, 7, 8, 9, 10, 11, 12, 13, 14]), 'mid-song window is unpadded');
+	assert.equal(mid.indexOf(10), 4, 'active line is the 5th of 9');
+
+	// Last line: four -1 (padding) after it, so it stays in the middle slot.
+	const last = W(20, 19, 4, 4);
+	assert.equal(last.length, 9, 'window keeps its size at the end of the song');
+	assert.equal(last.indexOf(19), 4, 'final lyric line is STILL the 5th of 9 (not pushed to the bottom)');
+	assert.equal(last.filter(i => i === -1).length, 4, 'four trailing slots are padding');
+
+	// First line: symmetric padding before it.
+	const first = W(20, 0, 4, 4);
+	assert.equal(first.indexOf(0), 4, 'first lyric line is centred too');
+	assert.equal(first.filter(i => i === -1).length, 4, 'four leading slots are padding');
+
+	// A lyric shorter than the window: padded on both sides.
+	const tiny = W(3, 1, 4, 4);
+	assert.equal(tiny.length, 9, 'a 3-line lyric still fills 9 slots');
+	assert.equal(tiny.indexOf(1), 4, 'active line stays centred');
+	assert.equal(tiny.filter(i => i === -1).length, 6, 'six pads for a 3-line lyric');
+
+	// Edge cases must not throw or invent rows.
+	assert.equal(JSON.stringify(W(0, 0, 4, 4)), '[]', 'no lines -> no rows');
+	assert.equal(JSON.stringify(W(10, -1, 4, 4)), '[]', 'no active line -> no rows');
+
+	// The rendered rows must agree with the helper. The test harness stubs
+	// useEffect, so the playback clock never advances and every render lands on
+	// t=0 (the first lyric) - which is exactly the start-of-song case worth
+	// checking, and the active row still has to be the middle one.
+	store.clear();
+	snapshot = { active: true, playing: true, title: 'T', artist: 'A', durationSec: 60, positionSec: 0,
+		canToggle: true, canNext: true, canPrev: true, canSeek: true, coverSerial: 0,
+		lyric: { status: 'matched', songId: 1, lines: Array.from({ length: 20 }, (_, i) => ({ t: i * 5, text: 'L' + i })) } };
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	resetHooks();
+	let tree = rerender();
+	nodes(tree).find(n => String(n.props.className || '').startsWith('dnl-island')).props.onMouseEnter();
+	tree = rerender();
+	const rows = nodes(tree).filter(n => /(^|\s)dnl-line(\s|$)/.test(String(n.props.className || '')));
+	assert.equal(rows.length, 9, 'nine rows rendered (got ' + rows.length + ')');
+	assert.equal(rows.findIndex(r => String(r.props.className).includes('dnl-line-active')), 4, 'rendered active row is the middle one');
+	assert.equal(rows.filter(r => String(r.props.className).includes('dnl-line-pad')).length, 4, 'leading pads rendered');
+	const pads = rows.filter(r => String(r.props.className).includes('dnl-line-pad'));
+	assert(pads.every(r => r.props['aria-hidden'] === 'true'), 'padding rows are hidden from assistive tech');
+	assert(pads.every(r => nodes(r).some(n => n.props.className === 'dnl-line-main')), 'padding rows keep their height');
+	assert(plugin.__test.CSS.includes('.dnl-line-pad{visibility:hidden}'), 'padding rows are invisible but still take space');
+}
+
+// 15. ±5s seek: arithmetic, clamping, capability gating and the request body.
+{
+	const T = plugin.__test.seekTarget;
+	assert.equal(typeof T, 'function', 'seekTarget exposed for testing');
+
+	// Plain steps.
+	assert.equal(T(30, 5, 60), 35, 'forward 5s from 30s');
+	assert.equal(T(30, -5, 60), 25, 'back 5s from 30s');
+	assert.equal(T(0.5, 5, 60), 5.5, 'fractional positions survive');
+
+	// Clamped at both ends of the track.
+	assert.equal(T(58, 5, 60), 60, 'forward clamps at the duration');
+	assert.equal(T(2, -5, 60), 0, 'back clamps at zero');
+
+	// No movement -> no request.
+	assert.equal(T(60, 5, 60), null, 'forward at the very end does nothing');
+	assert.equal(T(0, -5, 60), null, 'back at the very start does nothing');
+
+	// Unknown duration still clamps at zero.
+	assert.equal(T(3, -5, 0), 0, 'no duration: still clamps the low end');
+	assert.equal(T(3, 5, 0), 8, 'no duration: forward is unbounded above');
+
+	// The buttons exist, are gated on canSeek, and post the expected body.
+	const base = { active: true, playing: true, title: 'T', artist: 'A', durationSec: 60, positionSec: 30,
+		canToggle: true, canNext: true, canPrev: true, canSeek: true, coverSerial: 0,
+		lyric: { status: 'matched', songId: 1, lines: [{ t: 0, text: 'A' }] } };
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	const openWith = (snap) => {
+		snapshot = snap;
+		store.clear();
+		resetHooks();
+		nodes(rerender()).find(n => String(n.props.className || '').startsWith('dnl-island')).props.onMouseEnter();
+		return nodes(rerender());
+	};
+
+	let all = openWith(base);
+	const fwd = all.find(n => n.props['aria-label'] === '前进 5 秒');
+	const back = all.find(n => n.props['aria-label'] === '后退 5 秒');
+	assert(fwd && back, 'both seek buttons rendered');
+	assert(!fwd.props.disabled && !back.props.disabled, 'enabled when canSeek=true');
+	assert(typeof fwd.props.onClick === 'function', 'forward is clickable');
+
+	const posted = [];
+	fetchImpl = async (url, options) => {
+		if (String(url).includes('/control')) posted.push(JSON.parse(options.body));
+		return { ok: true, json: async () => ({ ok: true }) };
+	};
+	fwd.props.onClick({ stopPropagation() {} });
+	await new Promise(resolve => setTimeout(resolve, 30));
+	assert.equal(posted.length, 1, 'forward click posts exactly one command');
+	assert.equal(posted[0].cmd, 'seek', 'command is seek');
+	assert.equal(typeof posted[0].pos, 'number', 'position is numeric');
+
+	// A player without seek support disables them instead of failing silently.
+	all = openWith({ ...base, canSeek: false });
+	assert(all.find(n => n.props['aria-label'] === '前进 5 秒').props.disabled, 'forward disabled when canSeek=false');
+	assert(all.find(n => n.props['aria-label'] === '后退 5 秒').props.disabled, 'back disabled when canSeek=false');
+	fetchImpl = async () => ({ ok: true, json: async () => ({ ok: true }) });
+}
+
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); entry/exit choreography math matches the reference.');

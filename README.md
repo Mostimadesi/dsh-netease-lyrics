@@ -5,7 +5,7 @@
 DSH 歌词伴侣，两个浮层并存：
 
 1. **顶部胶囊**：页面顶部居中，展示**当前播放歌曲的当前歌词句**；hover / 点击平滑展开为封面 + 曲目信息 +
-   滚动歌词窗口 + 进度条 + **播放控制**（上一首 / 播放暂停 / 下一首）；
+   滚动歌词窗口 + 进度条 + **播放控制**（后退 5 秒 / 上一首 / 播放暂停 / 下一首 / 前进 5 秒）；
 2. **环境悬浮歌词**（v0.3.0 新增，灵感来自 [limpbus-lyrics「都市回响」](https://github.com/Celine258/idea-from-limbus-company-dancing-lyrics)）：歌词句随机浮现在面板左右两侧，轻微倾斜、逐字浮现、随播放起伏、退场淡出或加速跌落——像桌面上飘过的歌词雨。
 
 无 SMTC 会话时整块隐藏；悬浮层 `pointer-events:none`，不遮挡任何面板操作。
@@ -197,7 +197,8 @@ https://d.musicapp.migu.cn/data/oss/resource/...   ← lrcUrl 原样 GET，得�
 面板在收起时带 `inert` 且按钮 `disabled`，所以键盘和读屏不会聚焦到看不见的控件；`prefers-reduced-motion`
 下所有过渡关闭。
 
-**播放控制**走宿主新增的 `POST /dsh-netease-lyrics/control`：请求体 `{"cmd":"toggle"|"play"|"pause"|"next"|"prev"}`，
+**播放控制**走宿主新增的 `POST /dsh-netease-lyrics/control`：请求体
+`{"cmd":"toggle"|"play"|"pause"|"next"|"prev"}` 或 `{"cmd":"seek","pos":<秒>}`，
 宿主转成一行 JSON 写进 SMTC 桥的 stdin，桥调用 `TryTogglePlayPauseAsync` / `TrySkipNextAsync` /
 `TrySkipPreviousAsync` 等并把 ack 按 `id` 回传。要点：
 
@@ -207,6 +208,17 @@ https://d.musicapp.migu.cn/data/oss/resource/...   ← lrcUrl 原样 GET，得�
 - 桥的 ack 里 `ok:false` 是**真实拒绝**（例如 `no-session`），HTTP 仍是 200，界面据此给出提示。
 - 有些播放器（Edge 的 MediaSession 桥）会"假成功"：`TryPlayAsync` 返回 true 但状态不变，桥会等 1.5s
   校验实际状态，失败则回退到 toggle。
+- **±5 秒跳转**先查播放器的 `IsPlaybackPositionEnabled`：不支持时桥回 `no-seek`，界面提示"该播放器不支持跳转"，
+  按钮本身也会因 `canSeek === false` 直接禁用（酷狗就是这种情况）。位置在客户端夹到 `[0, 时长]`，
+  宿主再用当前时长兜一次底，两端都不会向播放器请求越界位置。
+- `seek` 的 `pos` 只接受真正的数字：`Number(null)` 和 `Number('')` 都是 0，若用朴素转换，
+  一个缺失字段会被当成"跳到 0"并等待一个永远不会到来的 ack。
+
+### 歌词窗口始终居中
+
+展开态固定渲染 **9 行**（高亮行前后各 4 行），越界的槽位用**隐藏占位行**填满。早先的实现是把
+`index±4` 夹紧到数组范围内，结果唱到最后一句时后面没有行可"推"，高亮行就沉到底部。
+现在开头、中间、结尾三种情况下高亮行都恒为第 5 行（实测中心都在容器的 56.8% 处）。
 
 ## 多歌词源与失败回退
 
