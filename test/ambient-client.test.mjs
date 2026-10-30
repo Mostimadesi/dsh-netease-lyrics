@@ -151,10 +151,37 @@ presetSelect.props.onChange({ target: { value: 'neon' } });
 tree = render('dsh-netease-lyrics-layer');
 assert.equal(tree.props.style['--dnla-color'], '#ff9ef5', 'neon preset colour');
 assert.equal(tree.props.style['--dnla-glow'], '#b06bff', 'neon preset glow');
-const islandColor = nodes(renderCfg()).find(n => n.type === 'input' && n.props['aria-label'] === '原文颜色');
-islandColor.props.onChange({ target: { value: '#abcdef' } });
-island = render('dsh-netease-lyrics-island');
-assert.equal(island.props.style['--dnl-original'], '#abcdef');
+// The capsule colour pickers now live in the capsule's own settings view (gear),
+// not in the plugin settings page - drive them from there.
+{
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	snapshot = ACTIVE;
+	store.clear();
+	resetHooks();
+	let tree2 = rerender();
+	nodes(tree2).find(n => String(n.props.className || '').startsWith('dnl-island')).props.onMouseEnter();
+	tree2 = rerender();
+	nodes(tree2).find(n => String(n.props.className || '').includes('dnl-gear')).props.onClick({ stopPropagation() {} });
+	tree2 = rerender();
+	const islandColor = nodes(tree2).find(n => n.type === 'input' && n.props['aria-label'] === '原文颜色');
+	assert(islandColor, 'capsule settings expose the colour picker');
+	islandColor.props.onChange({ target: { value: '#abcdef' } });
+	assert.equal(JSON.parse(store.get('dsh.netease-lyrics.colors.v1')).original, '#abcdef',
+		'capsule colour picker persists the choice');
+	// The rendered island reads that key on mount, so a fresh mount must carry it.
+	resetHooks();
+	island = rerender();
+	const hostEl = nodes(island).find(n => String(n.props.className || '') === 'dnl-host');
+	assert(hostEl, 'island host element found');
+	assert.equal(hostEl.props.style['--dnl-original'], '#abcdef', 'colour variable reaches the island host');
+}
 // 7. Style selector + gradient colors + ambient font flow through.
 const styleSelect = nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '悬浮文字样式');
 assert(styleSelect, 'style selector exists');
@@ -354,31 +381,59 @@ const heldHalo = nodes(render('dsh-netease-lyrics-island')).find(n => String(n.p
 assert(heldHalo.props.className.includes('dnl-halo-hold'), 'paused track holds the breath');
 assert(!nodes(heldHalo).some(n => n.props.className === 'dnl-kick'), 'no line ripple while paused');
 
-snapshot = null;
-const glowSelect = nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源');
-assert(glowSelect, 'glow colour-source selector exists');
+// The halo knobs moved into the capsule's own settings view (gear), so they are
+// driven from there now. `openGear` mounts the island, expands it and flips to
+// the settings view, returning the walked tree.
+const gearHelpers = () => {
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	const openGear = (snap) => {
+		snapshot = snap;
+		resetHooks();
+		nodes(rerender()).find(n => String(n.props.className || '').startsWith('dnl-island')).props.onMouseEnter();
+		let tree = rerender();
+		nodes(tree).find(n => String(n.props.className || '').includes('dnl-gear')).props.onClick({ stopPropagation() {} });
+		return rerender();
+	};
+	return { resetHooks, rerender, openGear };
+};
+const gear = gearHelpers();
+const HIDDEN = { active: true, playing: true, title: 'T', coverSerial: 0,
+	lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
+
+let gearTree = gear.openGear(HIDDEN);
+const glowSelect = nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源');
+assert(glowSelect, 'glow colour-source selector exists in the capsule settings');
 assert.equal(glowSelect.props.value, 'theme', 'default follows the theme');
-const paceSelect = nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏');
+const paceSelect = nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏');
 assert(paceSelect, 'pace selector exists while the halo is on');
 assert.equal(paceSelect.props.value, 'normal', 'default pace is normal');
 paceSelect.props.onChange({ target: { value: 'calm' } });
 assert.equal(JSON.parse(store.get('dsh.netease-lyrics.display.v1')).glowPace, 'calm', 'pace persisted');
-snapshot = { active: true, playing: true, title: 'T', coverSerial: 0, lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
-const calmHalo = nodes(render('dsh-netease-lyrics-island')).find(n => String(n.props.className).startsWith('dnl-halo'));
+
+const calmHalo = nodes(gear.openGear(HIDDEN)).find(n => String(n.props.className || '').startsWith('dnl-halo'));
 assert.equal(calmHalo.props.style['--dnl-glow-dur'], '8.4s', 'calm pace slows the period');
 assert.equal(calmHalo.props.style['--dnl-glow-amp'], '.8', 'calm pace dims the lamp');
-snapshot = null;
-nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
+
+gearTree = gear.openGear({ ...HIDDEN, coverSerial: 9 });
+nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
 	.props.onChange({ target: { value: 'cover' } });
 assert.equal(JSON.parse(store.get('dsh.netease-lyrics.display.v1')).glow, 'cover', 'cover mode persisted');
-snapshot = { active: true, playing: true, title: 'T', coverSerial: 9, lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
-assert(nodes(render('dsh-netease-lyrics-island')).some(n => String(n.props.className).startsWith('dnl-halo')), 'cover mode keeps the halo');
-snapshot = null;
-nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
+assert(nodes(gear.openGear({ ...HIDDEN, coverSerial: 9 })).some(n => String(n.props.className || '').startsWith('dnl-halo')), 'cover mode keeps the halo');
+
+gearTree = gear.openGear(HIDDEN);
+nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
 	.props.onChange({ target: { value: 'off' } });
-assert(!nodes(renderCfg()).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏'), 'pace selector hides when the halo is off');
-snapshot = { active: true, playing: true, title: 'T', lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
-assert(!nodes(render('dsh-netease-lyrics-island')).some(n => String(n.props.className).startsWith('dnl-halo')), 'off removes the halo');
+const offTree = gear.openGear(HIDDEN);
+assert(!nodes(offTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏'),
+	'pace selector hides when the halo is off');
+assert(!nodes(offTree).some(n => String(n.props.className || '').startsWith('dnl-halo')), 'off removes the halo');
 
 // 11. The halo geometry/motion lives in the injected CSS (the Node harness cannot
 //     paint): border-only layers, outward relay, hue drift, ripple, pace scaling.
@@ -683,4 +738,101 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	fetchImpl = async () => ({ ok: true, json: async () => ({ ok: true }) });
 }
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); entry/exit choreography math matches the reference.');
+// 16. Gear: the expanded capsule can switch to its own settings view, which
+//     carries the knobs that used to live on the plugin settings page.
+{
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	const open = () => {
+		snapshot = { active: true, playing: true, title: 'T', artist: 'A', durationSec: 60, positionSec: 10,
+			canToggle: true, canNext: true, canPrev: true, canSeek: true, coverSerial: 0,
+			lyric: { status: 'matched', songId: 1, lines: [{ t: 0, text: 'A' }] } };
+		store.clear();
+		resetHooks();
+		nodes(rerender()).find(n => String(n.props.className || '').startsWith('dnl-island')).props.onMouseEnter();
+		return rerender();
+	};
+	const clickGear = (tree) => {
+		nodes(tree).find(n => String(n.props.className || '').includes('dnl-gear')).props.onClick({ stopPropagation() {} });
+		return rerender();
+	};
+
+	let tree = open();
+	const gearBtn = nodes(tree).find(n => String(n.props.className || '').includes('dnl-gear'));
+	assert(gearBtn, 'gear button rendered in the expanded panel');
+	assert.equal(gearBtn.props['aria-label'], '歌词胶囊设置', 'gear is labelled');
+	assert.equal(gearBtn.children[0], '\u2699', 'gear shows a cog glyph');
+	assert(nodes(tree).some(n => String(n.props.className || '') === 'dnl-panel-body'), 'lyrics body shown by default');
+	assert(!nodes(tree).some(n => String(n.props.className || '') === 'dnl-settings'), 'settings view hidden by default');
+
+	// Open the settings view.
+	tree = clickGear(tree);
+	assert(nodes(tree).some(n => String(n.props.className || '') === 'dnl-settings'), 'gear opens the settings view');
+	assert(!nodes(tree).some(n => String(n.props.className || '') === 'dnl-panel-body'), 'lyrics body swapped out');
+	const gearNow = nodes(tree).find(n => String(n.props.className || '').includes('dnl-gear'));
+	assert.equal(gearNow.props['aria-label'], '返回歌词', 'gear becomes a back button');
+	assert.equal(gearNow.props['aria-pressed'], 'true', 'pressed state exposed');
+	assert(nodes(tree).some(n => String(n.props.className || '').includes('dnl-gear-on')), 'active gear is highlighted');
+
+	// The moved knobs are present.
+	for (const label of ['面板不透明度', '原文颜色', '译文颜色', '当前句高亮', '呼吸灯颜色来源', '歌词字体']) {
+		assert(nodes(tree).some(n => n.props && n.props['aria-label'] === label), 'capsule settings expose: ' + label);
+	}
+
+	// They must no longer be on the plugin settings page (moved, not duplicated).
+	const page = nodes(renderCfg());
+	assert(!page.some(n => n.props && n.props['aria-label'] === '呼吸灯颜色来源'), 'halo knob left the settings page');
+	assert(!page.some(n => n.props && n.props['aria-label'] === '面板不透明度'), 'opacity knob is capsule-only');
+
+	// And back again.
+	tree = clickGear(tree);
+	assert(nodes(tree).some(n => String(n.props.className || '') === 'dnl-panel-body'), 'gear returns to the lyrics');
+}
+
+// 17. Panel opacity: a preference drives the CSS alpha, clamped to the theme value.
+{
+	const resetHooks = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+	const rerender = () => {
+		hookIndex = 0; dirty = false;
+		let out = entries.get('dsh-netease-lyrics-island')();
+		let guard = 0;
+		while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+		return out;
+	};
+	const hostWith = (prefs) => {
+		snapshot = { active: true, playing: true, title: 'T', artist: 'A', durationSec: 60, positionSec: 0,
+			canToggle: true, canNext: true, canPrev: true, canSeek: true, coverSerial: 0,
+			lyric: { status: 'matched', songId: 1, lines: [{ t: 0, text: 'A' }] } };
+		store.clear();
+		if (prefs) store.set('dsh.netease-lyrics.display.v1', JSON.stringify(prefs));
+		resetHooks();
+		return nodes(rerender()).find(n => String(n.props.className || '') === 'dnl-host');
+	};
+
+	// Default: exactly the theme token (alpha multiplier 1).
+	assert.equal(hostWith(null).props.style['--dnl-panel-alpha'], '1', 'default keeps the theme token as-is');
+	assert.equal(hostWith({ panelOpacity: 100 }).props.style['--dnl-panel-alpha'], '1', '100% is the theme value');
+	assert.equal(hostWith({ panelOpacity: 60 }).props.style['--dnl-panel-alpha'], '0.6', 'a lower value scales the alpha');
+	assert.equal(hostWith({ panelOpacity: 20 }).props.style['--dnl-panel-alpha'], '0.2', 'minimum is honoured');
+
+	// Out-of-range values are clamped when read back, so a stale value cannot
+	// make the panel invisible or denser than the theme.
+	assert.equal(hostWith({ panelOpacity: 5 }).props.style['--dnl-panel-alpha'], '0.2', 'below minimum clamps to 20%');
+	assert.equal(hostWith({ panelOpacity: 400 }).props.style['--dnl-panel-alpha'], '1', 'above maximum clamps to the theme value');
+
+	// The CSS must use the variable, and must not paint the token twice (that
+	// fixed denser-than-theme look was what made light text harder to read).
+	const css = plugin.__test.CSS;
+	assert(/\.dnl-expanded\{[^}]*color-mix\(in srgb,var\(--dsw-alias-bg-overlay\) calc\(var\(--dnl-panel-alpha,1\) \* 100%\),transparent\)/.test(css),
+		'expanded backing is the theme token scaled by the preference');
+	assert(!/\.dnl-expanded\{[^}]*linear-gradient\(var\(--dsw-alias-bg-overlay\)/.test(css),
+		'the old double-paint (denser than theme) is gone');
+}
+
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); gear settings view (knobs moved off the plugin page); panel opacity preference (alpha scaled from the theme token, clamped); entry/exit choreography math matches the reference.');
