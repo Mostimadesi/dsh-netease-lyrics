@@ -1,6 +1,6 @@
 {
   "name": "dsh-netease-lyrics",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "Lyrics companion for DeepSeek Harness: reads the current SMTC media session (NetEase via BetterNCM + InfLink-rs, QQ Music, KuGou, or any SMTC player), matches the track against NetEase, then QQ Music, then KuGou (falling back to a local .lrc sidecar or embedded tags), and renders BOTH a hover-expandable capsule with a breathing halo and limpbus-style ambient floating lyrics. Zero dependencies.",
   "type": "module",
   "main": "lib/index.js",

@@ -641,6 +641,44 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert.equal(JSON.stringify(W(0, 0, 4, 4)), '[]', 'no lines -> no rows');
 	assert.equal(JSON.stringify(W(10, -1, 4, 4)), '[]', 'no active line -> no rows');
 
+	// A translated lyric makes every row two text lines tall, so the spacer rows
+	// must reserve the same height - otherwise the pads are shorter than the rows
+	// they stand in for and the active line drifts off centre near the ends
+	// (measured 38.8% instead of 50%).
+	store.clear();
+	snapshot = { active: true, playing: true, title: 'T', artist: 'A', durationSec: 300, positionSec: 0,
+		canToggle: true, canNext: true, canPrev: true, canSeek: true, coverSerial: 0,
+		lyric: { status: 'matched', songId: 2, lines: Array.from({ length: 20 }, (_, i) => ({
+			t: i * 5, text: 'L' + i, trans: 'T' + i })) } };
+	{
+		const reset2 = () => { hookIndex = 0; states = []; refs = []; dirty = false; };
+		const rerender2 = () => {
+			hookIndex = 0; dirty = false;
+			let out = entries.get('dsh-netease-lyrics-island')();
+			let guard = 0;
+			while (dirty && guard++ < 10) { hookIndex = 0; dirty = false; out = entries.get('dsh-netease-lyrics-island')(); }
+			return out;
+		};
+		reset2();
+		let t2 = rerender2();
+		nodes(t2).find(n => String(n.props.className || '').startsWith('dnl-island')).props.onMouseEnter();
+		t2 = rerender2();
+		const rows2 = nodes(t2).filter(n => /(^|\s)dnl-line(\s|$)/.test(String(n.props.className || '')));
+		const pads2 = rows2.filter(r => String(r.props.className).includes('dnl-line-pad'));
+		assert.equal(pads2.length, 4, 'four pads at the start of a translated lyric');
+		assert(pads2.every(r => nodes(r).some(n => n.props.className === 'dnl-line-trans')),
+			'pads carry a translation spacer so they match a translated row height');
+		const realRows = rows2.filter(r => !String(r.props.className).includes('dnl-line-pad'));
+		assert(realRows.every(r => nodes(r).some(n => n.props.className === 'dnl-line-trans')),
+			'real rows keep their translations');
+	}
+
+	// The lyric box must not cap its own height any more: 9 translated rows need
+	// ~237px and the old 184px cap clipped the last two, pushing the active line
+	// to the bottom.
+	assert(!/\.dnl-lines\{[^}]*max-height/.test(plugin.__test.CSS), 'lyric box has no height cap');
+	assert(!/\.dnl-lines\{[^}]*overflow:hidden/.test(plugin.__test.CSS), 'lyric box does not clip its rows');
+
 	// The rendered rows must agree with the helper. The test harness stubs
 	// useEffect, so the playback clock never advances and every render lands on
 	// t=0 (the first lyric) - which is exactly the start-of-song case worth
@@ -787,6 +825,11 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		assert(nodes(tree).some(n => n.props && n.props['aria-label'] === label), 'capsule settings expose: ' + label);
 	}
 
+	// Hover buffer: an invisible ring that belongs to the island, so aiming at a
+	// control near the edge does not cross the boundary and collapse the capsule.
+	assert(/\.dnl-island::after\{[^}]*inset:-\d+px/.test(plugin.__test.CSS), 'island has a hover buffer ring');
+	assert(/\.dnl-island::after\{[^}]*pointer-events:auto/.test(plugin.__test.CSS), 'the buffer receives the pointer');
+
 	// Geometry guard for the bug this replaced: the button must live inside the
 	// panel's clipped box, not poke out of it behind negative offsets.
 	const gearCss = /\.dnl-gear\{[^}]*\}/.exec(plugin.__test.CSS);
@@ -854,4 +897,4 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'the old double-paint (denser than theme) is gone');
 }
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); gear settings view (knobs moved off the plugin page); panel opacity preference (alpha scaled from the theme token, clamped); entry/exit choreography math matches the reference.');
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); gear settings view (knobs moved off the plugin page); panel opacity preference (alpha scaled from the theme token, clamped); translated lyrics stay centred (spacer rows match row height, no height cap); hover buffer ring; entry/exit choreography math matches the reference.');
