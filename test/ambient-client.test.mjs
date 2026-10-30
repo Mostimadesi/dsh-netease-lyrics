@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 // (island + ambient layer + settings), the floating-line lifecycle with
 // synchronized translation animation, boundary clamping, freeze-on-pause,
 // disable, prefs persistence, and that the original island still renders.
+const source = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 const store = new Map();
 const entries = new Map();
 let hookIndex = 0;
@@ -500,7 +501,7 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	islandEl().props.onMouseLeave();
 	islandTree = rerender();
 	assert(islandEl().props.className.includes('dnl-expanded'), 'leaving does not collapse instantly (hysteresis)');
-	await new Promise(resolve => setTimeout(resolve, 320));
+	await new Promise(resolve => setTimeout(resolve, 520));
 	islandTree = rerender();
 	assert(!islandEl().props.className.includes('dnl-expanded'), 'leaving collapses an unpinned capsule after the delay');
 
@@ -510,7 +511,7 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	islandEl().props.onMouseLeave();
 	await new Promise(resolve => setTimeout(resolve, 60));
 	islandEl().props.onMouseEnter();
-	await new Promise(resolve => setTimeout(resolve, 320));
+	await new Promise(resolve => setTimeout(resolve, 520));
 	islandTree = rerender();
 	assert(islandEl().props.className.includes('dnl-expanded'), 'a re-entry cancels the pending collapse');
 
@@ -673,11 +674,16 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 			'real rows keep their translations');
 	}
 
-	// The lyric box must not cap its own height any more: 9 translated rows need
-	// ~237px and the old 184px cap clipped the last two, pushing the active line
-	// to the bottom.
-	assert(!/\.dnl-lines\{[^}]*max-height/.test(plugin.__test.CSS), 'lyric box has no height cap');
-	assert(!/\.dnl-lines\{[^}]*overflow:hidden/.test(plugin.__test.CSS), 'lyric box does not clip its rows');
+	// The list is bounded and SCROLLS (it must not clip): nine translated rows are
+	// ~297px, which made the whole capsule ~485px tall. Centring is done by
+	// scrolling the active row into the middle, not by relying on a tall box.
+	const linesRule = /\.dnl-lines\{[^}]*\}/.exec(plugin.__test.CSS);
+	assert(linesRule, 'lyric list rule present');
+	assert(/max-height:\d+px/.test(linesRule[0]), 'lyric list has a bounded height so the capsule stays compact');
+	assert(/overflow-y:auto/.test(linesRule[0]), 'the list scrolls rather than clipping its rows');
+	assert(!/overflow:hidden/.test(linesRule[0]), 'the list must not clip the active row');
+	// And the centring must actually be implemented by scrolling.
+	assert(/activeRowRef/.test(source), 'active row ref wired for scroll centring');
 
 	// The rendered rows must agree with the helper. The test harness stubs
 	// useEffect, so the playback clock never advances and every render lands on
@@ -825,10 +831,29 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		assert(nodes(tree).some(n => n.props && n.props['aria-label'] === label), 'capsule settings expose: ' + label);
 	}
 
-	// Hover buffer: an invisible ring that belongs to the island, so aiming at a
-	// control near the edge does not cross the boundary and collapse the capsule.
-	assert(/\.dnl-island::after\{[^}]*inset:-\d+px/.test(plugin.__test.CSS), 'island has a hover buffer ring');
-	assert(/\.dnl-island::after\{[^}]*pointer-events:auto/.test(plugin.__test.CSS), 'the buffer receives the pointer');
+	// No invisible overlay ring: as an absolutely-positioned pointer-receiving box
+	// it painted above the children and swallowed every click and drag (the gear
+	// and the drag handle both resolved to the island itself), and it inflated the
+	// measured height during the collapse animation. Hover grace is handled in
+	// time instead of in space.
+	assert(!/\.dnl-island::after\{[^}]*pointer-events:auto/.test(plugin.__test.CSS),
+		'no pointer-receiving overlay on the island (it swallowed clicks and drags)');
+	assert(!/\.dnl-island::after\{[^}]*inset:-/.test(plugin.__test.CSS),
+		'no oversized pseudo-element around the island');
+	// The controls must remain the topmost elements inside the island. This is the
+	// regression that broke both the gear and dragging: an overlay pseudo-element
+	// covered them, so elementFromPoint returned the island instead.
+	assert(!/\.dnl-island::(?:after|before)\{/.test(plugin.__test.CSS),
+		'no pseudo-element overlay on the island at all');
+	assert(/\.dnl-drag\{[^}]*position:absolute/.test(plugin.__test.CSS),
+		'the drag handle is still its own absolutely-positioned button');
+	assert(/\.dnl-gear\{[^}]*flex:none/.test(plugin.__test.CSS),
+		'the gear is still a real in-flow button');
+
+	// The grace period must be long enough to cover a graze on the way to a control.
+	const grace = /setTimeout\(\(\) => \{[\s\S]{0,200}?\}, (\d+)\);/.exec(source);
+	assert(grace, 'collapse is deferred by a timer');
+	assert(Number(grace[1]) >= 300, 'collapse grace is at least 300ms (got ' + grace[1] + ')');
 
 	// Geometry guard for the bug this replaced: the button must live inside the
 	// panel's clipped box, not poke out of it behind negative offsets.
@@ -897,4 +922,4 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'the old double-paint (denser than theme) is gone');
 }
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); gear settings view (knobs moved off the plugin page); panel opacity preference (alpha scaled from the theme token, clamped); translated lyrics stay centred (spacer rows match row height, no height cap); hover buffer ring; entry/exit choreography math matches the reference.');
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); gear settings view (knobs moved off the plugin page); panel opacity preference (alpha scaled from the theme token, clamped); translated lyrics stay centred (spacer rows match row height, scrolling list keeps the capsule compact); no pointer-swallowing overlay (gear + drag handle stay hittable, collapse grace is time-based); entry/exit choreography math matches the reference.');
