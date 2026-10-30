@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.21 - 2026-10-28 (dev)
+
+- **修复:展开窗口换句时"卡一下然后无过渡地跳"**。0.3.19 我加了
+  `scroll-snap-type:y mandatory` + `scroll-padding-block:50%` 想让引擎自己居中，
+  但居中 effect 同时也在写 `list.scrollTop` —— mandatory snap 会在那次写入后立刻重新吸附到最近的吸附点，
+  两者逐帧互相纠正，表现就是"卡住再跳"。收起态不滚动，所以不受影响。
+  - 移除全部 scroll-snap 规则（effect 本身已能正确居中）。
+  - 居中改为 `scrollTo({ behavior: "smooth" })`，让行的移动和淡入淡出同时发生，而不是淡入落在一个瞬间跳变上；
+    `prefers-reduced-motion` 与不支持平滑滚动的引擎仍回退为瞬时赋值。
+- 测试:锁定"CSS 不得出现 scroll-snap""居中必须用平滑滚动""必须有 reduced-motion 回退"。
+- 环境:清理了前几轮验证遗留的 38 个 headless Chrome 配置目录（2.2 GB）与孤儿进程；
+  验证脚本改为杀整棵进程树 + 硬超时。
+
 ## 0.3.20 - 2026-10-28 (dev)
 
 - **修复:外语歌拖动时窗口会改变大小**。重钳制 effect 的依赖里含 `dragPosition`，于是每次 pointermove 都重跑；

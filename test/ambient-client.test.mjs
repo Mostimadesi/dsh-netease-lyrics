@@ -682,6 +682,15 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert(/max-height:\d+px/.test(linesRule[0]), 'lyric list has a bounded height so the capsule stays compact');
 	assert(/overflow-y:auto/.test(linesRule[0]), 'the list scrolls rather than clipping its rows');
 	assert(!/overflow:hidden/.test(linesRule[0]), 'the list must not clip the active row');
+	// scroll-snap must NOT come back: `mandatory` re-snaps after every scrollTop
+	// write, which fought the centring effect and showed up as "sticks, then
+	// jumps with no transition" on each line change.
+	assert(!/scroll-snap-type/.test(plugin.__test.CSS), 'no scroll-snap (it fights the centring effect)');
+	assert(!/scroll-snap-align/.test(plugin.__test.CSS), 'no scroll-snap-align either');
+	// Centring must be animated rather than a same-frame jump.
+	assert(/scrollTo\(\{\s*top[^}]*behavior:\s*"smooth"/.test(source), 'centring scrolls smoothly');
+	assert(/prefers-reduced-motion/.test(source), 'smooth scrolling respects reduced motion');
+
 	// And the centring must actually be implemented by scrolling.
 	assert(/activeRowRef/.test(source), 'active row ref wired for scroll centring');
 
