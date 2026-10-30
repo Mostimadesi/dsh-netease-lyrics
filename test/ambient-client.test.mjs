@@ -823,8 +823,10 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert.equal(gearNow.props['aria-label'], '返回歌词', 'gear becomes a back button');
 	assert.equal(gearNow.props['aria-pressed'], 'true', 'pressed state exposed');
 	assert(nodes(tree).some(n => String(n.props.className || '').includes('dnl-gear-on')), 'active gear is highlighted');
+	// One button, rendered as a direct child of the panel so it survives the view
+	// swap; in the settings view it is the way back.
 	assert.equal(nodes(tree).filter(n => String(n.props.className || '').includes('dnl-gear')).length, 1,
-		'settings view renders exactly one (back) button, so the view is never a trap');
+		'settings view renders exactly one button (the way back), so the view is never a trap');
 
 	// The moved knobs are present.
 	for (const label of ['面板不透明度', '原文颜色', '译文颜色', '当前句高亮', '呼吸灯颜色来源', '歌词字体']) {
@@ -847,8 +849,14 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'no pseudo-element overlay on the island at all');
 	assert(/\.dnl-drag\{[^}]*position:absolute/.test(plugin.__test.CSS),
 		'the drag handle is still its own absolutely-positioned button');
-	assert(/\.dnl-gear\{[^}]*flex:none/.test(plugin.__test.CSS),
-		'the gear is still a real in-flow button');
+	// The gear is an absolutely positioned button inside .dnl-panel, inset from
+	// every edge so its box never touches the height animator's clip boundary.
+	assert(/\.dnl-gear\{[^}]*position:absolute/.test(plugin.__test.CSS),
+		'the gear is positioned against the panel');
+	assert(/\.dnl-gear\{[^}]*top:\s*\d+px/.test(plugin.__test.CSS) && /\.dnl-gear\{[^}]*right:\s*\d+px/.test(plugin.__test.CSS),
+		'the gear is inset from the clip boundary (not flush with it)');
+	assert(!/\.dnl-gear\{[^}]*top:\s*-/.test(plugin.__test.CSS),
+		'the gear must not use a negative inset (it would be clipped)');
 
 	// The grace period must be long enough to cover a graze on the way to a control.
 	const grace = /setTimeout\(\(\) => \{[\s\S]{0,200}?\}, (\d+)\);/.exec(source);
@@ -861,9 +869,9 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert(gearCss, 'gear rule present');
 	assert(!/top:\s*-/.test(gearCss[0]) && !/right:\s*-/.test(gearCss[0]),
 		'gear must not use negative offsets (they get clipped by the height animator)');
-	assert(/width:26px/.test(gearCss[0]) && /height:26px/.test(gearCss[0]), 'gear has a full-size target');
+	assert(/width:32px/.test(gearCss[0]) && /height:32px/.test(gearCss[0]), 'gear has a full-size 32px target');
 	// It is a flex item in the header row, not an absolute overlay.
-	assert(/margin-left:auto/.test(gearCss[0]), 'gear is pushed to the end of the header row');
+	assert(!/margin-left:auto/.test(gearCss[0]), 'gear no longer relies on header-row flow');
 	// As a flex item the gear takes its own row space, so the text needs no
 	// padding; the header just has to stay a flex row that can shrink.
 	assert(/\.dnl-head\{[^}]*display:flex/.test(plugin.__test.CSS), 'header stays a flex row so the gear sits beside the text');
