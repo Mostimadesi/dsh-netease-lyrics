@@ -682,6 +682,20 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert(/max-height:\d+px/.test(linesRule[0]), 'lyric list has a bounded height so the capsule stays compact');
 	assert(/overflow-y:auto/.test(linesRule[0]), 'the list scrolls rather than clipping its rows');
 	assert(!/overflow:hidden/.test(linesRule[0]), 'the list must not clip the active row');
+	// The expanded list must NOT be wrapped in LyricTransition: doing that made
+	// every line change render a second nine-row list and cross-fade the two,
+	// which looked like "sticks, then jumps". Only the collapsed one-line row
+	// should use it.
+	{
+		const islandSource = source;
+		const listWrap = /h\(LyricTransition,\s*\{\s*identity:[^}]*\}\s*,\s*h\("div",\s*\{\s*className:\s*"dnl-lines"/.test(islandSource);
+		assert(!listWrap, 'the lyric list must not be wrapped in LyricTransition');
+	}
+	// The active row's geometry must transition, or its height jumps and the
+	// centring has to correct in a second step.
+	assert(/\.dnl-line-main\{[^}]*transition:[^}]*font-size/.test(plugin.__test.CSS),
+		'active-row font-size transitions');
+
 	// scroll-snap must NOT come back: `mandatory` re-snaps after every scrollTop
 	// write, which fought the centring effect and showed up as "sticks, then
 	// jumps with no transition" on each line change.
