@@ -779,11 +779,30 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 	assert.equal(gearNow.props['aria-label'], '返回歌词', 'gear becomes a back button');
 	assert.equal(gearNow.props['aria-pressed'], 'true', 'pressed state exposed');
 	assert(nodes(tree).some(n => String(n.props.className || '').includes('dnl-gear-on')), 'active gear is highlighted');
+	assert.equal(nodes(tree).filter(n => String(n.props.className || '').includes('dnl-gear')).length, 1,
+		'settings view renders exactly one (back) button, so the view is never a trap');
 
 	// The moved knobs are present.
 	for (const label of ['面板不透明度', '原文颜色', '译文颜色', '当前句高亮', '呼吸灯颜色来源', '歌词字体']) {
 		assert(nodes(tree).some(n => n.props && n.props['aria-label'] === label), 'capsule settings expose: ' + label);
 	}
+
+	// Geometry guard for the bug this replaced: the button must live inside the
+	// panel's clipped box, not poke out of it behind negative offsets.
+	const gearCss = /\.dnl-gear\{[^}]*\}/.exec(plugin.__test.CSS);
+	assert(gearCss, 'gear rule present');
+	assert(!/top:\s*-/.test(gearCss[0]) && !/right:\s*-/.test(gearCss[0]),
+		'gear must not use negative offsets (they get clipped by the height animator)');
+	assert(/width:26px/.test(gearCss[0]) && /height:26px/.test(gearCss[0]), 'gear has a full-size target');
+	// It is a flex item in the header row, not an absolute overlay.
+	assert(/margin-left:auto/.test(gearCss[0]), 'gear is pushed to the end of the header row');
+	// As a flex item the gear takes its own row space, so the text needs no
+	// padding; the header just has to stay a flex row that can shrink.
+	assert(/\.dnl-head\{[^}]*display:flex/.test(plugin.__test.CSS), 'header stays a flex row so the gear sits beside the text');
+	assert(/\.dnl-head\{[^}]*min-width:0/.test(plugin.__test.CSS), 'header can shrink instead of overflowing');
+	// Both views must offer it, or opening the settings view would trap you.
+	const gearInLyrics = nodes(tree).filter(n => String(n.props.className || '').includes('dnl-gear'));
+	assert.equal(gearInLyrics.length, 1, 'lyrics view renders exactly one gear');
 
 	// They must no longer be on the plugin settings page (moved, not duplicated).
 	const page = nodes(renderCfg());
