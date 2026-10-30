@@ -922,4 +922,90 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'the old double-paint (denser than theme) is gone');
 }
 
-console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); gear settings view (knobs moved off the plugin page); panel opacity preference (alpha scaled from the theme token, clamped); translated lyrics stay centred (spacer rows match row height, scrolling list keeps the capsule compact); no pointer-swallowing overlay (gear + drag handle stay hittable, collapse grace is time-based); entry/exit choreography math matches the reference.');
+// 18. Rules of Hooks: no hook may appear after a component-level early return.
+//     A hook placed after `if (...) return null;` changes the hook count between
+//     renders, React throws, and the whole island unmounts - the capsule simply
+//     vanishes. Only real statements count: comments are stripped and returns
+//     nested in callbacks are excluded by brace depth.
+{
+	const stripComments = (text) => text
+		.replace(/\/\*[\s\S]*?\*\//g, '')
+		.split('\n')
+		.map(line => line.replace(/\/\/.*$/, ''))
+		.join('\n');
+
+	const bodies = [];
+	const fnRe = /function (LyricIsland|AmbientLyrics|BundleSettings|LyricTransition|FloatLine)\s*\([^)]*\)\s*\{/g;
+	let m;
+	while ((m = fnRe.exec(source)) !== null) {
+		let depth = 0;
+		let i = m.index + m[0].length - 1;
+		const start = i;
+		for (; i < source.length; i += 1) {
+			if (source[i] === '{') depth += 1;
+			else if (source[i] === '}') {
+				depth -= 1;
+				if (depth === 0) break;
+			}
+		}
+		bodies.push({ name: m[1], body: source.slice(start, i + 1) });
+	}
+	assert(bodies.length >= 4, 'component bodies located (' + bodies.length + ')');
+
+	// Scan one component body and report hooks that follow a component-level return.
+	const scan = (body) => {
+		const lines = stripComments(body).split('\n');
+		let depth = 0;
+		let earlyAt = -1;
+		const hooksAfter = [];
+		for (let i = 0; i < lines.length; i += 1) {
+			const line = lines[i];
+			const top = depth === 1;
+			if (top && /\breturn\b/.test(line)) {
+				if (earlyAt < 0) earlyAt = i;
+			} else if (earlyAt >= 0 && /\buse(State|Effect|Ref|Memo|Callback|Reducer|LayoutEffect)\s*\(/.test(line)) {
+				hooksAfter.push(i + 1);
+			}
+			for (const ch of line) {
+				if (ch === '{') depth += 1;
+				else if (ch === '}') depth -= 1;
+			}
+		}
+		return hooksAfter;
+	};
+
+	for (const { name, body } of bodies) {
+		const bad = scan(body);
+		assert.equal(bad.length, 0,
+			name + ' calls a hook after a component-level return (component lines ' + bad.join(',') +
+			') - that unmounts the island');
+	}
+
+	// Self-check: the detector must flag the shape it exists to catch, otherwise a
+	// silent pass would look like success.
+	const broken = [
+		'function Fake() {',
+		'\tconst [a] = useState(0);',
+		'\tif (a === 0) return null;',
+		'\tuseEffect(() => {}, []);',
+		'\treturn null;',
+		'}',
+	].join('\n');
+	assert(scan(broken).length > 0, 'the rules-of-hooks detector detects the broken shape');
+
+	// And it must NOT flag a return inside a callback or a comment.
+	const fine = [
+		'function Fine() {',
+		'\tconst [a] = useState(0);',
+		'\t// the early return below is fine because no hook follows it',
+		'\tuseEffect(() => {',
+		'\t\tif (a) return undefined;',
+		'\t}, [a]);',
+		'\tif (a === 0) return null;',
+		'\treturn 1;',
+		'}',
+	].join('\n');
+	assert.equal(scan(fine).length, 0, 'the detector does not flag callback returns or comments');
+}
+
+console.log('PASS: island + ambient layer + settings registrations; per-char rAF spans (no CSS animation); clamp; freeze/disable/prefs/styles/font; layered breathing halo (4 layers, relay, hue drift, line ripple, pace presets, theme/cover/off); smooth expand (grid 0fr->1fr animates intrinsic height, monotonic total height, hover hysteresis, collapsed stays text-wide, collapsed controls inert); centred lyric window incl. song start/end; transport controls (play/pause/next/prev, ±5s seek with clamping and capability gating, in-flight guard, propagation stop); gear settings view (knobs moved off the plugin page); panel opacity preference (alpha scaled from the theme token, clamped); translated lyrics stay centred (spacer rows match row height, scrolling list keeps the capsule compact); no pointer-swallowing overlay (gear + drag handle stay hittable, collapse grace is time-based); rules-of-hooks guard (no hook after an early return); entry/exit choreography math matches the reference.');
