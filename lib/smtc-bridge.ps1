@@ -15,6 +15,7 @@
     {"type":"state", ...}                                every poll tick
     {"type":"cover","hash":"...","mime":"image/jpeg","dataBase64":"..."}
                                                          only when art changes
+    {"type":"cover","hash":"...","cleared":true}       on track/session change
     {"type":"ack","cmd":"toggle","ok":true}              after a stdin command
     {"type":"error","message":"..."}                     non-fatal
     {"type":"fatal","message":"..."}                     SMTC unusable; exits
@@ -273,8 +274,36 @@ function Select-Session {
 # first, or PowerShell passes a PSObject wrapper and the call is rejected - then
 # read that InMemoryRandomAccessStream with ordinary calls. Verified against a real
 # WinRT stream in dev/test-cover.ps1.
-$script:lastCoverKey = $null
+$script:coverState = @{ key = $null; attempts = 0; nextAt = 0; ready = $false }
 $script:copyAsyncMethod = $null
+
+# Pure state machine, AST-extracted by test/cover-state.test.ps1 without WinRT.
+# A new identity clears old artwork immediately. Missing/failed thumbnails get at
+# most three reads, five seconds apart; successful artwork is never re-read.
+function Get-CoverAction {
+  param($State, $Key, [long]$NowMs)
+  $clear = $false
+  if ($State.key -cne $Key) {
+    $State.key = $Key
+    $State.attempts = 0
+    $State.nextAt = 0
+    $State.ready = $false
+    $clear = $true
+  }
+  $read = $false
+  if ($null -ne $Key -and -not $State.ready -and $State.attempts -lt 3 -and $NowMs -ge $State.nextAt) {
+    $State.attempts += 1
+    $State.nextAt = $NowMs + 5000
+    $read = $true
+  }
+  return @{ clear = $clear; read = $read }
+}
+
+# JSON keeps field boundaries unambiguous, including literal pipes in song names.
+function Get-CoverKey {
+  param([string]$App, [string]$Title, [string]$Artist, [string]$Album)
+  return (ConvertTo-Json -InputObject @($App, $Title, $Artist, $Album) -Compress)
+}
 
 function Get-CoverBase64 {
   param($Thumbnail)
@@ -347,6 +376,8 @@ function Get-State {
   $session = Select-Session $sessions
 
   if ($null -eq $session) {
+    $coverAction = Get-CoverAction $script:coverState $null ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
+    if ($coverAction.clear) { Write-Line @{ type = 'cover'; cleared = $true; hash = '' } }
     return @{
       type         = 'state'
       active       = $false
@@ -431,16 +462,16 @@ function Get-State {
     $script:estimate.key = $null
   }
 
-  # Re-read the artwork only when the identity of the track changes; the raw
-  # thumbnail stream reference has no stable id of its own.
-  $coverKey = "$title|$artist|$album"
-  if ($coverKey -ne $script:lastCoverKey) {
-    $script:lastCoverKey = $coverKey
+  $coverKey = Get-CoverKey $appId $title $artist $album
+  $coverAction = Get-CoverAction $script:coverState $coverKey ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
+  if ($coverAction.clear) { Write-Line @{ type = 'cover'; cleared = $true; hash = $coverKey } }
+  if ($coverAction.read) {
     if ($null -eq $thumbnail) {
       Add-Note 'this media session exposes no artwork thumbnail'
     } else {
       $cover = Get-CoverBase64 $thumbnail
       if ($null -ne $cover) {
+        $script:coverState.ready = $true
         Write-Line @{ type = 'cover'; hash = $coverKey; mime = $cover.mime; dataBase64 = $cover.data }
       } else {
         Add-Note 'artwork thumbnail could not be read'

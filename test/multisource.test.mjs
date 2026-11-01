@@ -231,6 +231,57 @@ await check('旧缓存不挡住新回退；新缓存可恢复 QQ 来源',async()
   await fs.unlink(file).catch(()=>{});await fs.unlink(file+'.tmp').catch(()=>{});await fs.rmdir(dir);
  }
 });
+await check('corrupt cache entries do not prevent a later valid entry restoring', async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dsh-corrupt-cache-'));
+ const file=path.join(dir,'cache.json');
+ try{
+  const entry={status:'matched',source:'qq',fetchedAt:Date.now(),lines:[{t:1,text:'cached valid'}]};
+  const key=fingerprintOf(facts.title,facts.artist)+'|hello|295';
+  await fs.writeFile(file,JSON.stringify({version:2,entries:[
+   null,42,{},['incomplete'],
+   ['null-row',{...entry,lines:[null]}],
+   ['primitive-row',{...entry,lines:['bad']}],
+   ['unsorted',{...entry,lines:[{t:2,text:'later'},{t:1,text:'earlier'}]}],
+   [key,entry]
+  ]}));
+  const {service,calls}=make({cacheFile:file});
+  const result=await service.resolve(facts);
+  assert.equal(result.source,'qq');assert.equal(result.lines[0].text,'cached valid');
+  assert.equal(calls.length,0,'valid entry after corrupt entries must still restore');
+  assert.equal(service.describe().entries,1,'malformed and unsorted entries must be rejected');
+ }finally{
+  await fs.unlink(file).catch(()=>{});await fs.rmdir(dir);
+ }
+});
+await check('local cache is not persisted or restored across local configuration changes', async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dsh-local-cache-'));
+ const cacheFile=path.join(dir,'cache.json'), sidecar=path.join(dir,'Adele - Hello.lrc');
+ const empty={ncm:'empty',qq:'empty',kugou:'empty',migu:'empty'};
+ try{
+  await fs.writeFile(sidecar,'[00:02.00]current local file','utf8');
+  const original=make({...empty,cacheFile,localDirs:[dir]});
+  assert.equal((await original.service.resolve(facts)).source,'local');
+  await new Promise(resolve=>setTimeout(resolve,2200));
+  const saved=JSON.parse(await fs.readFile(cacheFile,'utf8'));
+  assert(!saved.entries.some(([,entry])=>entry.source==='local'),'local entries must stay out of disk cache');
+  // Seed the old v2 format explicitly: restore must reject local entries too.
+  const key=fingerprintOf(facts.title,facts.artist)+'|hello|295';
+  await fs.writeFile(cacheFile,JSON.stringify({version:2,entries:[[key,{
+   status:'matched',source:'local',lines:[{t:1,text:'stale old directory'}],fetchedAt:Date.now()
+  }]]}));
+  const disabled=make({...empty,cacheFile,localDirs:[dir],localLyrics:false});
+  const off=await disabled.service.resolve(facts);
+  assert.equal(off.status,'unmatched');assert.equal(off.attempts.at(-1).reason,'disabled');
+  assert.equal(disabled.calls.length,4,'old local cache must not bypass current policy');
+  const changed=make({...empty,cacheFile,localDirs:[dir]});
+  const fresh=await changed.service.resolve(facts);
+  assert.equal(fresh.source,'local');assert.equal(fresh.lines[0].text,'current local file');
+  assert.equal(changed.calls.length,4);
+ }finally{
+  for(const file of [sidecar,cacheFile,cacheFile+'.tmp']) await fs.unlink(file).catch(()=>{});
+  await fs.rmdir(dir);
+ }
+});
 await check('HTML 实体和 UTF-8 译文解码',async()=>{
  assert.equal(decodeQQText(base64('[00:01.00]&#20320;&#x597d; &lt;世界&gt;')),'[00:01.00]你好 <世界>');
 });

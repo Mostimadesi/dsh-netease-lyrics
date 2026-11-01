@@ -12,6 +12,14 @@ check('parseLrc count', lrc.length === 5, JSON.stringify(lrc));
 check('parseLrc times', lrc[0].t === 1.5 && lrc[1].t === 5 && lrc[2].t === 9 && lrc[3].t === 12, JSON.stringify(lrc));
 check('parseLrc sorted+text', lrc[1].text === '重复句' && lrc[2].text === '重复句', JSON.stringify(lrc));
 
+// Offsets apply to the whole document, including metadata after lyric lines.
+const advanced = parseLrc('[00:01.00]first\n[00:03.00][00:04.00]repeat\n[offset:+1500]');
+check('positive offset advances all timestamps, preserving negative first row',
+	JSON.stringify(advanced.map(row => row.t)) === JSON.stringify([-0.5, 1.5, 2.5]), JSON.stringify(advanced));
+const delayed = parseLrc('[offset:-500]\n[00:02.00]second\n[00:01.00]first');
+check('negative offset delays and sorts timestamps', delayed[0].t === 1.5 && delayed[1].t === 2.5, JSON.stringify(delayed));
+check('malformed offset ignored', parseLrc('[offset:nope]\n[00:01]line')[0].t === 1, 'malformed offset changed timing');
+
 // 2. fingerprint normalization
 const fp1 = fingerprintOf('晴天 (Live)', ' 周杰伦 ');
 const fp2 = fingerprintOf('晴天', '周杰伦');

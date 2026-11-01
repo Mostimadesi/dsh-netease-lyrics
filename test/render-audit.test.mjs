@@ -4,8 +4,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const SRC = 'D:\\DeepSeek Harness\\workspace\\plugins_helper\\dsh-netease-lyrics\\lib\\client.js';
-const source = fs.readFileSync(SRC, 'utf8');
+const source = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 
 const store = new Map();
 const entries = new Map();
@@ -44,7 +43,7 @@ vm.runInNewContext(source, ctx);
 plugin.apply({ slots: { inject: (_, cb) => cb(), register: (o, c) => { entries.set(o.key || o.id || o.name, c); return () => {}; } } });
 
 function render(id) {
-	hookIndex = 0; refs = []; dirty = false;
+	hookIndex = 0; dirty = false;
 	let out = entries.get(id)();
 	let guard = 0;
 	while (dirty && guard++ < 20) { hookIndex = 0; dirty = false; out = entries.get(id)(); }
@@ -111,7 +110,7 @@ const STATES = {
 for (const [label, snap] of Object.entries(STATES)) {
 	check('island renders: ' + label, () => {
 		snapshot = snap;
-		const tree = render('dsh-netease-lyrics-island');
+		const tree = mount('dsh-netease-lyrics-island');
 		if (snap.active !== true) {
 			if (tree !== null) throw new Error('expected null for inactive, got a tree');
 			return 'null (hidden) as intended';
@@ -125,7 +124,7 @@ for (const [label, snap] of Object.entries(STATES)) {
 
 	check('ambient layer renders: ' + label, () => {
 		snapshot = snap;
-		const tree = render('dsh-netease-lyrics-layer');
+		const tree = mount('dsh-netease-lyrics-layer');
 		if (snap.active !== true) return 'null as intended';
 		if (!tree) throw new Error('returned nothing');
 		return 'ok';
@@ -210,14 +209,14 @@ check('survives null/NaN/string garbage in the snapshot', () => {
 	snapshot = { active: true, playing: 'yes', title: null, artist: undefined, durationSec: 'abc',
 		positionSec: null, canToggle: 'x', coverSerial: 'y',
 		lyric: { status: 'matched', lines: [null, { t: 'a', text: null }, { t: 1, text: 'ok', trans: 5 }] } };
-	const tree = render('dsh-netease-lyrics-island');
+	const tree = mount('dsh-netease-lyrics-island');
 	if (!tree) throw new Error('crashed on garbage input');
 	return 'ok';
 });
 
 check('survives a lyric object with a non-array lines field', () => {
 	snapshot = { ...BASE, lyric: { status: 'matched', lines: 'not an array' } };
-	const tree = render('dsh-netease-lyrics-island');
+	const tree = mount('dsh-netease-lyrics-island');
 	if (!tree) throw new Error('crashed');
 	return 'ok';
 });

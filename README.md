@@ -1,6 +1,6 @@
 # dsh-netease-lyrics
 
-> **dev 分支（v0.3.0 预览）**：新增「环境悬浮歌词」。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
+> **dev 分支（v0.3.23）**：胶囊与环境悬浮歌词，并包含生命周期、效率与本地歌词兼容性修复。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
 
 DSH 歌词伴侣，两个浮层并存：
 
@@ -13,7 +13,7 @@ DSH 歌词伴侣，两个浮层并存：
 播放状态取自 Windows **SMTC**（系统媒体控件）——不登录、不读 cookie、不访问账号数据，
 网易云、QQ 音乐、酷狗音乐以及任何注册了 SMTC 的播放器都能作为播放来源。
 歌词按「标题 + 歌手 + 时长」匹配：依次尝试网易云、QQ 音乐、酷狗、咪咕的在线接口，
-未匹配、无带时间歌词或请求失败就换下一个；三家都失败时再读本机的 `.lrc` 侧车文件或音频内嵌歌词。
+未匹配、无带时间歌词或请求失败就换下一个；四家都失败时再读本机的 `.lrc` 侧车文件或音频内嵌歌词。
 播放器客户端都不承担歌词接口服务，不要求它们为了取词而启动。
 
 ## 前置条件
@@ -24,13 +24,13 @@ DSH 歌词伴侣，两个浮层并存：
 | PowerShell | Windows PowerShell 5.1（`powershell.exe`，不能用 pwsh 7；系统自带） |
 | 播放器 | 任何向 SMTC 注册媒体会话的播放器 |
 | 网易云桌面版 | **原生客户端不注册 SMTC 会话**（实测 75 次采样全 0）。必须装 BetterNCM + InfLink-rs 把播放状态发布到 SMTC（见 [dsh-netease-island 的方案 B 记载](https://github.com/yezisorft/dsh-netease-island)），或改用浏览器网页版播放 |
-| 网络 | 宿主进程可出网到 `music.163.com` 和 `c.y.qq.com`（歌词链路） |
+| 网络 | 宿主进程可访问网易云、QQ、酷狗、咪咕歌词接口及搜索结果返回的歌词 CDN |
 
 ## 安装
 
 ```powershell
 git clone https://github.com/Mostimadesi/dsh-netease-lyrics.git
-git -C dsh-netease-lyrics checkout dev   # v0.3.0 预览（悬浮歌词）
+git -C dsh-netease-lyrics checkout dev
 dsh plugin --profile desktop add <克隆目录的绝对路径>
 ```
 
@@ -54,8 +54,8 @@ dsh plugin --profile desktop add <克隆目录的绝对路径>
 可能发生——展开态会显示匹配到的曲目名，可一键「重新匹配」。
 
 缓存：`~/.dsh/dsh-netease-lyrics-cache.json`（v2，最多 300 项，记录歌曲版本、时长及歌词来源）。
-成功结果保留 7 天；双源未匹配结论保留 10 分钟，请求故障保留 30 秒，切歌回来或点击重新匹配时重试。
-旧 v1 缓存不会迁移，以免旧单源失败阻断新回退；升级后首次播放会重新取词。请求串行且逐请求至少间隔 800ms。
+成功结果保留 7 天；在线源未匹配结论保留 10 分钟，请求故障保留 30 秒，切歌回来或点击重新匹配时重试。
+旧 v1 缓存不会迁移，以免旧单源失败阻断新回退；升级后首次播放会重新取词。请求逐请求至少间隔 800ms；快速切歌会取消旧曲的请求和排队工作，优先处理当前曲目。本地文件命中仅保留在当前服务实例的内存中，不跨配置持久化。
 
 ## 环境悬浮歌词（v0.3.0）
 
@@ -341,13 +341,16 @@ QQ 音乐的 SMTC 会话可能先于在线曲库就绪，瞬时失败此前会�
 
 ## 开发与测试
 
-零 npm 依赖,Node.js ≥ 18 即可跑测试:
+运行时不新增 npm 依赖。开发测试使用 React 18 测试渲染器（仅 devDependencies），已在 Node.js 24 与 Windows PowerShell 5.1 下验证：
 
 ```powershell
-npm test              # 4 个 node 测试:双源回退矩阵 / LRC 解析 / 客户端(双浮层注册+偏好) / 帧级编排仿真
-npm run test:bridge   # PS5.1 会话选择 6 场景(需 Windows PowerShell 5.1)
-npm run check         # 三个 JS 文件语法检查
+npm ci --ignore-scripts --legacy-peer-deps
+npm run check         # 五个生产 JS 文件语法检查
+npm test              # 真实 React 生命周期、共享轮询、宿主恢复、取消旧曲请求、解析/缓存/控件/编排
+npm run test:bridge   # PowerShell 5.1：会话选择、时钟、封面清理和有限重试；不启动 WinRT 桥
 ```
+
+具体覆盖范围和未覆盖项见 [实现复核报告](REGRESSION-AUDIT.md)。静态快照烟雾测试不替代浏览器视觉检查。
 
 `test/live-qq-fallback.mjs` 访问真实 QQ 在线接口,仅手动运行,不进 CI;
 推送到 GitHub 后 `.github/workflows/ci.yml` 会在 windows-latest 上自动跑上述全部检查。

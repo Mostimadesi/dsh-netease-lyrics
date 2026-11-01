@@ -78,6 +78,43 @@ await check('非 ID3 / 含 unsynchronisation 的标签安全返回 null', async 
 	assert.equal(parseId3Lyrics(id3([uslt('x')], { flags: 0x80 })), null);
 });
 
+for (const [encoding, bigEndian] of [[1, false], [1, true], [2, true]]) {
+	await check(`ID3 UTF-16 encoding=${encoding} BE=${bigEndian}: USLT / SYLT`, async () => {
+		const encode = text => {
+			const bytes = Buffer.from(text, 'utf16le');
+			return bigEndian ? bytes.swap16() : bytes;
+		};
+		const bom = encoding === 1 ? Buffer.from(bigEndian ? [0xfe, 0xff] : [0xff, 0xfe]) : Buffer.alloc(0);
+		const descriptor = Buffer.concat([bom, encode('description'), Buffer.alloc(2)]);
+		// Payload inherits descriptor byte order without repeating the BOM.
+		const usltBody = Buffer.concat([Buffer.from([encoding]), Buffer.from('eng'), descriptor, encode('Hello 世界')]);
+		assert.deepEqual(parseId3Lyrics(id3([frame('USLT', usltBody, true)], { version: 4 })), { text: 'Hello 世界' });
+		const pieces = [Buffer.from([encoding]), Buffer.from('eng'), Buffer.from([2, 1]), descriptor];
+		for (const [text, time] of [['Hello 世界', 1500], ['second 行', 3250]]) {
+			const stamp = Buffer.alloc(4); stamp.writeUInt32BE(time);
+			pieces.push(encode(text), Buffer.alloc(2), stamp);
+		}
+		assert.deepEqual(parseId3Lyrics(id3([frame('SYLT', Buffer.concat(pieces), true)], { version: 4 })), {
+			lines: [{ t: 1.5, text: 'Hello 世界' }, { t: 3.25, text: 'second 行' }],
+		});
+		// A missing/truncated timestamp must not manufacture an entry or throw.
+		const truncated = Buffer.concat([Buffer.from([encoding]), Buffer.from('eng'), Buffer.from([2, 1]), descriptor, encode('unfinished'), Buffer.alloc(2), Buffer.alloc(3)]);
+		assert.equal(parseId3Lyrics(id3([frame('SYLT', truncated, true)], { version: 4 })), null);
+	});
+}
+await check('ID3 extended headers: v2.3 and v2.4 sizes, truncated headers rejected', async () => {
+	for (const version of [3, 4]) {
+		const extended = version === 3
+			? Buffer.from([0, 0, 0, 6, 0, 0, 0, 0, 0, 0])
+			: Buffer.from([0, 0, 0, 6, 1, 0]);
+		const lyric = frame('USLT', Buffer.concat([Buffer.from([3]), Buffer.from('eng'), Buffer.from([0]), Buffer.from('extended lyrics')]), version === 4);
+		assert.deepEqual(parseId3Lyrics(id3([extended, lyric], { version, flags: 0x40 })), { text: 'extended lyrics' });
+		assert.equal(parseId3Lyrics(id3([extended.subarray(0, 4)], { version, flags: 0x40 })), null);
+		const oversized = Buffer.from([0, 0, 0, 100]);
+		assert.equal(parseId3Lyrics(id3([oversized, lyric], { version, flags: 0x40 })), null);
+	}
+});
+
 /* ---------- FLAC ---------- */
 await check('FLAC VORBIS_COMMENT LYRICS 可读', async () => {
 	const tag = parseFlacLyrics(flac([['TITLE', 'Hello'], ['LYRICS', '[00:04.00]flac line']]));
@@ -119,6 +156,29 @@ await check('扫描：未命中给原因，禁用时直接跳过', async () => {
 	} finally {
 		await fs.unlink(path.join(dir, 'Adele - Hello.mp3')).catch(() => {});
 		await fs.rmdir(dir).catch(() => {});
+	}
+});
+
+await check('deadline prevents candidate I/O after scan, and reads after a slow stat', async () => {
+	const original = { now: Date.now, readdir: fs.readdir, stat: fs.stat, readFile: fs.readFile, open: fs.open };
+	let now = 0, statCalls = 0, readCalls = 0;
+	try {
+		Date.now = () => now;
+		fs.readFile = async () => { readCalls++; throw new Error('must not read after deadline'); };
+		fs.open = async () => { readCalls++; throw new Error('must not open after deadline'); };
+		fs.stat = async () => { statCalls++; now = 100; return { size: 20 }; };
+		fs.readdir = async () => [{ isDirectory: () => false, isFile: () => true,
+			get name() { now = 100; return 'Hello.lrc'; } }];
+		const expired = await findLocalLyrics({ title: 'Hello' }, { dirs: ['/virtual'], budgetMs: 100 });
+		assert.equal(expired.reason, 'budget-exhausted');
+		assert.equal(statCalls, 0); assert.equal(readCalls, 0);
+		now = 0;
+		fs.readdir = async () => [{ name: 'Hello.lrc', isDirectory: () => false, isFile: () => true }];
+		await findLocalLyrics({ title: 'Hello' }, { dirs: ['/virtual'], budgetMs: 100 });
+		assert.equal(statCalls, 1); assert.equal(readCalls, 0);
+	} finally {
+		Date.now = original.now; fs.readdir = original.readdir; fs.stat = original.stat;
+		fs.readFile = original.readFile; fs.open = original.open;
 	}
 });
 

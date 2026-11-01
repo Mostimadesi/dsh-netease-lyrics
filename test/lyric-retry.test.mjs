@@ -135,8 +135,32 @@ function makeClock() {
 	r.note('fp1', 'unmatched');
 	r.dispose();
 	assert.equal(clock.pending(), 0, 'pending cancelled by dispose');
+	r.note('fp1', 'unmatched');
+	r.reset();
+	r.note('fp2', 'error');
+	assert.equal(clock.pending(), 0, 'late outcomes and reset cannot revive a disposed controller');
 	clock.fire(60000);
 	assert.deepEqual(r.describe().attempts, 0, 'attempts zeroed');
 }
 
-console.log('PASS: 8 lyric-retry scenarios — schedule/budget/pin, match-cancel, reset-per-track, host-side fingerprint guard, disabled mode, config clamps, dispose.');
+// 9. A callback already queued by a scheduler stays inert after reset/dispose.
+{
+	const queued = [];
+	const events = [];
+	const r = createLyricRetry({
+		delayMs: 5000, schedule: fn => { queued.push(fn); return queued.length; },
+		cancel: () => {}, invalidate: fp => events.push(['invalidate', fp]),
+		onAttempt: a => events.push(['attempt', a.fingerprint]),
+	});
+	r.note('old', 'error');
+	r.reset();
+	r.note('new', 'error');
+	queued[0]();
+	assert.equal(r.describe().pending, true, 'stale callback cannot clear the replacement timer');
+	assert.deepEqual(events, [], 'reset invalidates callbacks even when cancellation cannot retract them');
+	r.dispose();
+	queued[1]();
+	assert.deepEqual(events, [], 'disposed callback cannot invalidate or resolve');
+}
+
+console.log('PASS: 9 lyric-retry scenarios — schedule/budget/pin, match-cancel, reset-per-track, host-side fingerprint guard, disabled mode, config clamps, terminal dispose, queued callback cancellation.');
