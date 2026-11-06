@@ -75,14 +75,69 @@ assert.equal(stickyLineIndex(lines, 0, -1), 0, 'no previous index behaves like t
 assert.equal(stickyLineIndex([], 5, 0), -1, 'empty lines is -1');
 assert.equal(stickyLineIndex(lines, 3, 99), 0, 'an out-of-range previous falls back to raw');
 
-// --- the render path must actually use the sticky variant ---
+// --- the render path must use the sticky/settled index ---
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
-assert.match(src, /const shownIndexRef = useRef\(-1\)/, 'the shown index is remembered across renders');
-assert.match(src, /stickyLineIndex\(linesForHooks, clockPos, shownIndexRef\.current\)/,
-	'the collapsed/expanded path uses the sticky index');
-assert.match(src, /stickyLineIndex\(lines, pos, shownIndexRef\.current\)/,
-	'the render path uses the sticky index too');
-assert(!/const index = lines\.length > 0 \? currentLineIndex\(lines, pos\) : -1;/.test(src),
-	'no render path is left on the non-sticky lookup');
+assert.match(src, /const lineStateRef = useRef\(null\)/, 'the shown index is remembered across renders');
+assert.match(src, /lineStateRef\.current = \{ shown: -1, pending: -1, pendingSince: 0 \}/,
+	'the state object is created lazily (useRef initial values are not universal)');
+assert.match(src, /settleLineIndex\(linesForHooks, clockPos, lineStateRef\.current, Date\.now\(\), backwardSettleMs\(st\?\.pollMs\)\)/,
+	'the settled index drives the render, sized by the poll interval');
+assert.match(src, /const index = indexForHooks;/, 'the render reuses the same settled index');
+assert(!/stickyLineIndex\(lines, pos, shownIndexRef/.test(src), 'no second, independent index computation is left');
+
+// ---------------------------------------------------------------------------
+// settleLineIndex: a single stale BACKWARD reading must not flash a previous
+// line. This is the second half of the reported bug ("it flashes another line
+// before switching"): one stale poll pulls the raw index back for a cycle and,
+// with hysteresis alone, that drop is wide enough to be shown.
+// ---------------------------------------------------------------------------
+const { settleLineIndex, BACKWARD_SETTLE_MS } = plugin.__test;
+
+// We are showing B (index 1) and one poll reports an older position inside A.
+const st = { shown: 1, pending: -1, pendingSince: 0 };
+const t0 = 1000;
+assert.equal(settleLineIndex(lines, 2.0, st, t0), 1,
+	'a backward reading inside the settle window keeps the current line');
+assert.equal(st.pending, 0, 'the lower index is remembered as pending');
+// The next poll reports the correct position again (still inside B): the stale
+// reading is forgotten and B stays on screen the whole time.
+assert.equal(settleLineIndex(lines, 6.0, st, t0 + 200), 1,
+	'back on the current line after the stale poll: still shows it');
+// A genuine backward seek that persists past the window does land.
+const st2 = { shown: 2, pending: -1, pendingSince: 0 };
+assert.equal(settleLineIndex(lines, 1.0, st2, t0), 2, 'a backward seek is not applied instantly');
+assert.equal(settleLineIndex(lines, 1.0, st2, t0 + BACKWARD_SETTLE_MS + 1), 0,
+	'a backward seek that persists is applied');
+
+// Forward changes are immediate (hysteresis already vetted them).
+const st3 = { shown: 0, pending: -1, pendingSince: 0 };
+assert.equal(settleLineIndex(lines, 5 + LINE_HYSTERESIS_SEC + 0.01, st3, t0), 1,
+	'a clear forward advance is applied at once');
+
+// A transient that returns to the shown line clears the pending state.
+const st4 = { shown: 1, pending: -1, pendingSince: 0 };
+settleLineIndex(lines, 2.0, st4, t0);
+assert.equal(st4.pending, 0, 'pending set by the stale read');
+settleLineIndex(lines, 12.0, st4, t0 + 50);
+assert.equal(st4.pending, -1, 'returning to the shown line clears the pending state');
+
+// The confirmation window MUST outlast one poll, or a single stale poll (which
+// lives exactly one poll cycle) still gets committed. Measured bug: 500ms poll
+// with a 450ms window flashed C3 -> A1 -> C3.
+const { backwardSettleMs } = plugin.__test;
+for (const poll of [250, 500, 1000, 2000]) {
+	assert(backwardSettleMs(poll) > poll,
+		'confirmation window must exceed the poll interval (' + poll + 'ms)');
+}
+assert(backwardSettleMs(500) >= 750, 'a 500ms poll gets at least a 750ms window');
+assert.equal(backwardSettleMs(undefined) >= 750, true, 'a missing poll interval falls back sanely');
+
+// A one-poll stale reading (500ms) must be swallowed by a 500ms-poll window.
+const st5 = { shown: 2, pending: -1, pendingSince: 0 };
+const win = backwardSettleMs(500);
+assert.equal(st5.shown, 2, 'showing C');
+assert.equal(settleLineIndex(lines, 1.0, st5, t0, win), 2, 'stale read does not change the line');
+assert.equal(settleLineIndex(lines, 1.0, st5, t0 + 500, win), 2,
+	'even after a full stale poll the line is unchanged');
 
 console.log('PASS: lyric index is sticky across a dithering position (no flashing previous line)');
