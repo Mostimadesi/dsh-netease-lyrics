@@ -872,6 +872,17 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'no pseudo-element overlay on the island at all');
 	assert(/\.dnl-drag\{[^}]*position:absolute/.test(plugin.__test.CSS),
 		'the drag handle is still its own absolutely-positioned button');
+	// The whole left gutter (the island's 30px padding box) must be draggable in
+	// BOTH states, including the COLLAPSED pill. A small centred 20x28 handle
+	// left ~half of that strip hittable only by the island (click-to-pin), which
+	// is why a collapsed capsule could not be moved from its left region.
+	assert(/\.dnl-drag\{[^}]*left:0/.test(plugin.__test.CSS)
+		&& /\.dnl-drag\{[^}]*top:0/.test(plugin.__test.CSS)
+		&& /\.dnl-drag\{[^}]*bottom:0/.test(plugin.__test.CSS)
+		&& /\.dnl-drag\{[^}]*width:30px/.test(plugin.__test.CSS),
+		'the drag target spans the full left padding strip (collapsed + expanded)');
+	assert(!/\.dnl-drag\{[^}]*top:50%/.test(plugin.__test.CSS),
+		'the drag handle is no longer a short centred box');
 	// The gear is an absolutely positioned button inside .dnl-panel, inset from
 	// every edge so its box never touches the height animator's clip boundary.
 	assert(/\.dnl-gear\{[^}]*position:absolute/.test(plugin.__test.CSS),

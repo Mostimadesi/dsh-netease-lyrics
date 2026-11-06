@@ -1,0 +1,1727 @@
+﻿sample,timestamp,elapsed_s,pid,name,role,cpu_pct,ws_mb,private_mb
+1,2026-11-06 16:20:39,0.2,19156,powershell.exe,smtc-bridge,0,92.85,106.85
+1,2026-11-06 16:20:39,0.2,11768,DeepSeek Harness.exe,subprocess,0,148.97,59.67
+1,2026-11-06 16:20:39,0.2,21364,DeepSeek Harness.exe,host,0,415.98,570.21
+1,2026-11-06 16:20:39,0.2,9896,DeepSeek Harness.exe,subprocess,0,149.18,59.11
+1,2026-11-06 16:20:39,0.2,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+1,2026-11-06 16:20:39,0.2,20680,DeepSeek Harness.exe,subprocess,0,141.01,59.15
+1,2026-11-06 16:20:39,0.2,17804,DeepSeek Harness.exe,renderer,0,543.45,580.02
+1,2026-11-06 16:20:39,0.2,5036,DeepSeek Harness.exe,main,0,123.04,143.55
+1,2026-11-06 16:20:39,0.2,23088,DeepSeek Harness.exe,main,0,79.88,24.51
+1,2026-11-06 16:20:39,0.2,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+2,2026-11-06 16:20:49,10.6,19156,powershell.exe,smtc-bridge,0.31,91.07,104.99
+2,2026-11-06 16:20:49,10.6,11768,DeepSeek Harness.exe,subprocess,0,149.18,59.95
+2,2026-11-06 16:20:49,10.6,21364,DeepSeek Harness.exe,host,0.16,419.06,573.7
+2,2026-11-06 16:20:49,10.6,9896,DeepSeek Harness.exe,subprocess,0,149.79,60.44
+2,2026-11-06 16:20:49,10.6,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+2,2026-11-06 16:20:49,10.6,20680,DeepSeek Harness.exe,subprocess,0,141.16,59.62
+2,2026-11-06 16:20:49,10.6,17804,DeepSeek Harness.exe,renderer,0.47,543.95,580.73
+2,2026-11-06 16:20:49,10.6,5036,DeepSeek Harness.exe,main,0.31,123.17,144.04
+2,2026-11-06 16:20:49,10.6,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+2,2026-11-06 16:20:49,10.6,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+3,2026-11-06 16:20:59,20.7,19156,powershell.exe,smtc-bridge,0.47,91.07,104.99
+3,2026-11-06 16:20:59,20.7,11768,DeepSeek Harness.exe,subprocess,0.31,149.33,60.4
+3,2026-11-06 16:20:59,20.7,21364,DeepSeek Harness.exe,host,0.47,413.47,568.09
+3,2026-11-06 16:20:59,20.7,9896,DeepSeek Harness.exe,subprocess,0.16,150.15,60.82
+3,2026-11-06 16:20:59,20.7,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+3,2026-11-06 16:20:59,20.7,20680,DeepSeek Harness.exe,subprocess,0.16,140.57,58.88
+3,2026-11-06 16:20:59,20.7,17804,DeepSeek Harness.exe,renderer,1.56,544.88,581.38
+3,2026-11-06 16:20:59,20.7,5036,DeepSeek Harness.exe,main,0,123.99,145
+3,2026-11-06 16:20:59,20.7,23088,DeepSeek Harness.exe,main,0,79.69,24.01
+3,2026-11-06 16:20:59,20.7,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+4,2026-11-06 16:21:09,30.9,19156,powershell.exe,smtc-bridge,0.31,85.03,99.04
+4,2026-11-06 16:21:09,30.9,11768,DeepSeek Harness.exe,subprocess,0,148.74,59.65
+4,2026-11-06 16:21:09,30.9,21364,DeepSeek Harness.exe,host,0.94,413.88,568.33
+4,2026-11-06 16:21:09,30.9,9896,DeepSeek Harness.exe,subprocess,0.47,148.66,58.84
+4,2026-11-06 16:21:09,30.9,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+4,2026-11-06 16:21:09,30.9,20680,DeepSeek Harness.exe,subprocess,0,140.75,58.88
+4,2026-11-06 16:21:09,30.9,17804,DeepSeek Harness.exe,renderer,2.81,546.83,583.23
+4,2026-11-06 16:21:09,30.9,5036,DeepSeek Harness.exe,main,0.16,123.18,144.04
+4,2026-11-06 16:21:09,30.9,23088,DeepSeek Harness.exe,main,0,79.98,24.51
+4,2026-11-06 16:21:09,30.9,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+5,2026-11-06 16:21:20,41.1,19156,powershell.exe,smtc-bridge,0.47,90.54,104.72
+5,2026-11-06 16:21:20,41.1,11768,DeepSeek Harness.exe,subprocess,0.31,148.92,59.65
+5,2026-11-06 16:21:20,41.1,21364,DeepSeek Harness.exe,host,0.16,411.87,566.31
+5,2026-11-06 16:21:20,41.1,9896,DeepSeek Harness.exe,subprocess,0,148.88,58.84
+5,2026-11-06 16:21:20,41.1,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+5,2026-11-06 16:21:20,41.1,20680,DeepSeek Harness.exe,subprocess,0,140.95,59.14
+5,2026-11-06 16:21:20,41.1,17804,DeepSeek Harness.exe,renderer,2.19,547.11,583.55
+5,2026-11-06 16:21:20,41.1,5036,DeepSeek Harness.exe,main,0.16,123.46,144.47
+5,2026-11-06 16:21:20,41.1,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+5,2026-11-06 16:21:20,41.1,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+6,2026-11-06 16:21:30,51.2,19156,powershell.exe,smtc-bridge,0.62,90.54,104.72
+6,2026-11-06 16:21:30,51.2,11768,DeepSeek Harness.exe,subprocess,0.16,149.11,59.91
+6,2026-11-06 16:21:30,51.2,21364,DeepSeek Harness.exe,host,1.72,422.44,578.79
+6,2026-11-06 16:21:30,51.2,9896,DeepSeek Harness.exe,subprocess,0,149.15,59.13
+6,2026-11-06 16:21:30,51.2,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+6,2026-11-06 16:21:30,51.2,20680,DeepSeek Harness.exe,subprocess,0,141.12,59.62
+6,2026-11-06 16:21:30,51.2,17804,DeepSeek Harness.exe,renderer,5.16,545.33,580.53
+6,2026-11-06 16:21:30,51.2,5036,DeepSeek Harness.exe,main,0.31,123.57,144.71
+6,2026-11-06 16:21:30,51.2,23088,DeepSeek Harness.exe,main,0,79.78,24.26
+6,2026-11-06 16:21:30,51.2,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+7,2026-11-06 16:21:40,61.4,19156,powershell.exe,smtc-bridge,0.31,90.82,105
+7,2026-11-06 16:21:40,61.4,11768,DeepSeek Harness.exe,subprocess,0.16,149.29,60.4
+7,2026-11-06 16:21:40,61.4,21364,DeepSeek Harness.exe,host,0.31,419.29,574.73
+7,2026-11-06 16:21:40,61.4,9896,DeepSeek Harness.exe,subprocess,0,149.42,59.42
+7,2026-11-06 16:21:40,61.4,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+7,2026-11-06 16:21:40,61.4,20680,DeepSeek Harness.exe,subprocess,0,140.53,58.62
+7,2026-11-06 16:21:40,61.4,17804,DeepSeek Harness.exe,renderer,1.41,545.44,580.58
+7,2026-11-06 16:21:40,61.4,5036,DeepSeek Harness.exe,main,0.62,124,145.06
+7,2026-11-06 16:21:40,61.4,23088,DeepSeek Harness.exe,main,0,79.5,23.76
+7,2026-11-06 16:21:40,61.4,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+8,2026-11-06 16:21:50,71.7,19156,powershell.exe,smtc-bridge,0.31,90.82,105
+8,2026-11-06 16:21:50,71.7,11768,DeepSeek Harness.exe,subprocess,0.16,148.7,59.4
+8,2026-11-06 16:21:50,71.7,21364,DeepSeek Harness.exe,host,0.31,418.83,574.27
+8,2026-11-06 16:21:50,71.7,9896,DeepSeek Harness.exe,subprocess,0,149.59,59.85
+8,2026-11-06 16:21:50,71.7,12760,DeepSeek Harness.exe,gpu,0,181.28,286.46
+8,2026-11-06 16:21:50,71.7,20680,DeepSeek Harness.exe,subprocess,0,140.71,58.88
+8,2026-11-06 16:21:50,71.7,17804,DeepSeek Harness.exe,renderer,2.19,545.99,581.37
+8,2026-11-06 16:21:50,71.7,5036,DeepSeek Harness.exe,main,0.16,124.41,145.68
+8,2026-11-06 16:21:50,71.7,23088,DeepSeek Harness.exe,main,0,79.59,24.01
+8,2026-11-06 16:21:50,71.7,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+9,2026-11-06 16:22:00,81.8,19156,powershell.exe,smtc-bridge,0.16,91.09,105.29
+9,2026-11-06 16:22:00,81.8,11768,DeepSeek Harness.exe,subprocess,0.16,148.88,59.65
+9,2026-11-06 16:22:00,81.8,21364,DeepSeek Harness.exe,host,1.25,419.04,574.58
+9,2026-11-06 16:22:00,81.8,9896,DeepSeek Harness.exe,subprocess,0.16,149.04,59.12
+9,2026-11-06 16:22:00,81.8,12760,DeepSeek Harness.exe,gpu,0,181.32,286.49
+9,2026-11-06 16:22:00,81.8,20680,DeepSeek Harness.exe,subprocess,0.16,140.91,59.14
+9,2026-11-06 16:22:00,81.8,17804,DeepSeek Harness.exe,renderer,1.88,546,581.2
+9,2026-11-06 16:22:00,81.8,5036,DeepSeek Harness.exe,main,0.16,124.65,146.17
+9,2026-11-06 16:22:00,81.8,23088,DeepSeek Harness.exe,main,0,79.88,24.51
+9,2026-11-06 16:22:00,81.8,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+10,2026-11-06 16:22:10,92,19156,powershell.exe,smtc-bridge,0.16,91.09,105.29
+10,2026-11-06 16:22:10,92,11768,DeepSeek Harness.exe,subprocess,0.31,149.07,59.91
+10,2026-11-06 16:22:10,92,21364,DeepSeek Harness.exe,host,6.25,407.89,559.34
+10,2026-11-06 16:22:10,92,9896,DeepSeek Harness.exe,subprocess,0.16,149.3,59.41
+10,2026-11-06 16:22:10,92,12760,DeepSeek Harness.exe,gpu,0,181.32,286.49
+10,2026-11-06 16:22:10,92,20680,DeepSeek Harness.exe,subprocess,0.16,141.12,59.42
+10,2026-11-06 16:22:10,92,17804,DeepSeek Harness.exe,renderer,5.16,543.32,578.26
+10,2026-11-06 16:22:10,92,5036,DeepSeek Harness.exe,main,0.16,124.16,145.61
+10,2026-11-06 16:22:10,92,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+10,2026-11-06 16:22:10,92,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+11,2026-11-06 16:22:21,102.1,19156,powershell.exe,smtc-bridge,0.16,91.09,105.29
+11,2026-11-06 16:22:21,102.1,11768,DeepSeek Harness.exe,subprocess,0.16,149.28,60.19
+11,2026-11-06 16:22:21,102.1,21364,DeepSeek Harness.exe,host,0.16,407.6,558.92
+11,2026-11-06 16:22:21,102.1,9896,DeepSeek Harness.exe,subprocess,0,149.51,59.88
+11,2026-11-06 16:22:21,102.1,12760,DeepSeek Harness.exe,gpu,0,181.32,286.49
+11,2026-11-06 16:22:21,102.1,20680,DeepSeek Harness.exe,subprocess,0,140.48,58.62
+11,2026-11-06 16:22:21,102.1,17804,DeepSeek Harness.exe,renderer,14.37,537.11,573.09
+11,2026-11-06 16:22:21,102.1,5036,DeepSeek Harness.exe,main,0,124.42,145.95
+11,2026-11-06 16:22:21,102.1,23088,DeepSeek Harness.exe,main,0,79.68,24.01
+11,2026-11-06 16:22:21,102.1,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+12,2026-11-06 16:22:31,112.3,19156,powershell.exe,smtc-bridge,0.31,91.39,105.6
+12,2026-11-06 16:22:31,112.3,11768,DeepSeek Harness.exe,subprocess,0.16,149.42,60.4
+12,2026-11-06 16:22:31,112.3,21364,DeepSeek Harness.exe,host,0.62,402.83,554.74
+12,2026-11-06 16:22:31,112.3,9896,DeepSeek Harness.exe,subprocess,0,148.96,59.13
+12,2026-11-06 16:22:31,112.3,12760,DeepSeek Harness.exe,gpu,0,181.32,286.49
+12,2026-11-06 16:22:31,112.3,20680,DeepSeek Harness.exe,subprocess,0,140.67,58.88
+12,2026-11-06 16:22:31,112.3,17804,DeepSeek Harness.exe,renderer,2.19,537.8,573.59
+12,2026-11-06 16:22:31,112.3,5036,DeepSeek Harness.exe,main,0.16,123.93,145.62
+12,2026-11-06 16:22:31,112.3,23088,DeepSeek Harness.exe,main,0,79.97,24.51
+12,2026-11-06 16:22:31,112.3,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+13,2026-11-06 16:22:41,122.4,19156,powershell.exe,smtc-bridge,0.16,91.37,105.57
+13,2026-11-06 16:22:41,122.4,11768,DeepSeek Harness.exe,subprocess,0.94,148.84,59.65
+13,2026-11-06 16:22:41,122.4,21364,DeepSeek Harness.exe,host,2.66,404.58,557.23
+13,2026-11-06 16:22:41,122.4,9896,DeepSeek Harness.exe,subprocess,0,149.2,59.39
+13,2026-11-06 16:22:41,122.4,12760,DeepSeek Harness.exe,gpu,33.12,197.86,481.64
+13,2026-11-06 16:22:41,122.4,20680,DeepSeek Harness.exe,subprocess,0,140.86,59.13
+13,2026-11-06 16:22:41,122.4,17804,DeepSeek Harness.exe,renderer,66.25,583.22,589.15
+13,2026-11-06 16:22:41,122.4,5036,DeepSeek Harness.exe,main,9.22,123.19,142.33
+13,2026-11-06 16:22:41,122.4,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+13,2026-11-06 16:22:41,122.4,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+14,2026-11-06 16:22:51,132.8,19156,powershell.exe,smtc-bridge,0.78,91.65,105.85
+14,2026-11-06 16:22:51,132.8,11768,DeepSeek Harness.exe,subprocess,0.94,149.02,59.9
+14,2026-11-06 16:22:51,132.8,21364,DeepSeek Harness.exe,host,2.81,413.59,565.96
+14,2026-11-06 16:22:51,132.8,9896,DeepSeek Harness.exe,subprocess,0,149.6,59.54
+14,2026-11-06 16:22:51,132.8,12760,DeepSeek Harness.exe,gpu,65,197.01,377.1
+14,2026-11-06 16:22:51,132.8,20680,DeepSeek Harness.exe,subprocess,0,141.07,59.16
+14,2026-11-06 16:22:51,132.8,17804,DeepSeek Harness.exe,renderer,128.44,660.9,662.77
+14,2026-11-06 16:22:51,132.8,5036,DeepSeek Harness.exe,main,12.34,122.65,141.71
+14,2026-11-06 16:22:51,132.8,23088,DeepSeek Harness.exe,main,0,79.77,24.01
+14,2026-11-06 16:22:51,132.8,14672,DeepSeek Harness.exe,utility,0.31,47.67,12.25
+15,2026-11-06 16:23:02,143.1,19156,powershell.exe,smtc-bridge,0.78,84.27,97.54
+15,2026-11-06 16:23:02,143.1,21364,DeepSeek Harness.exe,host,2.34,407.04,559.71
+15,2026-11-06 16:23:02,143.1,9896,DeepSeek Harness.exe,subprocess,0.47,149.75,59.94
+15,2026-11-06 16:23:02,143.1,12760,DeepSeek Harness.exe,gpu,47.5,183.75,305.16
+15,2026-11-06 16:23:02,143.1,20680,DeepSeek Harness.exe,subprocess,0.47,141.22,59.62
+15,2026-11-06 16:23:02,143.1,17804,DeepSeek Harness.exe,renderer,97.66,839.48,853.74
+15,2026-11-06 16:23:02,143.1,5036,DeepSeek Harness.exe,main,6.41,123.44,142.88
+15,2026-11-06 16:23:02,143.1,23088,DeepSeek Harness.exe,main,0.16,79.5,23.76
+15,2026-11-06 16:23:02,143.1,14672,DeepSeek Harness.exe,utility,0,47.67,12.25
+16,2026-11-06 16:23:12,153.3,19156,powershell.exe,smtc-bridge,0.78,90.07,103.76
+16,2026-11-06 16:23:12,153.3,21364,DeepSeek Harness.exe,host,2.19,408.12,561.12
+16,2026-11-06 16:23:12,153.3,9896,DeepSeek Harness.exe,subprocess,0,149.2,59.19
+16,2026-11-06 16:23:12,153.3,12760,DeepSeek Harness.exe,gpu,39.06,182.36,360.19
+16,2026-11-06 16:23:12,153.3,20680,DeepSeek Harness.exe,subprocess,0,140.63,58.88
+16,2026-11-06 16:23:12,153.3,17804,DeepSeek Harness.exe,renderer,88.59,1047.11,1059.89
+16,2026-11-06 16:23:12,153.3,5036,DeepSeek Harness.exe,main,4.69,123.06,142.58
+16,2026-11-06 16:23:12,153.3,23088,DeepSeek Harness.exe,main,0,79.59,24.01
+16,2026-11-06 16:23:12,153.3,14672,DeepSeek Harness.exe,utility,0,47.67,12.25
+17,2026-11-06 16:23:22,163.4,19156,powershell.exe,smtc-bridge,0.31,84.22,98.17
+17,2026-11-06 16:23:22,163.4,21364,DeepSeek Harness.exe,host,0.62,407.64,560.96
+17,2026-11-06 16:23:22,163.4,9896,DeepSeek Harness.exe,subprocess,0,149.46,59.47
+17,2026-11-06 16:23:22,163.4,12760,DeepSeek Harness.exe,gpu,40.16,183.22,267.43
+17,2026-11-06 16:23:22,163.4,20680,DeepSeek Harness.exe,subprocess,0,140.81,59.12
+17,2026-11-06 16:23:22,163.4,17804,DeepSeek Harness.exe,renderer,88.12,1133.23,1145.59
+17,2026-11-06 16:23:22,163.4,5036,DeepSeek Harness.exe,main,3.28,123.93,143.79
+17,2026-11-06 16:23:22,163.4,23088,DeepSeek Harness.exe,main,0,79.88,24.51
+17,2026-11-06 16:23:22,163.4,14672,DeepSeek Harness.exe,utility,0,47.67,12.25
+18,2026-11-06 16:23:32,173.6,19156,powershell.exe,smtc-bridge,0.16,87.09,101.01
+18,2026-11-06 16:23:32,173.6,21364,DeepSeek Harness.exe,host,0.78,407.88,561.9
+18,2026-11-06 16:23:32,173.6,9896,DeepSeek Harness.exe,subprocess,0,149.64,59.91
+18,2026-11-06 16:23:32,173.6,12760,DeepSeek Harness.exe,gpu,35,182.16,282.8
+18,2026-11-06 16:23:32,173.6,20680,DeepSeek Harness.exe,subprocess,0,141.02,59.16
+18,2026-11-06 16:23:32,173.6,17804,DeepSeek Harness.exe,renderer,79.38,1079.86,1106.2
+18,2026-11-06 16:23:32,173.6,5036,DeepSeek Harness.exe,main,2.34,123.58,143.79
+18,2026-11-06 16:23:32,173.6,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+18,2026-11-06 16:23:32,173.6,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+19,2026-11-06 16:23:42,183.8,19156,powershell.exe,smtc-bridge,0.78,87.06,100.94
+19,2026-11-06 16:23:42,183.8,21364,DeepSeek Harness.exe,host,1.25,411.05,565.16
+19,2026-11-06 16:23:42,183.8,9896,DeepSeek Harness.exe,subprocess,0,149.09,59.16
+19,2026-11-06 16:23:42,183.8,12760,DeepSeek Harness.exe,gpu,35.78,181.95,275.91
+19,2026-11-06 16:23:42,183.8,20680,DeepSeek Harness.exe,subprocess,0,141.18,59.62
+19,2026-11-06 16:23:42,183.8,17804,DeepSeek Harness.exe,renderer,81.56,1086.65,1113.45
+19,2026-11-06 16:23:42,183.8,5036,DeepSeek Harness.exe,main,1.56,123.04,143.36
+19,2026-11-06 16:23:42,183.8,23088,DeepSeek Harness.exe,main,0,79.68,24.01
+19,2026-11-06 16:23:42,183.8,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+20,2026-11-06 16:23:52,194,19156,powershell.exe,smtc-bridge,0.62,87.06,100.94
+20,2026-11-06 16:23:52,194,21364,DeepSeek Harness.exe,host,1.72,411.48,565.34
+20,2026-11-06 16:23:52,194,9896,DeepSeek Harness.exe,subprocess,0.16,149.44,59.54
+20,2026-11-06 16:23:52,194,12760,DeepSeek Harness.exe,gpu,40.62,184.34,298.27
+20,2026-11-06 16:23:52,194,20680,DeepSeek Harness.exe,subprocess,0.16,140.59,58.88
+20,2026-11-06 16:23:52,194,17804,DeepSeek Harness.exe,renderer,94.38,1083.04,1109.94
+20,2026-11-06 16:23:52,194,5036,DeepSeek Harness.exe,main,7.03,123.97,144.71
+20,2026-11-06 16:23:52,194,23088,DeepSeek Harness.exe,main,0,79.96,24.51
+20,2026-11-06 16:23:52,194,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+21,2026-11-06 16:24:03,204.2,19156,powershell.exe,smtc-bridge,0.31,87.06,100.94
+21,2026-11-06 16:24:03,204.2,21364,DeepSeek Harness.exe,host,0.78,412.05,566.21
+21,2026-11-06 16:24:03,204.2,9896,DeepSeek Harness.exe,subprocess,0.16,149.7,59.82
+21,2026-11-06 16:24:03,204.2,12760,DeepSeek Harness.exe,gpu,0.47,181.58,254.46
+21,2026-11-06 16:24:03,204.2,20680,DeepSeek Harness.exe,subprocess,0.16,140.77,58.88
+21,2026-11-06 16:24:03,204.2,17804,DeepSeek Harness.exe,renderer,10.78,554.92,579.52
+21,2026-11-06 16:24:03,204.2,5036,DeepSeek Harness.exe,main,0.16,123.28,143.95
+21,2026-11-06 16:24:03,204.2,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+21,2026-11-06 16:24:03,204.2,14672,DeepSeek Harness.exe,utility,0,47.66,12.24
+22,2026-11-06 16:24:13,214.3,19156,powershell.exe,smtc-bridge,0.31,87.06,100.94
+22,2026-11-06 16:24:13,214.3,21364,DeepSeek Harness.exe,host,0.94,412.18,566.46
+22,2026-11-06 16:24:13,214.3,9896,DeepSeek Harness.exe,subprocess,0,149.04,59.18
+22,2026-11-06 16:24:13,214.3,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+22,2026-11-06 16:24:13,214.3,20680,DeepSeek Harness.exe,subprocess,0,140.98,59.15
+22,2026-11-06 16:24:13,214.3,17804,DeepSeek Harness.exe,renderer,1.72,555.48,579.82
+22,2026-11-06 16:24:13,214.3,5036,DeepSeek Harness.exe,main,0.16,123.37,144.18
+22,2026-11-06 16:24:13,214.3,23088,DeepSeek Harness.exe,main,0,79.76,24.01
+22,2026-11-06 16:24:13,214.3,14672,DeepSeek Harness.exe,utility,0,47.68,12.25
+23,2026-11-06 16:24:23,224.4,19156,powershell.exe,smtc-bridge,0.16,87.44,100.94
+23,2026-11-06 16:24:23,224.4,21364,DeepSeek Harness.exe,host,0.31,412.29,566.64
+23,2026-11-06 16:24:23,224.4,9896,DeepSeek Harness.exe,subprocess,0,149.27,59.44
+23,2026-11-06 16:24:23,224.4,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+23,2026-11-06 16:24:23,224.4,20680,DeepSeek Harness.exe,subprocess,0,141.14,59.62
+23,2026-11-06 16:24:23,224.4,17804,DeepSeek Harness.exe,renderer,0.31,555.98,580.57
+23,2026-11-06 16:24:23,224.4,5036,DeepSeek Harness.exe,main,0.31,123.32,144.69
+23,2026-11-06 16:24:23,224.4,23088,DeepSeek Harness.exe,main,0,80.04,24.51
+23,2026-11-06 16:24:23,224.4,14672,DeepSeek Harness.exe,utility,0,47.68,12.25
+24,2026-11-06 16:24:33,234.5,19156,powershell.exe,smtc-bridge,0,87.44,100.94
+24,2026-11-06 16:24:33,234.5,21364,DeepSeek Harness.exe,host,1.56,416.08,571.77
+24,2026-11-06 16:24:33,234.5,9896,DeepSeek Harness.exe,subprocess,0,149.54,59.48
+24,2026-11-06 16:24:33,234.5,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+24,2026-11-06 16:24:33,234.5,20680,DeepSeek Harness.exe,subprocess,0,140.55,58.88
+24,2026-11-06 16:24:33,234.5,17804,DeepSeek Harness.exe,renderer,1.41,556.3,580.94
+24,2026-11-06 16:24:33,234.5,5036,DeepSeek Harness.exe,main,0.16,123.8,145.36
+24,2026-11-06 16:24:33,234.5,23088,DeepSeek Harness.exe,main,0,79.57,24.01
+24,2026-11-06 16:24:33,234.5,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+25,2026-11-06 16:24:43,244.6,19156,powershell.exe,smtc-bridge,0.16,87.44,100.94
+25,2026-11-06 16:24:43,244.6,21364,DeepSeek Harness.exe,host,1.25,420.45,576.23
+25,2026-11-06 16:24:43,244.6,9896,DeepSeek Harness.exe,subprocess,0,149.71,59.93
+25,2026-11-06 16:24:43,244.6,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+25,2026-11-06 16:24:43,244.6,20680,DeepSeek Harness.exe,subprocess,0,140.73,58.88
+25,2026-11-06 16:24:43,244.6,17804,DeepSeek Harness.exe,renderer,1.56,556.81,581.28
+25,2026-11-06 16:24:43,244.6,5036,DeepSeek Harness.exe,main,0.31,123.19,144.82
+25,2026-11-06 16:24:43,244.6,23088,DeepSeek Harness.exe,main,0,79.86,24.51
+25,2026-11-06 16:24:43,244.6,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+26,2026-11-06 16:24:53,254.8,19156,powershell.exe,smtc-bridge,0.31,87.44,100.94
+26,2026-11-06 16:24:53,254.8,21364,DeepSeek Harness.exe,host,1.88,426.37,584.06
+26,2026-11-06 16:24:53,254.8,9896,DeepSeek Harness.exe,subprocess,0,149.2,59.18
+26,2026-11-06 16:24:53,254.8,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+26,2026-11-06 16:24:53,254.8,20680,DeepSeek Harness.exe,subprocess,0,140.93,59.14
+26,2026-11-06 16:24:53,254.8,17804,DeepSeek Harness.exe,renderer,5.62,559.7,583.92
+26,2026-11-06 16:24:53,254.8,5036,DeepSeek Harness.exe,main,0.47,123.34,145.12
+26,2026-11-06 16:24:53,254.8,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+26,2026-11-06 16:24:53,254.8,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+27,2026-11-06 16:25:03,265,19156,powershell.exe,smtc-bridge,0.31,87.44,100.94
+27,2026-11-06 16:25:03,265,21364,DeepSeek Harness.exe,host,0.47,425.87,583.56
+27,2026-11-06 16:25:03,265,9896,DeepSeek Harness.exe,subprocess,0,149.58,59.6
+27,2026-11-06 16:25:03,265,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+27,2026-11-06 16:25:03,265,20680,DeepSeek Harness.exe,subprocess,0,141.14,59.42
+27,2026-11-06 16:25:03,265,17804,DeepSeek Harness.exe,renderer,1.56,559.79,583.92
+27,2026-11-06 16:25:03,265,5036,DeepSeek Harness.exe,main,0.16,123.35,145.25
+27,2026-11-06 16:25:03,265,23088,DeepSeek Harness.exe,main,0,79.65,24.01
+27,2026-11-06 16:25:03,265,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+28,2026-11-06 16:25:14,275.1,19156,powershell.exe,smtc-bridge,0.16,83.03,95.91
+28,2026-11-06 16:25:14,275.1,21364,DeepSeek Harness.exe,host,0.16,425.19,582.2
+28,2026-11-06 16:25:14,275.1,9896,DeepSeek Harness.exe,subprocess,0,149.61,59.95
+28,2026-11-06 16:25:14,275.1,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+28,2026-11-06 16:25:14,275.1,20680,DeepSeek Harness.exe,subprocess,0,140.5,58.62
+28,2026-11-06 16:25:14,275.1,17804,DeepSeek Harness.exe,renderer,0.31,560.02,584.42
+28,2026-11-06 16:25:14,275.1,5036,DeepSeek Harness.exe,main,0.47,121.9,140.44
+28,2026-11-06 16:25:14,275.1,23088,DeepSeek Harness.exe,main,0,79.93,24.51
+28,2026-11-06 16:25:14,275.1,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+29,2026-11-06 16:25:24,285.2,19156,powershell.exe,smtc-bridge,0,85.86,99.38
+29,2026-11-06 16:25:24,285.2,21364,DeepSeek Harness.exe,host,1.72,430.25,586.68
+29,2026-11-06 16:25:24,285.2,9896,DeepSeek Harness.exe,subprocess,0,149.11,59.04
+29,2026-11-06 16:25:24,285.2,12760,DeepSeek Harness.exe,gpu,0,181.62,254.48
+29,2026-11-06 16:25:24,285.2,20680,DeepSeek Harness.exe,subprocess,0,140.69,58.88
+29,2026-11-06 16:25:24,285.2,17804,DeepSeek Harness.exe,renderer,0.94,569.14,593.83
+29,2026-11-06 16:25:24,285.2,5036,DeepSeek Harness.exe,main,0.31,122.3,141.27
+29,2026-11-06 16:25:24,285.2,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+29,2026-11-06 16:25:24,285.2,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+30,2026-11-06 16:25:34,295.3,19156,powershell.exe,smtc-bridge,0.62,87.52,101.63
+30,2026-11-06 16:25:34,295.3,21364,DeepSeek Harness.exe,host,1.09,418.28,574.59
+30,2026-11-06 16:25:34,295.3,9896,DeepSeek Harness.exe,subprocess,0.16,149.34,59.33
+30,2026-11-06 16:25:34,295.3,12760,DeepSeek Harness.exe,gpu,32.66,197.33,393.77
+30,2026-11-06 16:25:34,295.3,20680,DeepSeek Harness.exe,subprocess,0,140.88,59.13
+30,2026-11-06 16:25:34,295.3,17804,DeepSeek Harness.exe,renderer,93.75,599.98,610.79
+30,2026-11-06 16:25:34,295.3,5036,DeepSeek Harness.exe,main,7.19,123.31,142.27
+30,2026-11-06 16:25:34,295.3,23088,DeepSeek Harness.exe,main,0,79.73,24.01
+30,2026-11-06 16:25:34,295.3,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+31,2026-11-06 16:25:44,305.5,19156,powershell.exe,smtc-bridge,0.16,87.52,101.63
+31,2026-11-06 16:25:44,305.5,21364,DeepSeek Harness.exe,host,0.16,416.17,572.78
+31,2026-11-06 16:25:44,305.5,9896,DeepSeek Harness.exe,subprocess,0,149.61,59.67
+31,2026-11-06 16:25:44,305.5,12760,DeepSeek Harness.exe,gpu,40.47,196.79,330.58
+31,2026-11-06 16:25:44,305.5,20680,DeepSeek Harness.exe,subprocess,0,141.09,59.41
+31,2026-11-06 16:25:44,305.5,17804,DeepSeek Harness.exe,renderer,105.78,604.7,614.47
+31,2026-11-06 16:25:44,305.5,5036,DeepSeek Harness.exe,main,3.59,123.23,141.91
+31,2026-11-06 16:25:44,305.5,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+31,2026-11-06 16:25:44,305.5,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+32,2026-11-06 16:25:54,315.8,19156,powershell.exe,smtc-bridge,0.62,87.67,101.63
+32,2026-11-06 16:25:54,315.8,21364,DeepSeek Harness.exe,host,2.19,426.25,583.82
+32,2026-11-06 16:25:54,315.8,9896,DeepSeek Harness.exe,subprocess,0,149.93,60.06
+32,2026-11-06 16:25:54,315.8,12760,DeepSeek Harness.exe,gpu,36.72,182.97,329.02
+32,2026-11-06 16:25:54,315.8,20680,DeepSeek Harness.exe,subprocess,0,141.24,59.62
+32,2026-11-06 16:25:54,315.8,17804,DeepSeek Harness.exe,renderer,99.38,602.18,626.11
+32,2026-11-06 16:25:54,315.8,5036,DeepSeek Harness.exe,main,2.19,124.04,143.38
+32,2026-11-06 16:25:54,315.8,23088,DeepSeek Harness.exe,main,0,79.55,24.01
+32,2026-11-06 16:25:54,315.8,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+33,2026-11-06 16:26:04,325.9,19156,powershell.exe,smtc-bridge,0.16,82.71,95.78
+33,2026-11-06 16:26:04,325.9,21364,DeepSeek Harness.exe,host,0.78,426.29,583.95
+33,2026-11-06 16:26:04,325.9,9896,DeepSeek Harness.exe,subprocess,0,149.06,59
+33,2026-11-06 16:26:04,325.9,12760,DeepSeek Harness.exe,gpu,41.25,182.95,324.72
+33,2026-11-06 16:26:04,325.9,20680,DeepSeek Harness.exe,subprocess,0,140.64,58.88
+33,2026-11-06 16:26:04,325.9,17804,DeepSeek Harness.exe,renderer,100.63,604.82,628.76
+33,2026-11-06 16:26:04,325.9,5036,DeepSeek Harness.exe,main,2.03,123.64,143.15
+33,2026-11-06 16:26:04,325.9,23088,DeepSeek Harness.exe,main,0,79.83,24.26
+33,2026-11-06 16:26:04,325.9,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+34,2026-11-06 16:26:14,336.1,19156,powershell.exe,smtc-bridge,0.62,85.56,98.97
+34,2026-11-06 16:26:14,336.1,21364,DeepSeek Harness.exe,host,0.31,426.48,584.38
+34,2026-11-06 16:26:14,336.1,9896,DeepSeek Harness.exe,subprocess,0.16,149.25,59.26
+34,2026-11-06 16:26:14,336.1,12760,DeepSeek Harness.exe,gpu,45.78,182.93,325.59
+34,2026-11-06 16:26:14,336.1,20680,DeepSeek Harness.exe,subprocess,0,140.83,59.13
+34,2026-11-06 16:26:14,336.1,17804,DeepSeek Harness.exe,renderer,104.53,607.67,632.08
+34,2026-11-06 16:26:14,336.1,5036,DeepSeek Harness.exe,main,3.44,124.02,143.47
+34,2026-11-06 16:26:14,336.1,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+34,2026-11-06 16:26:14,336.1,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+35,2026-11-06 16:26:25,346.2,19156,powershell.exe,smtc-bridge,0.62,87.07,100.94
+35,2026-11-06 16:26:25,346.2,21364,DeepSeek Harness.exe,host,7.81,416.66,568.87
+35,2026-11-06 16:26:25,346.2,9896,DeepSeek Harness.exe,subprocess,0.31,149.44,59.52
+35,2026-11-06 16:26:25,346.2,12760,DeepSeek Harness.exe,gpu,55.94,183.92,325.24
+35,2026-11-06 16:26:25,346.2,20680,DeepSeek Harness.exe,subprocess,0.31,141.04,59.16
+35,2026-11-06 16:26:25,346.2,17804,DeepSeek Harness.exe,renderer,117.5,622.96,648.34
+35,2026-11-06 16:26:25,346.2,5036,DeepSeek Harness.exe,main,3.91,124.05,144
+35,2026-11-06 16:26:25,346.2,23088,DeepSeek Harness.exe,main,0,79.64,24.01
+35,2026-11-06 16:26:25,346.2,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+36,2026-11-06 16:26:35,356.4,19156,powershell.exe,smtc-bridge,0.31,87.07,100.94
+36,2026-11-06 16:26:35,356.4,21364,DeepSeek Harness.exe,host,2.81,418.88,571.16
+36,2026-11-06 16:26:35,356.4,9896,DeepSeek Harness.exe,subprocess,0.16,149.66,59.81
+36,2026-11-06 16:26:35,356.4,12760,DeepSeek Harness.exe,gpu,73.44,184.02,343.84
+36,2026-11-06 16:26:35,356.4,20680,DeepSeek Harness.exe,subprocess,0.16,141.2,59.62
+36,2026-11-06 16:26:35,356.4,17804,DeepSeek Harness.exe,renderer,126.88,640.1,665.07
+36,2026-11-06 16:26:35,356.4,5036,DeepSeek Harness.exe,main,9.84,124.42,144.82
+36,2026-11-06 16:26:35,356.4,23088,DeepSeek Harness.exe,main,0.16,79.92,24.51
+36,2026-11-06 16:26:35,356.4,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.23
+37,2026-11-06 16:26:45,366.6,19156,powershell.exe,smtc-bridge,0.62,88.06,101.62
+37,2026-11-06 16:26:45,366.6,21364,DeepSeek Harness.exe,host,3.28,428.74,581.65
+37,2026-11-06 16:26:45,366.6,9896,DeepSeek Harness.exe,subprocess,0,149.05,59
+37,2026-11-06 16:26:45,366.6,12760,DeepSeek Harness.exe,gpu,79.53,183.52,321.21
+37,2026-11-06 16:26:45,366.6,20680,DeepSeek Harness.exe,subprocess,0,140.61,58.88
+37,2026-11-06 16:26:45,366.6,17804,DeepSeek Harness.exe,renderer,136.09,641.41,665.64
+37,2026-11-06 16:26:45,366.6,5036,DeepSeek Harness.exe,main,4.69,124.2,144.54
+37,2026-11-06 16:26:45,366.6,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+37,2026-11-06 16:26:45,366.6,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+38,2026-11-06 16:26:55,377,19156,powershell.exe,smtc-bridge,0.16,88.09,101.62
+38,2026-11-06 16:26:55,377,21364,DeepSeek Harness.exe,host,0,430.32,582.51
+38,2026-11-06 16:26:55,377,9896,DeepSeek Harness.exe,subprocess,0,149.23,59.25
+38,2026-11-06 16:26:55,377,12760,DeepSeek Harness.exe,gpu,9.38,181.84,292.02
+38,2026-11-06 16:26:55,377,20680,DeepSeek Harness.exe,subprocess,0,140.79,58.88
+38,2026-11-06 16:26:55,377,17804,DeepSeek Harness.exe,renderer,24.22,628.36,661.3
+38,2026-11-06 16:26:55,377,5036,DeepSeek Harness.exe,main,2.19,124.36,144.76
+38,2026-11-06 16:26:55,377,23088,DeepSeek Harness.exe,main,0,79.73,24.01
+38,2026-11-06 16:26:55,377,14672,DeepSeek Harness.exe,utility,0,47.66,12.23
+39,2026-11-06 16:27:05,387.1,19156,powershell.exe,smtc-bridge,0.31,88.11,101.65
+39,2026-11-06 16:27:05,387.1,21364,DeepSeek Harness.exe,host,1.56,419.71,571.92
+39,2026-11-06 16:27:05,387.1,9896,DeepSeek Harness.exe,subprocess,0,149.4,59.48
+39,2026-11-06 16:27:05,387.1,12760,DeepSeek Harness.exe,gpu,27.03,198.93,461.69
+39,2026-11-06 16:27:05,387.1,20680,DeepSeek Harness.exe,subprocess,0,140.99,59.15
+39,2026-11-06 16:27:05,387.1,17804,DeepSeek Harness.exe,renderer,81.56,673.91,681.98
+39,2026-11-06 16:27:05,387.1,5036,DeepSeek Harness.exe,main,3.59,125.1,145.87
+39,2026-11-06 16:27:05,387.1,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+39,2026-11-06 16:27:05,387.1,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.23
+40,2026-11-06 16:27:16,397.2,19156,powershell.exe,smtc-bridge,0,84.48,97.76
+40,2026-11-06 16:27:16,397.2,21364,DeepSeek Harness.exe,host,3.12,418.52,571.41
+40,2026-11-06 16:27:16,397.2,9896,DeepSeek Harness.exe,subprocess,0,149.61,59.51
+40,2026-11-06 16:27:16,397.2,12760,DeepSeek Harness.exe,gpu,50,197.51,335.41
+40,2026-11-06 16:27:16,397.2,20680,DeepSeek Harness.exe,subprocess,0,141.15,59.62
+40,2026-11-06 16:27:16,397.2,17804,DeepSeek Harness.exe,renderer,116.88,699.02,708.1
+40,2026-11-06 16:27:16,397.2,5036,DeepSeek Harness.exe,main,5.78,124.91,145.55
+40,2026-11-06 16:27:16,397.2,23088,DeepSeek Harness.exe,main,0,79.55,24.01
+40,2026-11-06 16:27:16,397.2,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.23
+41,2026-11-06 16:27:26,407.4,19156,powershell.exe,smtc-bridge,0.31,86.53,100.19
+41,2026-11-06 16:27:26,407.4,21364,DeepSeek Harness.exe,host,2.97,441.5,595.77
+41,2026-11-06 16:27:26,407.4,9896,DeepSeek Harness.exe,subprocess,0.16,149.73,59.95
+41,2026-11-06 16:27:26,407.4,12760,DeepSeek Harness.exe,gpu,10.78,181.94,275.09
+41,2026-11-06 16:27:26,407.4,20680,DeepSeek Harness.exe,subprocess,0,140.56,58.88
+41,2026-11-06 16:27:26,407.4,17804,DeepSeek Harness.exe,renderer,38.44,605.82,627.72
+41,2026-11-06 16:27:26,407.4,5036,DeepSeek Harness.exe,main,4.06,123.44,141.37
+41,2026-11-06 16:27:26,407.4,23088,DeepSeek Harness.exe,main,0,79.83,24.26
+41,2026-11-06 16:27:26,407.4,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.24
+42,2026-11-06 16:27:36,417.5,19156,powershell.exe,smtc-bridge,0.78,82.52,96.48
+42,2026-11-06 16:27:36,417.5,21364,DeepSeek Harness.exe,host,7.5,425.41,577.29
+42,2026-11-06 16:27:36,417.5,9896,DeepSeek Harness.exe,subprocess,0.16,149.14,59.2
+42,2026-11-06 16:27:36,417.5,12760,DeepSeek Harness.exe,gpu,47.66,197.58,509.77
+42,2026-11-06 16:27:36,417.5,20680,DeepSeek Harness.exe,subprocess,0.16,140.74,58.88
+42,2026-11-06 16:27:36,417.5,17804,DeepSeek Harness.exe,renderer,103.91,650.74,674.17
+42,2026-11-06 16:27:36,417.5,5036,DeepSeek Harness.exe,main,7.81,123.64,141.45
+42,2026-11-06 16:27:36,417.5,23088,DeepSeek Harness.exe,main,0.16,79.52,23.76
+42,2026-11-06 16:27:36,417.5,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.24
+43,2026-11-06 16:27:46,427.6,19156,powershell.exe,smtc-bridge,0.47,84.65,98.95
+43,2026-11-06 16:27:46,427.6,21364,DeepSeek Harness.exe,host,1.88,446.2,601.04
+43,2026-11-06 16:27:46,427.6,9896,DeepSeek Harness.exe,subprocess,0.16,149.32,59.45
+43,2026-11-06 16:27:46,427.6,12760,DeepSeek Harness.exe,gpu,50.94,199.15,362.62
+43,2026-11-06 16:27:46,427.6,20680,DeepSeek Harness.exe,subprocess,0.16,140.93,59.14
+43,2026-11-06 16:27:46,427.6,17804,DeepSeek Harness.exe,renderer,95.78,676.96,699.33
+43,2026-11-06 16:27:46,427.6,5036,DeepSeek Harness.exe,main,2.66,123.8,141.98
+43,2026-11-06 16:27:46,427.6,23088,DeepSeek Harness.exe,main,0,79.64,24.01
+43,2026-11-06 16:27:46,427.6,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.23
+44,2026-11-06 16:27:56,437.8,19156,powershell.exe,smtc-bridge,0.16,85.07,98.93
+44,2026-11-06 16:27:56,437.8,21364,DeepSeek Harness.exe,host,2.34,448.54,603.21
+44,2026-11-06 16:27:56,437.8,9896,DeepSeek Harness.exe,subprocess,0,149.54,59.48
+44,2026-11-06 16:27:56,437.8,12760,DeepSeek Harness.exe,gpu,30.16,182.45,358.84
+44,2026-11-06 16:27:56,437.8,20680,DeepSeek Harness.exe,subprocess,0,141.11,59.62
+44,2026-11-06 16:27:56,437.8,17804,DeepSeek Harness.exe,renderer,82.19,613.46,648.46
+44,2026-11-06 16:27:56,437.8,5036,DeepSeek Harness.exe,main,5.78,125.25,143.65
+44,2026-11-06 16:27:56,437.8,23088,DeepSeek Harness.exe,main,0,79.93,24.51
+44,2026-11-06 16:27:56,437.8,14672,DeepSeek Harness.exe,utility,0.94,47.64,12.21
+45,2026-11-06 16:28:06,447.9,19156,powershell.exe,smtc-bridge,0.47,85.18,98.93
+45,2026-11-06 16:28:06,447.9,21364,DeepSeek Harness.exe,host,6.25,444.12,596.73
+45,2026-11-06 16:28:06,447.9,9896,DeepSeek Harness.exe,subprocess,0,149.69,59.96
+45,2026-11-06 16:28:06,447.9,12760,DeepSeek Harness.exe,gpu,0,182.16,283.03
+45,2026-11-06 16:28:06,447.9,20680,DeepSeek Harness.exe,subprocess,0,140.51,58.62
+45,2026-11-06 16:28:06,447.9,17804,DeepSeek Harness.exe,renderer,13.59,623.64,658
+45,2026-11-06 16:28:06,447.9,5036,DeepSeek Harness.exe,main,0.62,124.14,142.32
+45,2026-11-06 16:28:06,447.9,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+45,2026-11-06 16:28:06,447.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+46,2026-11-06 16:28:16,458,19156,powershell.exe,smtc-bridge,0.16,85.2,98.95
+46,2026-11-06 16:28:16,458,21364,DeepSeek Harness.exe,host,0.94,444.46,596.17
+46,2026-11-06 16:28:16,458,9896,DeepSeek Harness.exe,subprocess,0,149.1,59.21
+46,2026-11-06 16:28:16,458,12760,DeepSeek Harness.exe,gpu,0,182.16,283.03
+46,2026-11-06 16:28:16,458,20680,DeepSeek Harness.exe,subprocess,0.16,140.69,58.88
+46,2026-11-06 16:28:16,458,17804,DeepSeek Harness.exe,renderer,6.09,618.39,652.91
+46,2026-11-06 16:28:16,458,5036,DeepSeek Harness.exe,main,0.31,123.95,142.5
+46,2026-11-06 16:28:16,458,23088,DeepSeek Harness.exe,main,0,79.73,24.01
+46,2026-11-06 16:28:16,458,14672,DeepSeek Harness.exe,utility,0.47,47.65,12.21
+47,2026-11-06 16:28:26,468.1,19156,powershell.exe,smtc-bridge,0,85.18,98.93
+47,2026-11-06 16:28:26,468.1,21364,DeepSeek Harness.exe,host,2.5,459.8,611.78
+47,2026-11-06 16:28:26,468.1,9896,DeepSeek Harness.exe,subprocess,0.16,149.28,59.21
+47,2026-11-06 16:28:26,468.1,12760,DeepSeek Harness.exe,gpu,27.03,198.8,471.34
+47,2026-11-06 16:28:26,468.1,20680,DeepSeek Harness.exe,subprocess,0.16,140.88,59.13
+47,2026-11-06 16:28:26,468.1,17804,DeepSeek Harness.exe,renderer,64.84,683.61,687.21
+47,2026-11-06 16:28:26,468.1,5036,DeepSeek Harness.exe,main,4.69,125.01,143.67
+47,2026-11-06 16:28:26,468.1,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+47,2026-11-06 16:28:26,468.1,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+48,2026-11-06 16:28:37,478.2,19156,powershell.exe,smtc-bridge,0.31,85.19,98.93
+48,2026-11-06 16:28:37,478.2,21364,DeepSeek Harness.exe,host,6.41,460.16,612.86
+48,2026-11-06 16:28:37,478.2,9896,DeepSeek Harness.exe,subprocess,0,149.48,59.48
+48,2026-11-06 16:28:37,478.2,12760,DeepSeek Harness.exe,gpu,21.41,182.39,271.18
+48,2026-11-06 16:28:37,478.2,20680,DeepSeek Harness.exe,subprocess,0,141.09,59.41
+48,2026-11-06 16:28:37,478.2,17804,DeepSeek Harness.exe,renderer,48.75,703.64,734.06
+48,2026-11-06 16:28:37,478.2,5036,DeepSeek Harness.exe,main,2.19,125.11,143.79
+48,2026-11-06 16:28:37,478.2,23088,DeepSeek Harness.exe,main,0,79.55,24.01
+48,2026-11-06 16:28:37,478.2,14672,DeepSeek Harness.exe,utility,0.16,47.65,12.21
+49,2026-11-06 16:28:47,488.3,19156,powershell.exe,smtc-bridge,0.31,85.31,98.95
+49,2026-11-06 16:28:47,488.3,21364,DeepSeek Harness.exe,host,3.44,486.48,639.72
+49,2026-11-06 16:28:47,488.3,9896,DeepSeek Harness.exe,subprocess,0,149.65,59.96
+49,2026-11-06 16:28:47,488.3,12760,DeepSeek Harness.exe,gpu,0,182.39,271.18
+49,2026-11-06 16:28:47,488.3,20680,DeepSeek Harness.exe,subprocess,0,141.23,59.62
+49,2026-11-06 16:28:47,488.3,17804,DeepSeek Harness.exe,renderer,19.38,625.65,655.38
+49,2026-11-06 16:28:47,488.3,5036,DeepSeek Harness.exe,main,0.31,124.65,143.22
+49,2026-11-06 16:28:47,488.3,23088,DeepSeek Harness.exe,main,0,79.84,24.51
+49,2026-11-06 16:28:47,488.3,14672,DeepSeek Harness.exe,utility,0,47.64,12.21
+50,2026-11-06 16:28:57,498.5,19156,powershell.exe,smtc-bridge,0.47,85.41,98.93
+50,2026-11-06 16:28:57,498.5,21364,DeepSeek Harness.exe,host,1.72,495.02,648.29
+50,2026-11-06 16:28:57,498.5,9896,DeepSeek Harness.exe,subprocess,0,149.05,58.96
+50,2026-11-06 16:28:57,498.5,12760,DeepSeek Harness.exe,gpu,0,182.39,271.18
+50,2026-11-06 16:28:57,498.5,20680,DeepSeek Harness.exe,subprocess,0,140.64,58.88
+50,2026-11-06 16:28:57,498.5,17804,DeepSeek Harness.exe,renderer,13.12,623.53,653.19
+50,2026-11-06 16:28:57,498.5,5036,DeepSeek Harness.exe,main,0.31,124.92,143.91
+50,2026-11-06 16:28:57,498.5,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+50,2026-11-06 16:28:57,498.5,14672,DeepSeek Harness.exe,utility,0,47.64,12.21
+51,2026-11-06 16:29:07,508.7,19156,powershell.exe,smtc-bridge,0.16,85.6,98.93
+51,2026-11-06 16:29:07,508.7,21364,DeepSeek Harness.exe,host,1.25,509.52,664.32
+51,2026-11-06 16:29:07,508.7,9896,DeepSeek Harness.exe,subprocess,0,149.23,59.21
+51,2026-11-06 16:29:07,508.7,12760,DeepSeek Harness.exe,gpu,0,182.39,271.18
+51,2026-11-06 16:29:07,508.7,20680,DeepSeek Harness.exe,subprocess,0,140.82,59.12
+51,2026-11-06 16:29:07,508.7,17804,DeepSeek Harness.exe,renderer,5.94,632.09,662.38
+51,2026-11-06 16:29:07,508.7,5036,DeepSeek Harness.exe,main,0.16,125.42,144.57
+51,2026-11-06 16:29:07,508.7,23088,DeepSeek Harness.exe,main,0,79.64,24.01
+51,2026-11-06 16:29:07,508.7,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+52,2026-11-06 16:29:17,518.8,19156,powershell.exe,smtc-bridge,0.62,85.62,98.95
+52,2026-11-06 16:29:17,518.8,21364,DeepSeek Harness.exe,host,4.69,461.77,612.93
+52,2026-11-06 16:29:17,518.8,9896,DeepSeek Harness.exe,subprocess,0,149.43,59.47
+52,2026-11-06 16:29:17,518.8,12760,DeepSeek Harness.exe,gpu,0,182.39,271.18
+52,2026-11-06 16:29:17,518.8,20680,DeepSeek Harness.exe,subprocess,0,141.04,59.16
+52,2026-11-06 16:29:17,518.8,17804,DeepSeek Harness.exe,renderer,8.91,626.23,657.57
+52,2026-11-06 16:29:17,518.8,5036,DeepSeek Harness.exe,main,0.16,124.68,143.73
+52,2026-11-06 16:29:17,518.8,23088,DeepSeek Harness.exe,main,0,79.93,24.51
+52,2026-11-06 16:29:17,518.8,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+53,2026-11-06 16:29:27,528.9,19156,powershell.exe,smtc-bridge,0,85.6,98.93
+53,2026-11-06 16:29:27,528.9,21364,DeepSeek Harness.exe,host,1.72,475.32,627.48
+53,2026-11-06 16:29:27,528.9,9896,DeepSeek Harness.exe,subprocess,0,149.64,59.75
+53,2026-11-06 16:29:27,528.9,12760,DeepSeek Harness.exe,gpu,0,182.39,271.18
+53,2026-11-06 16:29:27,528.9,20680,DeepSeek Harness.exe,subprocess,0,141.19,59.62
+53,2026-11-06 16:29:27,528.9,17804,DeepSeek Harness.exe,renderer,11.88,634.92,664.64
+53,2026-11-06 16:29:27,528.9,5036,DeepSeek Harness.exe,main,0.62,124.94,144.09
+53,2026-11-06 16:29:27,528.9,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+53,2026-11-06 16:29:27,528.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+54,2026-11-06 16:29:37,539,19156,powershell.exe,smtc-bridge,0.47,85.61,98.93
+54,2026-11-06 16:29:37,539,21364,DeepSeek Harness.exe,host,2.19,471.94,624.04
+54,2026-11-06 16:29:37,539,9896,DeepSeek Harness.exe,subprocess,0,149.01,58.96
+54,2026-11-06 16:29:37,539,12760,DeepSeek Harness.exe,gpu,0.16,183.23,279.25
+54,2026-11-06 16:29:37,539,20680,DeepSeek Harness.exe,subprocess,0,140.6,58.88
+54,2026-11-06 16:29:37,539,17804,DeepSeek Harness.exe,renderer,10.78,628,657.7
+54,2026-11-06 16:29:37,539,5036,DeepSeek Harness.exe,main,0.78,125.13,144.35
+54,2026-11-06 16:29:37,539,23088,DeepSeek Harness.exe,main,0,79.73,24.01
+54,2026-11-06 16:29:37,539,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+55,2026-11-06 16:29:48,549.2,19156,powershell.exe,smtc-bridge,0.94,85.66,99.61
+55,2026-11-06 16:29:48,549.2,21364,DeepSeek Harness.exe,host,1.25,472.36,624.43
+55,2026-11-06 16:29:48,549.2,9896,DeepSeek Harness.exe,subprocess,0.16,149.19,59.21
+55,2026-11-06 16:29:48,549.2,12760,DeepSeek Harness.exe,gpu,84.06,198.14,350.89
+55,2026-11-06 16:29:48,549.2,20680,DeepSeek Harness.exe,subprocess,0,140.78,58.88
+55,2026-11-06 16:29:48,549.2,7868,DeepSeek Harness.exe,subprocess,0,152.82,65.91
+55,2026-11-06 16:29:48,549.2,17804,DeepSeek Harness.exe,renderer,149.06,677.61,679.6
+55,2026-11-06 16:29:48,549.2,5036,DeepSeek Harness.exe,main,10,125.77,144.95
+55,2026-11-06 16:29:48,549.2,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+55,2026-11-06 16:29:48,549.2,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+56,2026-11-06 16:29:58,559.6,19156,powershell.exe,smtc-bridge,0.78,86.93,100.71
+56,2026-11-06 16:29:58,559.6,21364,DeepSeek Harness.exe,host,2.19,487.71,641.29
+56,2026-11-06 16:29:58,559.6,9896,DeepSeek Harness.exe,subprocess,0.16,149.38,59.46
+56,2026-11-06 16:29:58,559.6,12760,DeepSeek Harness.exe,gpu,90.78,200.35,375.6
+56,2026-11-06 16:29:58,559.6,20680,DeepSeek Harness.exe,subprocess,0.16,140.99,59.15
+56,2026-11-06 16:29:58,559.6,7868,DeepSeek Harness.exe,subprocess,2.66,151.39,63.66
+56,2026-11-06 16:29:58,559.6,17804,DeepSeek Harness.exe,renderer,137.5,684.85,686.18
+56,2026-11-06 16:29:58,559.6,5036,DeepSeek Harness.exe,main,2.81,125.99,145.37
+56,2026-11-06 16:29:58,559.6,23088,DeepSeek Harness.exe,main,0,79.55,24.01
+56,2026-11-06 16:29:58,559.6,14672,DeepSeek Harness.exe,utility,0,47.64,12.21
+57,2026-11-06 16:30:08,569.8,19156,powershell.exe,smtc-bridge,0.31,85.68,99.31
+57,2026-11-06 16:30:08,569.8,21364,DeepSeek Harness.exe,host,2.03,488.19,641.73
+57,2026-11-06 16:30:08,569.8,9896,DeepSeek Harness.exe,subprocess,0,149.59,59.49
+57,2026-11-06 16:30:08,569.8,12760,DeepSeek Harness.exe,gpu,78.28,198.88,370.6
+57,2026-11-06 16:30:08,569.8,20680,DeepSeek Harness.exe,subprocess,0,141.15,59.62
+57,2026-11-06 16:30:08,569.8,7868,DeepSeek Harness.exe,subprocess,1.72,151.64,64.17
+57,2026-11-06 16:30:08,569.8,17804,DeepSeek Harness.exe,renderer,127.66,699.59,701.38
+57,2026-11-06 16:30:08,569.8,5036,DeepSeek Harness.exe,main,10.78,124.05,141.99
+57,2026-11-06 16:30:08,569.8,23088,DeepSeek Harness.exe,main,0,79.83,24.26
+57,2026-11-06 16:30:08,569.8,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+58,2026-11-06 16:30:19,580.1,19156,powershell.exe,smtc-bridge,0.78,89.87,103.96
+58,2026-11-06 16:30:19,580.1,21364,DeepSeek Harness.exe,host,1.56,488.04,641.8
+58,2026-11-06 16:30:19,580.1,9896,DeepSeek Harness.exe,subprocess,0,149.75,59.96
+58,2026-11-06 16:30:19,580.1,12760,DeepSeek Harness.exe,gpu,86.88,198.17,338.95
+58,2026-11-06 16:30:19,580.1,20680,DeepSeek Harness.exe,subprocess,0,140.56,58.88
+58,2026-11-06 16:30:19,580.1,7868,DeepSeek Harness.exe,subprocess,1.72,151.91,64.46
+58,2026-11-06 16:30:19,580.1,17804,DeepSeek Harness.exe,renderer,145,704.7,706.6
+58,2026-11-06 16:30:19,580.1,5036,DeepSeek Harness.exe,main,4.38,124.09,142.09
+58,2026-11-06 16:30:19,580.1,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+58,2026-11-06 16:30:19,580.1,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+59,2026-11-06 16:30:29,590.4,19156,powershell.exe,smtc-bridge,0.78,89.85,103.92
+59,2026-11-06 16:30:29,590.4,21364,DeepSeek Harness.exe,host,2.03,501.53,656.73
+59,2026-11-06 16:30:29,590.4,9896,DeepSeek Harness.exe,subprocess,0.16,149.15,59.21
+59,2026-11-06 16:30:29,590.4,12760,DeepSeek Harness.exe,gpu,89.22,198.18,356.28
+59,2026-11-06 16:30:29,590.4,20680,DeepSeek Harness.exe,subprocess,0,140.75,58.88
+59,2026-11-06 16:30:29,590.4,7868,DeepSeek Harness.exe,subprocess,3.59,152.21,64.54
+59,2026-11-06 16:30:29,590.4,17804,DeepSeek Harness.exe,renderer,135.31,718.04,720.16
+59,2026-11-06 16:30:29,590.4,5036,DeepSeek Harness.exe,main,2.97,124.41,142.76
+59,2026-11-06 16:30:29,590.4,23088,DeepSeek Harness.exe,main,0,79.64,24.01
+59,2026-11-06 16:30:29,590.4,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+60,2026-11-06 16:30:39,600.6,19156,powershell.exe,smtc-bridge,0.78,90.52,103.92
+60,2026-11-06 16:30:39,600.6,21364,DeepSeek Harness.exe,host,10.94,467.78,621.17
+60,2026-11-06 16:30:39,600.6,9896,DeepSeek Harness.exe,subprocess,0,149.34,59.46
+60,2026-11-06 16:30:39,600.6,12760,DeepSeek Harness.exe,gpu,79.53,198.19,336.87
+60,2026-11-06 16:30:39,600.6,20680,DeepSeek Harness.exe,subprocess,0,140.95,59.14
+60,2026-11-06 16:30:39,600.6,7868,DeepSeek Harness.exe,subprocess,1.41,152.27,64.86
+60,2026-11-06 16:30:39,600.6,17804,DeepSeek Harness.exe,renderer,134.22,715.69,731.65
+60,2026-11-06 16:30:39,600.6,5036,DeepSeek Harness.exe,main,3.44,124.19,142.4
+60,2026-11-06 16:30:39,600.6,23088,DeepSeek Harness.exe,main,0.16,79.93,24.51
+60,2026-11-06 16:30:39,600.6,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+61,2026-11-06 16:30:49,610.9,19156,powershell.exe,smtc-bridge,0.62,90.52,103.92
+61,2026-11-06 16:30:49,610.9,21364,DeepSeek Harness.exe,host,3.75,465.94,618.9
+61,2026-11-06 16:30:49,610.9,9896,DeepSeek Harness.exe,subprocess,0,149.55,59.49
+61,2026-11-06 16:30:49,610.9,12760,DeepSeek Harness.exe,gpu,77.97,198.43,340.52
+61,2026-11-06 16:30:49,610.9,20680,DeepSeek Harness.exe,subprocess,0,141.12,59.62
+61,2026-11-06 16:30:49,610.9,572,DeepSeek Harness.exe,subprocess,0,152.28,65.26
+61,2026-11-06 16:30:49,610.9,7868,DeepSeek Harness.exe,subprocess,1.25,151.74,64.14
+61,2026-11-06 16:30:49,610.9,17804,DeepSeek Harness.exe,renderer,141.72,732.88,748.59
+61,2026-11-06 16:30:49,610.9,5036,DeepSeek Harness.exe,main,4.22,124.39,143
+61,2026-11-06 16:30:49,610.9,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+61,2026-11-06 16:30:49,610.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+62,2026-11-06 16:31:00,621.4,19156,powershell.exe,smtc-bridge,0.31,90.52,103.92
+62,2026-11-06 16:31:00,621.4,21364,DeepSeek Harness.exe,host,2.97,476.17,628.16
+62,2026-11-06 16:31:00,621.4,9896,DeepSeek Harness.exe,subprocess,0,149.71,59.96
+62,2026-11-06 16:31:00,621.4,12760,DeepSeek Harness.exe,gpu,83.91,198.08,352.92
+62,2026-11-06 16:31:00,621.4,20680,DeepSeek Harness.exe,subprocess,0,140.53,58.62
+62,2026-11-06 16:31:00,621.4,7868,DeepSeek Harness.exe,subprocess,0.94,152,64.42
+62,2026-11-06 16:31:00,621.4,17804,DeepSeek Harness.exe,renderer,136.88,702.84,717.87
+62,2026-11-06 16:31:00,621.4,5036,DeepSeek Harness.exe,main,8.12,125.02,144.05
+62,2026-11-06 16:31:00,621.4,23088,DeepSeek Harness.exe,main,0,79.74,24.01
+62,2026-11-06 16:31:00,621.4,14672,DeepSeek Harness.exe,utility,0.16,47.64,12.21
+63,2026-11-06 16:31:10,631.6,19156,powershell.exe,smtc-bridge,0.62,90.52,103.92
+63,2026-11-06 16:31:10,631.6,21364,DeepSeek Harness.exe,host,4.69,477.25,630.08
+63,2026-11-06 16:31:10,631.6,9896,DeepSeek Harness.exe,subprocess,0,149.12,59.21
+63,2026-11-06 16:31:10,631.6,12760,DeepSeek Harness.exe,gpu,53.75,182.99,349.44
+63,2026-11-06 16:31:10,631.6,20680,DeepSeek Harness.exe,subprocess,0,140.71,58.88
+63,2026-11-06 16:31:10,631.6,7868,DeepSeek Harness.exe,subprocess,2.19,152.2,64.9
+63,2026-11-06 16:31:10,631.6,17804,DeepSeek Harness.exe,renderer,94.38,689.5,718.3
+63,2026-11-06 16:31:10,631.6,5036,DeepSeek Harness.exe,main,3.91,124.79,143.63
+63,2026-11-06 16:31:10,631.6,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+63,2026-11-06 16:31:10,631.6,14672,DeepSeek Harness.exe,utility,0,47.64,12.21
+64,2026-11-06 16:31:20,641.7,19156,powershell.exe,smtc-bridge,0.78,90.52,103.92
+64,2026-11-06 16:31:20,641.7,21364,DeepSeek Harness.exe,host,0.31,476.77,629.76
+64,2026-11-06 16:31:20,641.7,9896,DeepSeek Harness.exe,subprocess,0.31,149.3,59.21
+64,2026-11-06 16:31:20,641.7,12760,DeepSeek Harness.exe,gpu,0,182.27,273.64
+64,2026-11-06 16:31:20,641.7,20680,DeepSeek Harness.exe,subprocess,0.31,140.91,59.14
+64,2026-11-06 16:31:20,641.7,7868,DeepSeek Harness.exe,subprocess,0.47,151.72,64.18
+64,2026-11-06 16:31:20,641.7,17804,DeepSeek Harness.exe,renderer,3.28,688.39,717.43
+64,2026-11-06 16:31:20,641.7,5036,DeepSeek Harness.exe,main,0.62,124.97,144.13
+64,2026-11-06 16:31:20,641.7,23088,DeepSeek Harness.exe,main,0,79.55,24.01
+64,2026-11-06 16:31:20,641.7,14672,DeepSeek Harness.exe,utility,0,47.64,12.21
+65,2026-11-06 16:31:30,652,19156,powershell.exe,smtc-bridge,0.78,90.52,103.92
+65,2026-11-06 16:31:30,652,21364,DeepSeek Harness.exe,host,1.72,490.22,644.29
+65,2026-11-06 16:31:30,652,9896,DeepSeek Harness.exe,subprocess,0,149.52,59.48
+65,2026-11-06 16:31:30,652,12760,DeepSeek Harness.exe,gpu,0,182.27,273.64
+65,2026-11-06 16:31:30,652,20680,DeepSeek Harness.exe,subprocess,0.16,141.13,59.42
+65,2026-11-06 16:31:30,652,7868,DeepSeek Harness.exe,subprocess,0.62,152,64.48
+65,2026-11-06 16:31:30,652,17804,DeepSeek Harness.exe,renderer,17.19,650.96,680.41
+65,2026-11-06 16:31:30,652,5036,DeepSeek Harness.exe,main,0.47,125.57,144.92
+65,2026-11-06 16:31:30,652,23088,DeepSeek Harness.exe,main,0,79.84,24.51
+65,2026-11-06 16:31:30,652,14672,DeepSeek Harness.exe,utility,0,47.64,12.21
+66,2026-11-06 16:31:41,662.4,19156,powershell.exe,smtc-bridge,0.62,90.52,103.92
+66,2026-11-06 16:31:41,662.4,21364,DeepSeek Harness.exe,host,4.06,502.35,657.39
+66,2026-11-06 16:31:41,662.4,9896,DeepSeek Harness.exe,subprocess,0.47,149.68,59.96
+66,2026-11-06 16:31:41,662.4,12760,DeepSeek Harness.exe,gpu,60.62,199.21,473.82
+66,2026-11-06 16:31:41,662.4,20680,DeepSeek Harness.exe,subprocess,0.47,140.5,58.62
+66,2026-11-06 16:31:41,662.4,7868,DeepSeek Harness.exe,subprocess,2.5,152.27,64.94
+66,2026-11-06 16:31:41,662.4,17804,DeepSeek Harness.exe,renderer,101.56,708.86,710.55
+66,2026-11-06 16:31:41,662.4,5036,DeepSeek Harness.exe,main,7.5,125.19,144.55
+66,2026-11-06 16:31:41,662.4,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+66,2026-11-06 16:31:41,662.4,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+67,2026-11-06 16:31:51,672.6,19156,powershell.exe,smtc-bridge,0.31,90.52,103.92
+67,2026-11-06 16:31:51,672.6,21364,DeepSeek Harness.exe,host,10.47,489.26,642.52
+67,2026-11-06 16:31:51,672.6,9896,DeepSeek Harness.exe,subprocess,0.16,149.09,59.21
+67,2026-11-06 16:31:51,672.6,12760,DeepSeek Harness.exe,gpu,95.78,199.8,336.04
+67,2026-11-06 16:31:51,672.6,20680,DeepSeek Harness.exe,subprocess,0,140.68,58.88
+67,2026-11-06 16:31:51,672.6,7868,DeepSeek Harness.exe,subprocess,0.47,151.73,64.19
+67,2026-11-06 16:31:51,672.6,17804,DeepSeek Harness.exe,renderer,144.38,744.18,747.12
+67,2026-11-06 16:31:51,672.6,5036,DeepSeek Harness.exe,main,4.53,125.36,144.89
+67,2026-11-06 16:31:51,672.6,23088,DeepSeek Harness.exe,main,0,79.65,24.01
+67,2026-11-06 16:31:51,672.6,14672,DeepSeek Harness.exe,utility,0,47.67,12.23
+68,2026-11-06 16:32:02,683.1,19156,powershell.exe,smtc-bridge,0.16,90.53,103.95
+68,2026-11-06 16:32:02,683.1,21364,DeepSeek Harness.exe,host,9.06,461.96,616.01
+68,2026-11-06 16:32:02,683.1,9896,DeepSeek Harness.exe,subprocess,0,149.27,59.21
+68,2026-11-06 16:32:02,683.1,12760,DeepSeek Harness.exe,gpu,94.22,199.37,360.43
+68,2026-11-06 16:32:02,683.1,20680,DeepSeek Harness.exe,subprocess,0,140.88,59.13
+68,2026-11-06 16:32:02,683.1,7868,DeepSeek Harness.exe,subprocess,0.62,151.98,64.46
+68,2026-11-06 16:32:02,683.1,17804,DeepSeek Harness.exe,renderer,132.5,759.82,761.46
+68,2026-11-06 16:32:02,683.1,5036,DeepSeek Harness.exe,main,4.06,126.1,145.85
+68,2026-11-06 16:32:02,683.1,23088,DeepSeek Harness.exe,main,0,79.94,24.51
+68,2026-11-06 16:32:02,683.1,14672,DeepSeek Harness.exe,utility,0.16,47.65,12.21
+69,2026-11-06 16:32:12,693.4,19156,powershell.exe,smtc-bridge,0.47,90.52,103.92
+69,2026-11-06 16:32:12,693.4,21364,DeepSeek Harness.exe,host,2.66,477.63,629.59
+69,2026-11-06 16:32:12,693.4,9896,DeepSeek Harness.exe,subprocess,0.16,149.48,59.48
+69,2026-11-06 16:32:12,693.4,12760,DeepSeek Harness.exe,gpu,85.16,199.74,352.99
+69,2026-11-06 16:32:12,693.4,20680,DeepSeek Harness.exe,subprocess,0.16,141.09,59.41
+69,2026-11-06 16:32:12,693.4,7868,DeepSeek Harness.exe,subprocess,0.94,152.24,64.74
+69,2026-11-06 16:32:12,693.4,17804,DeepSeek Harness.exe,renderer,136.56,773.62,775.8
+69,2026-11-06 16:32:12,693.4,5036,DeepSeek Harness.exe,main,8.59,126.39,146.41
+69,2026-11-06 16:32:12,693.4,23088,DeepSeek Harness.exe,main,0.16,79.52,23.76
+69,2026-11-06 16:32:12,693.4,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+70,2026-11-06 16:32:22,703.6,19156,powershell.exe,smtc-bridge,0.47,90.74,104.87
+70,2026-11-06 16:32:22,703.6,21364,DeepSeek Harness.exe,host,1.41,477.64,629.72
+70,2026-11-06 16:32:22,703.6,9896,DeepSeek Harness.exe,subprocess,0.16,149.65,59.96
+70,2026-11-06 16:32:22,703.6,12760,DeepSeek Harness.exe,gpu,40.31,182.68,260.45
+70,2026-11-06 16:32:22,703.6,20680,DeepSeek Harness.exe,subprocess,0,141.23,59.62
+70,2026-11-06 16:32:22,703.6,17804,DeepSeek Harness.exe,renderer,68.44,751.48,771.49
+70,2026-11-06 16:32:22,703.6,5036,DeepSeek Harness.exe,main,6.72,126.29,146.42
+70,2026-11-06 16:32:22,703.6,23088,DeepSeek Harness.exe,main,0,79.74,24.01
+70,2026-11-06 16:32:22,703.6,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+71,2026-11-06 16:32:32,713.8,19156,powershell.exe,smtc-bridge,0.62,90.97,104.89
+71,2026-11-06 16:32:32,713.8,21364,DeepSeek Harness.exe,host,4.38,484.57,637.24
+71,2026-11-06 16:32:32,713.8,9896,DeepSeek Harness.exe,subprocess,0,149.05,58.96
+71,2026-11-06 16:32:32,713.8,12760,DeepSeek Harness.exe,gpu,0,182.47,260.31
+71,2026-11-06 16:32:32,713.8,20680,DeepSeek Harness.exe,subprocess,0.16,140.64,58.88
+71,2026-11-06 16:32:32,713.8,17804,DeepSeek Harness.exe,renderer,9.38,729.28,771.45
+71,2026-11-06 16:32:32,713.8,5036,DeepSeek Harness.exe,main,0.62,123.73,141.25
+71,2026-11-06 16:32:32,713.8,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+71,2026-11-06 16:32:32,713.8,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+72,2026-11-06 16:32:42,723.9,19156,powershell.exe,smtc-bridge,0.16,90.96,104.87
+72,2026-11-06 16:32:42,723.9,21364,DeepSeek Harness.exe,host,7.81,463.63,615.45
+72,2026-11-06 16:32:42,723.9,9896,DeepSeek Harness.exe,subprocess,0.16,149.23,59.21
+72,2026-11-06 16:32:42,723.9,12760,DeepSeek Harness.exe,gpu,0,182.47,258.12
+72,2026-11-06 16:32:42,723.9,20680,DeepSeek Harness.exe,subprocess,0.16,140.83,59.13
+72,2026-11-06 16:32:42,723.9,17804,DeepSeek Harness.exe,renderer,11.88,651.94,694.52
+72,2026-11-06 16:32:42,723.9,5036,DeepSeek Harness.exe,main,0.16,123.77,141.55
+72,2026-11-06 16:32:42,723.9,23088,DeepSeek Harness.exe,main,0,79.55,24.01
+72,2026-11-06 16:32:42,723.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+73,2026-11-06 16:32:52,734,19156,powershell.exe,smtc-bridge,0.16,91.4,104.87
+73,2026-11-06 16:32:52,734,21364,DeepSeek Harness.exe,host,1.88,476.8,628.77
+73,2026-11-06 16:32:52,734,9896,DeepSeek Harness.exe,subprocess,0,149.43,59.47
+73,2026-11-06 16:32:52,734,12760,DeepSeek Harness.exe,gpu,0,182.47,258.12
+73,2026-11-06 16:32:52,734,20680,DeepSeek Harness.exe,subprocess,0,141.04,59.16
+73,2026-11-06 16:32:52,734,17804,DeepSeek Harness.exe,renderer,10.47,649.34,692.52
+73,2026-11-06 16:32:52,734,5036,DeepSeek Harness.exe,main,0.16,124.45,142.45
+73,2026-11-06 16:32:52,734,23088,DeepSeek Harness.exe,main,0,79.82,24.26
+73,2026-11-06 16:32:52,734,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+74,2026-11-06 16:33:03,744.3,19156,powershell.exe,smtc-bridge,0.62,91.4,104.87
+74,2026-11-06 16:33:03,744.3,21364,DeepSeek Harness.exe,host,4.06,500.43,653.9
+74,2026-11-06 16:33:03,744.3,9896,DeepSeek Harness.exe,subprocess,0,149.64,59.75
+74,2026-11-06 16:33:03,744.3,12760,DeepSeek Harness.exe,gpu,0,182.47,258.12
+74,2026-11-06 16:33:03,744.3,20680,DeepSeek Harness.exe,subprocess,0,141.2,59.62
+74,2026-11-06 16:33:03,744.3,17804,DeepSeek Harness.exe,renderer,14.69,649.06,693.78
+74,2026-11-06 16:33:03,744.3,5036,DeepSeek Harness.exe,main,0.31,124.22,142.34
+74,2026-11-06 16:33:03,744.3,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+74,2026-11-06 16:33:03,744.3,14672,DeepSeek Harness.exe,utility,0.16,47.64,12.21
+75,2026-11-06 16:33:13,754.4,19156,powershell.exe,smtc-bridge,0.31,91.4,104.87
+75,2026-11-06 16:33:13,754.4,21364,DeepSeek Harness.exe,host,0.94,499.45,652.52
+75,2026-11-06 16:33:13,754.4,9896,DeepSeek Harness.exe,subprocess,0,149.01,58.96
+75,2026-11-06 16:33:13,754.4,12760,DeepSeek Harness.exe,gpu,0,182.47,258.12
+75,2026-11-06 16:33:13,754.4,20680,DeepSeek Harness.exe,subprocess,0,140.6,58.88
+75,2026-11-06 16:33:13,754.4,17804,DeepSeek Harness.exe,renderer,3.44,658.12,701.04
+75,2026-11-06 16:33:13,754.4,5036,DeepSeek Harness.exe,main,0.16,125.62,143.83
+75,2026-11-06 16:33:13,754.4,23088,DeepSeek Harness.exe,main,0,79.63,24.01
+75,2026-11-06 16:33:13,754.4,14672,DeepSeek Harness.exe,utility,0,47.7,12.27
+76,2026-11-06 16:33:23,764.5,19156,powershell.exe,smtc-bridge,0.78,91.4,104.87
+76,2026-11-06 16:33:23,764.5,21364,DeepSeek Harness.exe,host,5.94,465.37,617.07
+76,2026-11-06 16:33:23,764.5,9896,DeepSeek Harness.exe,subprocess,0,149.19,59.21
+76,2026-11-06 16:33:23,764.5,12760,DeepSeek Harness.exe,gpu,0,182.47,258.12
+76,2026-11-06 16:33:23,764.5,20680,DeepSeek Harness.exe,subprocess,0,140.79,58.88
+76,2026-11-06 16:33:23,764.5,17804,DeepSeek Harness.exe,renderer,10.78,658.85,701.68
+76,2026-11-06 16:33:23,764.5,5036,DeepSeek Harness.exe,main,0.94,125.27,143.43
+76,2026-11-06 16:33:23,764.5,23088,DeepSeek Harness.exe,main,0,79.91,24.51
+76,2026-11-06 16:33:23,764.5,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.22
+77,2026-11-06 16:33:33,774.6,19156,powershell.exe,smtc-bridge,0.78,91.4,104.87
+77,2026-11-06 16:33:33,774.6,21364,DeepSeek Harness.exe,host,9.38,471.31,625.8
+77,2026-11-06 16:33:33,774.6,9896,DeepSeek Harness.exe,subprocess,0,149.38,59.46
+77,2026-11-06 16:33:33,774.6,12760,DeepSeek Harness.exe,gpu,25.78,198.07,432.21
+77,2026-11-06 16:33:33,774.6,20680,DeepSeek Harness.exe,subprocess,0.16,140.99,59.15
+77,2026-11-06 16:33:33,774.6,17804,DeepSeek Harness.exe,renderer,62.34,675.78,706.36
+77,2026-11-06 16:33:33,774.6,5036,DeepSeek Harness.exe,main,8.44,126.54,144.93
+77,2026-11-06 16:33:33,774.6,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+77,2026-11-06 16:33:33,774.6,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.22
+78,2026-11-06 16:33:43,784.8,19156,powershell.exe,smtc-bridge,0.62,85.43,98.66
+78,2026-11-06 16:33:43,784.8,21364,DeepSeek Harness.exe,host,1.72,477.69,631.34
+78,2026-11-06 16:33:43,784.8,9896,DeepSeek Harness.exe,subprocess,0,149.59,59.49
+78,2026-11-06 16:33:43,784.8,12760,DeepSeek Harness.exe,gpu,71.41,200.33,430.03
+78,2026-11-06 16:33:43,784.8,20680,DeepSeek Harness.exe,subprocess,0,141.15,59.62
+78,2026-11-06 16:33:43,784.8,17804,DeepSeek Harness.exe,renderer,133.28,701.66,718.02
+78,2026-11-06 16:33:43,784.8,5036,DeepSeek Harness.exe,main,8.59,125.32,143.94
+78,2026-11-06 16:33:43,784.8,23088,DeepSeek Harness.exe,main,0,79.71,24.01
+78,2026-11-06 16:33:43,784.8,14672,DeepSeek Harness.exe,utility,0,47.66,12.22
+79,2026-11-06 16:33:54,795.1,19156,powershell.exe,smtc-bridge,0.47,89.84,103.1
+79,2026-11-06 16:33:54,795.1,21364,DeepSeek Harness.exe,host,2.34,493.48,648.3
+79,2026-11-06 16:33:54,795.1,9896,DeepSeek Harness.exe,subprocess,0.16,149.75,59.96
+79,2026-11-06 16:33:54,795.1,12760,DeepSeek Harness.exe,gpu,85.78,198.77,333.87
+79,2026-11-06 16:33:54,795.1,20680,DeepSeek Harness.exe,subprocess,0.16,140.57,58.88
+79,2026-11-06 16:33:54,795.1,14660,DeepSeek Harness.exe,subprocess,0,148.73,59.03
+79,2026-11-06 16:33:54,795.1,17804,DeepSeek Harness.exe,renderer,147.34,707.29,716.67
+79,2026-11-06 16:33:54,795.1,5036,DeepSeek Harness.exe,main,2.19,126.36,145.17
+79,2026-11-06 16:33:54,795.1,23088,DeepSeek Harness.exe,main,0.16,80.01,24.51
+79,2026-11-06 16:33:54,795.1,14672,DeepSeek Harness.exe,utility,0,47.66,12.22
+80,2026-11-06 16:34:04,805.5,19156,powershell.exe,smtc-bridge,1.09,92.8,106.13
+80,2026-11-06 16:34:04,805.5,21364,DeepSeek Harness.exe,host,2.81,492.11,646.05
+80,2026-11-06 16:34:04,805.5,9896,DeepSeek Harness.exe,subprocess,0.16,149.16,59.21
+80,2026-11-06 16:34:04,805.5,12760,DeepSeek Harness.exe,gpu,83.75,198.36,356.67
+80,2026-11-06 16:34:04,805.5,20680,DeepSeek Harness.exe,subprocess,0.16,140.75,58.88
+80,2026-11-06 16:34:04,805.5,14660,DeepSeek Harness.exe,subprocess,1.41,148.98,59.29
+80,2026-11-06 16:34:04,805.5,17804,DeepSeek Harness.exe,renderer,133.91,718.12,726.62
+80,2026-11-06 16:34:04,805.5,5036,DeepSeek Harness.exe,main,1.09,126.68,145.73
+80,2026-11-06 16:34:04,805.5,23088,DeepSeek Harness.exe,main,0,79.54,24.01
+80,2026-11-06 16:34:04,805.5,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.22
+81,2026-11-06 16:34:14,815.7,19156,powershell.exe,smtc-bridge,0.94,82.45,95.93
+81,2026-11-06 16:34:14,815.7,21364,DeepSeek Harness.exe,host,3.91,490.95,644.56
+81,2026-11-06 16:34:14,815.7,9896,DeepSeek Harness.exe,subprocess,0,149.34,59.46
+81,2026-11-06 16:34:14,815.7,12760,DeepSeek Harness.exe,gpu,86.09,198.77,435.56
+81,2026-11-06 16:34:14,815.7,20680,DeepSeek Harness.exe,subprocess,0,140.95,59.14
+81,2026-11-06 16:34:14,815.7,14660,DeepSeek Harness.exe,subprocess,1.72,149.25,59.58
+81,2026-11-06 16:34:14,815.7,17804,DeepSeek Harness.exe,renderer,140.78,722.77,731.61
+81,2026-11-06 16:34:14,815.7,5036,DeepSeek Harness.exe,main,11.41,126.39,145.7
+81,2026-11-06 16:34:14,815.7,23088,DeepSeek Harness.exe,main,0,79.82,24.26
+81,2026-11-06 16:34:14,815.7,14672,DeepSeek Harness.exe,utility,0.16,47.65,12.21
+82,2026-11-06 16:34:24,826,19156,powershell.exe,smtc-bridge,0.94,88.76,101.81
+82,2026-11-06 16:34:24,826,21364,DeepSeek Harness.exe,host,9.06,473.01,624.44
+82,2026-11-06 16:34:24,826,9896,DeepSeek Harness.exe,subprocess,0,149.55,59.49
+82,2026-11-06 16:34:24,826,12760,DeepSeek Harness.exe,gpu,85.47,199.33,438.62
+82,2026-11-06 16:34:24,826,20680,DeepSeek Harness.exe,subprocess,0,141.12,59.62
+82,2026-11-06 16:34:24,826,14660,DeepSeek Harness.exe,subprocess,2.81,149.54,59.64
+82,2026-11-06 16:34:24,826,17804,DeepSeek Harness.exe,renderer,136.41,717.59,727.09
+82,2026-11-06 16:34:24,826,5036,DeepSeek Harness.exe,main,11.09,126.13,145.38
+82,2026-11-06 16:34:24,826,23088,DeepSeek Harness.exe,main,0.16,79.52,23.76
+82,2026-11-06 16:34:24,826,14672,DeepSeek Harness.exe,utility,0.16,47.65,12.21
+83,2026-11-06 16:34:35,836.2,19156,powershell.exe,smtc-bridge,0.62,90.32,103.66
+83,2026-11-06 16:34:35,836.2,21364,DeepSeek Harness.exe,host,4.84,485.26,637.33
+83,2026-11-06 16:34:35,836.2,9896,DeepSeek Harness.exe,subprocess,0.16,149.71,59.96
+83,2026-11-06 16:34:35,836.2,12760,DeepSeek Harness.exe,gpu,64.84,200.89,362.49
+83,2026-11-06 16:34:35,836.2,20680,DeepSeek Harness.exe,subprocess,0,140.53,58.62
+83,2026-11-06 16:34:35,836.2,14660,DeepSeek Harness.exe,subprocess,2.34,149.69,60.07
+83,2026-11-06 16:34:35,836.2,17804,DeepSeek Harness.exe,renderer,129.06,719.46,741.88
+83,2026-11-06 16:34:35,836.2,5036,DeepSeek Harness.exe,main,6.09,126.34,145.97
+83,2026-11-06 16:34:35,836.2,23088,DeepSeek Harness.exe,main,0,79.63,24.01
+83,2026-11-06 16:34:35,836.2,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+84,2026-11-06 16:34:45,846.4,19156,powershell.exe,smtc-bridge,1.25,90.32,103.66
+84,2026-11-06 16:34:45,846.4,21364,DeepSeek Harness.exe,host,5.62,492.36,644
+84,2026-11-06 16:34:45,846.4,9896,DeepSeek Harness.exe,subprocess,0.16,149.12,59.21
+84,2026-11-06 16:34:45,846.4,12760,DeepSeek Harness.exe,gpu,77.5,199.44,338.54
+84,2026-11-06 16:34:45,846.4,20680,DeepSeek Harness.exe,subprocess,0.31,140.71,58.88
+84,2026-11-06 16:34:45,846.4,14660,DeepSeek Harness.exe,subprocess,1.41,149.14,59.34
+84,2026-11-06 16:34:45,846.4,17804,DeepSeek Harness.exe,renderer,127.81,726.85,748.76
+84,2026-11-06 16:34:45,846.4,5036,DeepSeek Harness.exe,main,12.66,125.68,143.19
+84,2026-11-06 16:34:45,846.4,23088,DeepSeek Harness.exe,main,0,79.92,24.51
+84,2026-11-06 16:34:45,846.4,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+85,2026-11-06 16:34:55,856.7,21452,DeepSeek Harness.exe,subprocess,0,149.64,59.92
+85,2026-11-06 16:34:55,856.7,19156,powershell.exe,smtc-bridge,0.16,90.3,103.62
+85,2026-11-06 16:34:55,856.7,21364,DeepSeek Harness.exe,host,4.22,486.52,638.29
+85,2026-11-06 16:34:55,856.7,9896,DeepSeek Harness.exe,subprocess,0,149.3,59.21
+85,2026-11-06 16:34:55,856.7,12760,DeepSeek Harness.exe,gpu,15.78,183.58,288.04
+85,2026-11-06 16:34:55,856.7,20680,DeepSeek Harness.exe,subprocess,0,140.91,59.14
+85,2026-11-06 16:34:55,856.7,14660,DeepSeek Harness.exe,subprocess,0.62,149.41,59.63
+85,2026-11-06 16:34:55,856.7,17804,DeepSeek Harness.exe,renderer,50.62,657.02,692.22
+85,2026-11-06 16:34:55,856.7,5036,DeepSeek Harness.exe,main,3.59,124.4,141.79
+85,2026-11-06 16:34:55,856.7,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+85,2026-11-06 16:34:55,856.7,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+86,2026-11-06 16:35:05,866.9,19156,powershell.exe,smtc-bridge,0.47,90.3,103.62
+86,2026-11-06 16:35:05,866.9,21364,DeepSeek Harness.exe,host,1.88,498.25,649.89
+86,2026-11-06 16:35:05,866.9,9896,DeepSeek Harness.exe,subprocess,0,149.51,59.48
+86,2026-11-06 16:35:05,866.9,12760,DeepSeek Harness.exe,gpu,29.69,200.07,414.89
+86,2026-11-06 16:35:05,866.9,20680,DeepSeek Harness.exe,subprocess,0.16,141.12,59.42
+86,2026-11-06 16:35:05,866.9,14660,DeepSeek Harness.exe,subprocess,0.62,149.55,60.03
+86,2026-11-06 16:35:05,866.9,17804,DeepSeek Harness.exe,renderer,98.44,710.83,718.98
+86,2026-11-06 16:35:05,866.9,5036,DeepSeek Harness.exe,main,5.94,124.96,142.68
+86,2026-11-06 16:35:05,866.9,23088,DeepSeek Harness.exe,main,0,79.73,24.01
+86,2026-11-06 16:35:05,866.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+87,2026-11-06 16:35:16,877.1,19156,powershell.exe,smtc-bridge,0.94,90.3,103.62
+87,2026-11-06 16:35:16,877.1,21364,DeepSeek Harness.exe,host,9.53,488.02,640.54
+87,2026-11-06 16:35:16,877.1,9896,DeepSeek Harness.exe,subprocess,0,149.67,59.96
+87,2026-11-06 16:35:16,877.1,12760,DeepSeek Harness.exe,gpu,57.97,200,346.62
+87,2026-11-06 16:35:16,877.1,20680,DeepSeek Harness.exe,subprocess,0,140.49,58.62
+87,2026-11-06 16:35:16,877.1,14660,DeepSeek Harness.exe,subprocess,0.16,149.04,59.29
+87,2026-11-06 16:35:16,877.1,17804,DeepSeek Harness.exe,renderer,130.47,736.53,745.53
+87,2026-11-06 16:35:16,877.1,5036,DeepSeek Harness.exe,main,3.59,124.35,141.8
+87,2026-11-06 16:35:16,877.1,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+87,2026-11-06 16:35:16,877.1,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.22
+88,2026-11-06 16:35:26,887.3,19156,powershell.exe,smtc-bridge,0.47,90.3,103.62
+88,2026-11-06 16:35:26,887.3,21364,DeepSeek Harness.exe,host,2.97,494.61,648.15
+88,2026-11-06 16:35:26,887.3,9896,DeepSeek Harness.exe,subprocess,0.16,149.07,59.21
+88,2026-11-06 16:35:26,887.3,12760,DeepSeek Harness.exe,gpu,54.06,200.13,353.27
+88,2026-11-06 16:35:26,887.3,20680,DeepSeek Harness.exe,subprocess,0.16,140.67,58.88
+88,2026-11-06 16:35:26,887.3,14660,DeepSeek Harness.exe,subprocess,0.16,149.31,59.59
+88,2026-11-06 16:35:26,887.3,17804,DeepSeek Harness.exe,renderer,113.75,755.06,763.05
+88,2026-11-06 16:35:26,887.3,5036,DeepSeek Harness.exe,main,0.62,124.79,142.38
+88,2026-11-06 16:35:26,887.3,23088,DeepSeek Harness.exe,main,0,79.56,24.01
+88,2026-11-06 16:35:26,887.3,14672,DeepSeek Harness.exe,utility,0.16,47.65,12.21
+89,2026-11-06 16:35:36,897.5,19156,powershell.exe,smtc-bridge,0.62,90.3,103.62
+89,2026-11-06 16:35:36,897.5,21364,DeepSeek Harness.exe,host,2.03,501.98,659.3
+89,2026-11-06 16:35:36,897.5,9896,DeepSeek Harness.exe,subprocess,0,149.25,59.21
+89,2026-11-06 16:35:36,897.5,12760,DeepSeek Harness.exe,gpu,53.75,200.01,335.77
+89,2026-11-06 16:35:36,897.5,20680,DeepSeek Harness.exe,subprocess,0,140.85,59.13
+89,2026-11-06 16:35:36,897.5,14660,DeepSeek Harness.exe,subprocess,0,149.55,60.01
+89,2026-11-06 16:35:36,897.5,17804,DeepSeek Harness.exe,renderer,123.28,760.34,781.34
+89,2026-11-06 16:35:36,897.5,5036,DeepSeek Harness.exe,main,1.56,125.63,143.82
+89,2026-11-06 16:35:36,897.5,23088,DeepSeek Harness.exe,main,0,79.86,24.51
+89,2026-11-06 16:35:36,897.5,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+90,2026-11-06 16:35:46,907.6,19156,powershell.exe,smtc-bridge,0.16,90.3,103.62
+90,2026-11-06 16:35:46,907.6,21364,DeepSeek Harness.exe,host,7.34,471.89,624.82
+90,2026-11-06 16:35:46,907.6,9896,DeepSeek Harness.exe,subprocess,0,149.45,59.47
+90,2026-11-06 16:35:46,907.6,12760,DeepSeek Harness.exe,gpu,53.59,200.13,344.29
+90,2026-11-06 16:35:46,907.6,20680,DeepSeek Harness.exe,subprocess,0,141.06,59.16
+90,2026-11-06 16:35:46,907.6,14660,DeepSeek Harness.exe,subprocess,0.31,149,59.26
+90,2026-11-06 16:35:46,907.6,17804,DeepSeek Harness.exe,renderer,119.53,767.38,788.21
+90,2026-11-06 16:35:46,907.6,5036,DeepSeek Harness.exe,main,1.41,125.11,143.36
+90,2026-11-06 16:35:46,907.6,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+90,2026-11-06 16:35:46,907.6,14672,DeepSeek Harness.exe,utility,0.47,47.65,12.21
+91,2026-11-06 16:35:56,917.8,19156,powershell.exe,smtc-bridge,0.31,90.31,103.62
+91,2026-11-06 16:35:56,917.8,21364,DeepSeek Harness.exe,host,2.03,486.72,640.78
+91,2026-11-06 16:35:56,917.8,9896,DeepSeek Harness.exe,subprocess,0,149.62,59.96
+91,2026-11-06 16:35:56,917.8,12760,DeepSeek Harness.exe,gpu,65.16,200.2,318.45
+91,2026-11-06 16:35:56,917.8,20680,DeepSeek Harness.exe,subprocess,0,141.21,59.62
+91,2026-11-06 16:35:56,917.8,14660,DeepSeek Harness.exe,subprocess,0.16,149.25,59.28
+91,2026-11-06 16:35:56,917.8,17804,DeepSeek Harness.exe,renderer,118.44,770.8,791.47
+91,2026-11-06 16:35:56,917.8,5036,DeepSeek Harness.exe,main,6.09,125.86,144.25
+91,2026-11-06 16:35:56,917.8,23088,DeepSeek Harness.exe,main,0,79.68,24.01
+91,2026-11-06 16:35:56,917.8,14672,DeepSeek Harness.exe,utility,0,47.66,12.22
+92,2026-11-06 16:36:07,928.1,19156,powershell.exe,smtc-bridge,0.47,90.31,103.62
+92,2026-11-06 16:36:07,928.1,21364,DeepSeek Harness.exe,host,2.19,489.1,641.13
+92,2026-11-06 16:36:07,928.1,9896,DeepSeek Harness.exe,subprocess,0,149.03,58.96
+92,2026-11-06 16:36:07,928.1,12760,DeepSeek Harness.exe,gpu,60.16,200.79,420.73
+92,2026-11-06 16:36:07,928.1,20680,DeepSeek Harness.exe,subprocess,0,140.62,58.88
+92,2026-11-06 16:36:07,928.1,14660,DeepSeek Harness.exe,subprocess,0.31,149.5,59.56
+92,2026-11-06 16:36:07,928.1,17804,DeepSeek Harness.exe,renderer,117.5,771.14,791.45
+92,2026-11-06 16:36:07,928.1,5036,DeepSeek Harness.exe,main,6.88,125.63,143.94
+92,2026-11-06 16:36:07,928.1,23088,DeepSeek Harness.exe,main,0,79.97,24.51
+92,2026-11-06 16:36:07,928.1,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+93,2026-11-06 16:36:17,938.3,19156,powershell.exe,smtc-bridge,0.31,90.51,103.66
+93,2026-11-06 16:36:17,938.3,21364,DeepSeek Harness.exe,host,1.88,502.78,655.31
+93,2026-11-06 16:36:17,938.3,9896,DeepSeek Harness.exe,subprocess,0,149.21,59.21
+93,2026-11-06 16:36:17,938.3,12760,DeepSeek Harness.exe,gpu,49.38,199.72,338.98
+93,2026-11-06 16:36:17,938.3,20680,DeepSeek Harness.exe,subprocess,0,140.8,59.12
+93,2026-11-06 16:36:17,938.3,14660,DeepSeek Harness.exe,subprocess,0.31,149.69,60.02
+93,2026-11-06 16:36:17,938.3,17804,DeepSeek Harness.exe,renderer,124.06,769.27,789.92
+93,2026-11-06 16:36:17,938.3,5036,DeepSeek Harness.exe,main,4.84,125.95,144.55
+93,2026-11-06 16:36:17,938.3,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+93,2026-11-06 16:36:17,938.3,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+94,2026-11-06 16:36:27,948.5,19156,powershell.exe,smtc-bridge,1.09,90.5,103.63
+94,2026-11-06 16:36:27,948.5,21364,DeepSeek Harness.exe,host,1.88,514.3,667.6
+94,2026-11-06 16:36:27,948.5,9896,DeepSeek Harness.exe,subprocess,0.31,149.39,59.46
+94,2026-11-06 16:36:27,948.5,12760,DeepSeek Harness.exe,gpu,55.47,200.59,336.34
+94,2026-11-06 16:36:27,948.5,20680,DeepSeek Harness.exe,subprocess,0.31,141,59.15
+94,2026-11-06 16:36:27,948.5,14660,DeepSeek Harness.exe,subprocess,0.47,149.14,59.27
+94,2026-11-06 16:36:27,948.5,17804,DeepSeek Harness.exe,renderer,122.19,777.26,797.06
+94,2026-11-06 16:36:27,948.5,5036,DeepSeek Harness.exe,main,7.97,125.96,144.54
+94,2026-11-06 16:36:27,948.5,23088,DeepSeek Harness.exe,main,0,79.78,24.26
+94,2026-11-06 16:36:27,948.5,14672,DeepSeek Harness.exe,utility,0.16,47.65,12.21
+95,2026-11-06 16:36:37,958.6,19156,powershell.exe,smtc-bridge,0.47,90.5,103.63
+95,2026-11-06 16:36:37,958.6,21364,DeepSeek Harness.exe,host,7.66,476.81,628.15
+95,2026-11-06 16:36:37,958.6,9896,DeepSeek Harness.exe,subprocess,0.16,149.61,59.75
+95,2026-11-06 16:36:37,958.6,12760,DeepSeek Harness.exe,gpu,55.16,200,354.21
+95,2026-11-06 16:36:37,958.6,20680,DeepSeek Harness.exe,subprocess,0.16,141.16,59.62
+95,2026-11-06 16:36:37,958.6,14660,DeepSeek Harness.exe,subprocess,0.31,149.46,59.62
+95,2026-11-06 16:36:37,958.6,17804,DeepSeek Harness.exe,renderer,118.91,782.16,801.88
+95,2026-11-06 16:36:37,958.6,5036,DeepSeek Harness.exe,main,9.53,126.57,145.32
+95,2026-11-06 16:36:37,958.6,23088,DeepSeek Harness.exe,main,0,79.51,23.76
+95,2026-11-06 16:36:37,958.6,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+96,2026-11-06 16:36:47,968.8,19156,powershell.exe,smtc-bridge,0.47,90.72,103.67
+96,2026-11-06 16:36:47,968.8,21364,DeepSeek Harness.exe,host,3.75,493.62,646.13
+96,2026-11-06 16:36:47,968.8,9896,DeepSeek Harness.exe,subprocess,0,149.75,59.96
+96,2026-11-06 16:36:47,968.8,12760,DeepSeek Harness.exe,gpu,66.56,200.86,376.23
+96,2026-11-06 16:36:47,968.8,20680,DeepSeek Harness.exe,subprocess,0,140.57,58.88
+96,2026-11-06 16:36:47,968.8,14660,DeepSeek Harness.exe,subprocess,0,149.62,60.06
+96,2026-11-06 16:36:47,968.8,17804,DeepSeek Harness.exe,renderer,131.25,784.46,804.7
+96,2026-11-06 16:36:47,968.8,5036,DeepSeek Harness.exe,main,7.19,127.13,146.01
+96,2026-11-06 16:36:47,968.8,23088,DeepSeek Harness.exe,main,0,79.6,24.01
+96,2026-11-06 16:36:47,968.8,14672,DeepSeek Harness.exe,utility,0.62,47.65,12.21
+97,2026-11-06 16:36:57,978.9,19156,powershell.exe,smtc-bridge,0.94,90.7,103.64
+97,2026-11-06 16:36:57,978.9,21364,DeepSeek Harness.exe,host,2.66,503.41,655.81
+97,2026-11-06 16:36:57,978.9,9896,DeepSeek Harness.exe,subprocess,0,149.16,59.21
+97,2026-11-06 16:36:57,978.9,12760,DeepSeek Harness.exe,gpu,53.91,199.95,361.29
+97,2026-11-06 16:36:57,978.9,20680,DeepSeek Harness.exe,subprocess,0,140.75,58.88
+97,2026-11-06 16:36:57,978.9,14660,DeepSeek Harness.exe,subprocess,0.31,149.07,59.3
+97,2026-11-06 16:36:57,978.9,17804,DeepSeek Harness.exe,renderer,117.5,790.44,810.29
+97,2026-11-06 16:36:57,978.9,5036,DeepSeek Harness.exe,main,3.59,124.64,141.79
+97,2026-11-06 16:36:57,978.9,23088,DeepSeek Harness.exe,main,0,79.89,24.51
+97,2026-11-06 16:36:57,978.9,14672,DeepSeek Harness.exe,utility,0.47,47.65,12.21
+98,2026-11-06 16:37:08,989.2,19156,powershell.exe,smtc-bridge,0.78,91.16,103.64
+98,2026-11-06 16:37:08,989.2,21364,DeepSeek Harness.exe,host,6.56,471.73,622.29
+98,2026-11-06 16:37:08,989.2,9896,DeepSeek Harness.exe,subprocess,0,149.34,59.46
+98,2026-11-06 16:37:08,989.2,12760,DeepSeek Harness.exe,gpu,40.78,186.48,391.58
+98,2026-11-06 16:37:08,989.2,20680,DeepSeek Harness.exe,subprocess,0,140.95,59.14
+98,2026-11-06 16:37:08,989.2,14660,DeepSeek Harness.exe,subprocess,0.16,149.34,59.6
+98,2026-11-06 16:37:08,989.2,17804,DeepSeek Harness.exe,renderer,102.03,700.66,728.34
+98,2026-11-06 16:37:08,989.2,5036,DeepSeek Harness.exe,main,8.91,125.3,142.61
+98,2026-11-06 16:37:08,989.2,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+98,2026-11-06 16:37:08,989.2,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+99,2026-11-06 16:37:18,999.4,19156,powershell.exe,smtc-bridge,0,91.17,103.64
+99,2026-11-06 16:37:18,999.4,21364,DeepSeek Harness.exe,host,3.12,477.52,628.29
+99,2026-11-06 16:37:18,999.4,9896,DeepSeek Harness.exe,subprocess,0,149.55,59.49
+99,2026-11-06 16:37:18,999.4,12760,DeepSeek Harness.exe,gpu,0,183.7,272.47
+99,2026-11-06 16:37:18,999.4,20680,DeepSeek Harness.exe,subprocess,0,141.12,59.62
+99,2026-11-06 16:37:18,999.4,14660,DeepSeek Harness.exe,subprocess,0.31,149.61,59.89
+99,2026-11-06 16:37:18,999.4,17804,DeepSeek Harness.exe,renderer,16.88,692.67,719.78
+99,2026-11-06 16:37:18,999.4,5036,DeepSeek Harness.exe,main,0.16,125.67,143.05
+99,2026-11-06 16:37:18,999.4,23088,DeepSeek Harness.exe,main,0,79.7,24.01
+99,2026-11-06 16:37:18,999.4,14672,DeepSeek Harness.exe,utility,0.47,47.65,12.21
+100,2026-11-06 16:37:28,1009.6,19156,powershell.exe,smtc-bridge,0.47,91.17,103.64
+100,2026-11-06 16:37:28,1009.6,21364,DeepSeek Harness.exe,host,3.12,489.84,641.45
+100,2026-11-06 16:37:28,1009.6,9896,DeepSeek Harness.exe,subprocess,0,149.7,59.96
+100,2026-11-06 16:37:28,1009.6,12760,DeepSeek Harness.exe,gpu,0,183.65,272.42
+100,2026-11-06 16:37:28,1009.6,20680,DeepSeek Harness.exe,subprocess,0,140.52,58.62
+100,2026-11-06 16:37:28,1009.6,17804,DeepSeek Harness.exe,renderer,21.88,697.46,724.92
+100,2026-11-06 16:37:28,1009.6,5036,DeepSeek Harness.exe,main,0.47,125.69,143.06
+100,2026-11-06 16:37:28,1009.6,23088,DeepSeek Harness.exe,main,0,79.98,24.51
+100,2026-11-06 16:37:28,1009.6,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+101,2026-11-06 16:37:38,1019.7,19156,powershell.exe,smtc-bridge,0,91.17,103.64
+101,2026-11-06 16:37:38,1019.7,21364,DeepSeek Harness.exe,host,1.41,497.61,649.38
+101,2026-11-06 16:37:38,1019.7,9896,DeepSeek Harness.exe,subprocess,0.16,149.11,59.21
+101,2026-11-06 16:37:38,1019.7,12760,DeepSeek Harness.exe,gpu,0,183.65,272.42
+101,2026-11-06 16:37:38,1019.7,20680,DeepSeek Harness.exe,subprocess,0.16,140.7,58.88
+101,2026-11-06 16:37:38,1019.7,17804,DeepSeek Harness.exe,renderer,10,696.33,723.9
+101,2026-11-06 16:37:38,1019.7,5036,DeepSeek Harness.exe,main,0.47,125.16,142.48
+101,2026-11-06 16:37:38,1019.7,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+101,2026-11-06 16:37:38,1019.7,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+102,2026-11-06 16:37:48,1029.9,19156,powershell.exe,smtc-bridge,0.31,91.17,103.64
+102,2026-11-06 16:37:48,1029.9,21364,DeepSeek Harness.exe,host,0.31,492.2,644.1
+102,2026-11-06 16:37:48,1029.9,9896,DeepSeek Harness.exe,subprocess,0,149.3,59.21
+102,2026-11-06 16:37:48,1029.9,12760,DeepSeek Harness.exe,gpu,0,183.65,272.42
+102,2026-11-06 16:37:48,1029.9,20680,DeepSeek Harness.exe,subprocess,0,140.9,59.14
+102,2026-11-06 16:37:48,1029.9,17804,DeepSeek Harness.exe,renderer,1.56,696.27,723.94
+102,2026-11-06 16:37:48,1029.9,5036,DeepSeek Harness.exe,main,0.47,125.06,142.93
+102,2026-11-06 16:37:48,1029.9,23088,DeepSeek Harness.exe,main,0,79.79,24.26
+102,2026-11-06 16:37:48,1029.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+103,2026-11-06 16:37:59,1040.1,19156,powershell.exe,smtc-bridge,0.31,88.55,101.62
+103,2026-11-06 16:37:59,1040.1,21364,DeepSeek Harness.exe,host,0.78,495.11,647.21
+103,2026-11-06 16:37:59,1040.1,9896,DeepSeek Harness.exe,subprocess,0,149.5,59.48
+103,2026-11-06 16:37:59,1040.1,12760,DeepSeek Harness.exe,gpu,14.69,200.75,483.86
+103,2026-11-06 16:37:59,1040.1,20680,DeepSeek Harness.exe,subprocess,0,141.12,59.42
+103,2026-11-06 16:37:59,1040.1,17804,DeepSeek Harness.exe,renderer,40.16,719.75,731.48
+103,2026-11-06 16:37:59,1040.1,5036,DeepSeek Harness.exe,main,3.91,125.73,143.73
+103,2026-11-06 16:37:59,1040.1,21464,DeepSeek Harness.exe,subprocess,0,150.1,60.27
+103,2026-11-06 16:37:59,1040.1,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+103,2026-11-06 16:37:59,1040.1,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+104,2026-11-06 16:38:09,1050.5,19156,powershell.exe,smtc-bridge,0.31,91.09,104.6
+104,2026-11-06 16:38:09,1050.5,21364,DeepSeek Harness.exe,host,2.81,506.14,659.99
+104,2026-11-06 16:38:09,1050.5,9896,DeepSeek Harness.exe,subprocess,0.16,149.66,59.96
+104,2026-11-06 16:38:09,1050.5,12760,DeepSeek Harness.exe,gpu,77.66,200.1,388.65
+104,2026-11-06 16:38:09,1050.5,20680,DeepSeek Harness.exe,subprocess,0,140.48,58.62
+104,2026-11-06 16:38:09,1050.5,17804,DeepSeek Harness.exe,renderer,137.03,735.61,757.48
+104,2026-11-06 16:38:09,1050.5,5036,DeepSeek Harness.exe,main,9.38,125.43,143.35
+104,2026-11-06 16:38:09,1050.5,21464,DeepSeek Harness.exe,subprocess,0.47,148.38,57.84
+104,2026-11-06 16:38:09,1050.5,23088,DeepSeek Harness.exe,main,0,79.62,24.01
+104,2026-11-06 16:38:09,1050.5,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+105,2026-11-06 16:38:19,1060.7,19156,powershell.exe,smtc-bridge,0.16,91.07,104.56
+105,2026-11-06 16:38:19,1060.7,21364,DeepSeek Harness.exe,host,7.34,459.94,611.27
+105,2026-11-06 16:38:19,1060.7,9896,DeepSeek Harness.exe,subprocess,0.16,149.07,59.21
+105,2026-11-06 16:38:19,1060.7,12760,DeepSeek Harness.exe,gpu,70.16,200.88,402.07
+105,2026-11-06 16:38:19,1060.7,20680,DeepSeek Harness.exe,subprocess,0,140.66,58.88
+105,2026-11-06 16:38:19,1060.7,17804,DeepSeek Harness.exe,renderer,134.53,735.29,770.09
+105,2026-11-06 16:38:19,1060.7,5036,DeepSeek Harness.exe,main,5.31,126.14,144.49
+105,2026-11-06 16:38:19,1060.7,21464,DeepSeek Harness.exe,subprocess,1.09,148.59,58.05
+105,2026-11-06 16:38:19,1060.7,23088,DeepSeek Harness.exe,main,0.16,79.89,24.51
+105,2026-11-06 16:38:19,1060.7,14672,DeepSeek Harness.exe,utility,0,47.66,12.21
+106,2026-11-06 16:38:29,1070.9,19156,powershell.exe,smtc-bridge,0.78,91.07,104.56
+106,2026-11-06 16:38:29,1070.9,21364,DeepSeek Harness.exe,host,2.03,457.04,608.19
+106,2026-11-06 16:38:29,1070.9,9896,DeepSeek Harness.exe,subprocess,0,149.26,59.21
+106,2026-11-06 16:38:29,1070.9,12760,DeepSeek Harness.exe,gpu,85.31,200.48,371.52
+106,2026-11-06 16:38:29,1070.9,20680,DeepSeek Harness.exe,subprocess,0,140.85,59.13
+106,2026-11-06 16:38:29,1070.9,17804,DeepSeek Harness.exe,renderer,136.56,734.77,774
+106,2026-11-06 16:38:29,1070.9,5036,DeepSeek Harness.exe,main,2.5,125.67,144.11
+106,2026-11-06 16:38:29,1070.9,21464,DeepSeek Harness.exe,subprocess,2.19,148.85,58.08
+106,2026-11-06 16:38:29,1070.9,23088,DeepSeek Harness.exe,main,0,79.42,23.76
+106,2026-11-06 16:38:29,1070.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+107,2026-11-06 16:38:40,1081.2,19156,powershell.exe,smtc-bridge,0.47,91.27,104.57
+107,2026-11-06 16:38:40,1081.2,21364,DeepSeek Harness.exe,host,2.97,474.33,626.38
+107,2026-11-06 16:38:40,1081.2,9896,DeepSeek Harness.exe,subprocess,0,149.45,59.47
+107,2026-11-06 16:38:40,1081.2,12760,DeepSeek Harness.exe,gpu,81.56,200.77,382.21
+107,2026-11-06 16:38:40,1081.2,20680,DeepSeek Harness.exe,subprocess,0,141.07,59.16
+107,2026-11-06 16:38:40,1081.2,17804,DeepSeek Harness.exe,renderer,145.47,736.71,790.48
+107,2026-11-06 16:38:40,1081.2,5036,DeepSeek Harness.exe,main,3.28,125.95,144.59
+107,2026-11-06 16:38:40,1081.2,21464,DeepSeek Harness.exe,subprocess,0.31,149.12,58.38
+107,2026-11-06 16:38:40,1081.2,23088,DeepSeek Harness.exe,main,0,79.7,24.01
+107,2026-11-06 16:38:40,1081.2,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.21
+108,2026-11-06 16:38:50,1091.5,19156,powershell.exe,smtc-bridge,0.47,91.27,104.57
+108,2026-11-06 16:38:50,1091.5,21364,DeepSeek Harness.exe,host,4.69,486.48,638.14
+108,2026-11-06 16:38:50,1091.5,9896,DeepSeek Harness.exe,subprocess,0.31,149.63,59.96
+108,2026-11-06 16:38:50,1091.5,12760,DeepSeek Harness.exe,gpu,72.03,200.86,390.89
+108,2026-11-06 16:38:50,1091.5,20680,DeepSeek Harness.exe,subprocess,0.31,141.22,59.62
+108,2026-11-06 16:38:50,1091.5,17804,DeepSeek Harness.exe,renderer,131.09,758,810.83
+108,2026-11-06 16:38:50,1091.5,5036,DeepSeek Harness.exe,main,2.34,126.47,145.74
+108,2026-11-06 16:38:50,1091.5,21464,DeepSeek Harness.exe,subprocess,2.66,149.3,58.84
+108,2026-11-06 16:38:50,1091.5,23088,DeepSeek Harness.exe,main,0.16,80,24.51
+108,2026-11-06 16:38:50,1091.5,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.22
+109,2026-11-06 16:39:00,1101.7,19156,powershell.exe,smtc-bridge,0.78,91.65,104.57
+109,2026-11-06 16:39:00,1101.7,21364,DeepSeek Harness.exe,host,10.31,471.15,622.44
+109,2026-11-06 16:39:00,1101.7,9896,DeepSeek Harness.exe,subprocess,0,149.04,58.96
+109,2026-11-06 16:39:00,1101.7,12760,DeepSeek Harness.exe,gpu,75.47,200.2,378.11
+109,2026-11-06 16:39:00,1101.7,20680,DeepSeek Harness.exe,subprocess,0.16,140.63,58.88
+109,2026-11-06 16:39:00,1101.7,17804,DeepSeek Harness.exe,renderer,140.62,772.77,826.3
+109,2026-11-06 16:39:00,1101.7,5036,DeepSeek Harness.exe,main,6.41,126.02,145.39
+109,2026-11-06 16:39:00,1101.7,21464,DeepSeek Harness.exe,subprocess,3.12,148.77,58.11
+109,2026-11-06 16:39:00,1101.7,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+109,2026-11-06 16:39:00,1101.7,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.21
+110,2026-11-06 16:39:11,1112.2,19156,powershell.exe,smtc-bridge,0.62,91.65,104.57
+110,2026-11-06 16:39:11,1112.2,21364,DeepSeek Harness.exe,host,0.94,469.43,620.12
+110,2026-11-06 16:39:11,1112.2,9896,DeepSeek Harness.exe,subprocess,0,149.22,59.21
+110,2026-11-06 16:39:11,1112.2,12760,DeepSeek Harness.exe,gpu,84.38,200.4,422.88
+110,2026-11-06 16:39:11,1112.2,20680,DeepSeek Harness.exe,subprocess,0,140.81,59.12
+110,2026-11-06 16:39:11,1112.2,17804,DeepSeek Harness.exe,renderer,134.53,771.26,824.06
+110,2026-11-06 16:39:11,1112.2,5036,DeepSeek Harness.exe,main,7.19,126.81,146.69
+110,2026-11-06 16:39:11,1112.2,21464,DeepSeek Harness.exe,subprocess,1.09,149.03,58.4
+110,2026-11-06 16:39:11,1112.2,23088,DeepSeek Harness.exe,main,0,79.78,24.26
+110,2026-11-06 16:39:11,1112.2,14672,DeepSeek Harness.exe,utility,0,47.66,12.21
+111,2026-11-06 16:39:21,1122.4,19156,powershell.exe,smtc-bridge,0.31,91.64,104.54
+111,2026-11-06 16:39:21,1122.4,21364,DeepSeek Harness.exe,host,3.59,479.61,630.57
+111,2026-11-06 16:39:21,1122.4,9896,DeepSeek Harness.exe,subprocess,0,149.42,59.47
+111,2026-11-06 16:39:21,1122.4,12760,DeepSeek Harness.exe,gpu,70.62,202.46,614.72
+111,2026-11-06 16:39:21,1122.4,20680,DeepSeek Harness.exe,subprocess,0,141.03,59.16
+111,2026-11-06 16:39:21,1122.4,17804,DeepSeek Harness.exe,renderer,122.66,751.2,806.5
+111,2026-11-06 16:39:21,1122.4,5036,DeepSeek Harness.exe,main,10.94,125.19,142.27
+111,2026-11-06 16:39:21,1122.4,21464,DeepSeek Harness.exe,subprocess,0.31,149.23,58.87
+111,2026-11-06 16:39:21,1122.4,23088,DeepSeek Harness.exe,main,0,79.5,23.76
+111,2026-11-06 16:39:21,1122.4,14672,DeepSeek Harness.exe,utility,0,47.66,12.21
+112,2026-11-06 16:39:31,1132.7,19156,powershell.exe,smtc-bridge,0.94,85.36,97.59
+112,2026-11-06 16:39:31,1132.7,21364,DeepSeek Harness.exe,host,5,496.51,649.2
+112,2026-11-06 16:39:31,1132.7,9896,DeepSeek Harness.exe,subprocess,0.16,149.64,59.75
+112,2026-11-06 16:39:31,1132.7,12760,DeepSeek Harness.exe,gpu,79.22,202.37,380.05
+112,2026-11-06 16:39:31,1132.7,20680,DeepSeek Harness.exe,subprocess,0,141.18,59.62
+112,2026-11-06 16:39:31,1132.7,17804,DeepSeek Harness.exe,renderer,135,783.17,837.43
+112,2026-11-06 16:39:31,1132.7,5036,DeepSeek Harness.exe,main,3.44,124.75,142.11
+112,2026-11-06 16:39:31,1132.7,21464,DeepSeek Harness.exe,subprocess,2.5,148.71,58.12
+112,2026-11-06 16:39:31,1132.7,23088,DeepSeek Harness.exe,main,0.16,79.59,24.01
+112,2026-11-06 16:39:31,1132.7,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+113,2026-11-06 16:39:41,1142.9,19156,powershell.exe,smtc-bridge,0.78,89.25,102.19
+113,2026-11-06 16:39:41,1142.9,21364,DeepSeek Harness.exe,host,3.59,508.82,662.39
+113,2026-11-06 16:39:41,1142.9,9896,DeepSeek Harness.exe,subprocess,0,149,58.96
+113,2026-11-06 16:39:41,1142.9,12760,DeepSeek Harness.exe,gpu,80.78,202.27,362.05
+113,2026-11-06 16:39:41,1142.9,20680,DeepSeek Harness.exe,subprocess,0,140.59,58.88
+113,2026-11-06 16:39:41,1142.9,17804,DeepSeek Harness.exe,renderer,132.19,792.98,846.71
+113,2026-11-06 16:39:41,1142.9,5036,DeepSeek Harness.exe,main,2.81,124.65,142.31
+113,2026-11-06 16:39:41,1142.9,21464,DeepSeek Harness.exe,subprocess,0.62,148.96,58.39
+113,2026-11-06 16:39:41,1142.9,23088,DeepSeek Harness.exe,main,0,79.88,24.51
+113,2026-11-06 16:39:41,1142.9,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.21
+114,2026-11-06 16:39:52,1153.2,19156,powershell.exe,smtc-bridge,0.62,90.8,103.68
+114,2026-11-06 16:39:52,1153.2,21364,DeepSeek Harness.exe,host,10.47,481.3,636.53
+114,2026-11-06 16:39:52,1153.2,9896,DeepSeek Harness.exe,subprocess,0,149.19,59.21
+114,2026-11-06 16:39:52,1153.2,12760,DeepSeek Harness.exe,gpu,86.25,202.35,367.96
+114,2026-11-06 16:39:52,1153.2,20680,DeepSeek Harness.exe,subprocess,0,140.78,58.88
+114,2026-11-06 16:39:52,1153.2,17804,DeepSeek Harness.exe,renderer,139.06,788.75,841.89
+114,2026-11-06 16:39:52,1153.2,5036,DeepSeek Harness.exe,main,2.81,124.93,143.07
+114,2026-11-06 16:39:52,1153.2,21464,DeepSeek Harness.exe,subprocess,2.19,149.22,58.86
+114,2026-11-06 16:39:52,1153.2,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+114,2026-11-06 16:39:52,1153.2,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.21
+115,2026-11-06 16:40:02,1163.5,19156,powershell.exe,smtc-bridge,0.94,90.9,103.7
+115,2026-11-06 16:40:02,1163.5,21364,DeepSeek Harness.exe,host,4.38,497.42,649.1
+115,2026-11-06 16:40:02,1163.5,9896,DeepSeek Harness.exe,subprocess,0.16,149.38,59.46
+115,2026-11-06 16:40:02,1163.5,12760,DeepSeek Harness.exe,gpu,81.25,202.29,360.31
+115,2026-11-06 16:40:02,1163.5,20680,DeepSeek Harness.exe,subprocess,0,140.99,59.15
+115,2026-11-06 16:40:02,1163.5,17804,DeepSeek Harness.exe,renderer,134.06,788.94,842.38
+115,2026-11-06 16:40:02,1163.5,5036,DeepSeek Harness.exe,main,3.44,126.79,145.07
+115,2026-11-06 16:40:02,1163.5,21464,DeepSeek Harness.exe,subprocess,1.25,148.68,58.11
+115,2026-11-06 16:40:02,1163.5,23088,DeepSeek Harness.exe,main,0,79.69,24.01
+115,2026-11-06 16:40:02,1163.5,14672,DeepSeek Harness.exe,utility,0,47.66,12.21
+116,2026-11-06 16:40:12,1174,19156,powershell.exe,smtc-bridge,0.78,90.89,103.68
+116,2026-11-06 16:40:12,1174,21364,DeepSeek Harness.exe,host,1.88,493.31,644.52
+116,2026-11-06 16:40:12,1174,9896,DeepSeek Harness.exe,subprocess,0,149.6,59.5
+116,2026-11-06 16:40:12,1174,12760,DeepSeek Harness.exe,gpu,82.34,200.64,354.01
+116,2026-11-06 16:40:12,1174,20680,DeepSeek Harness.exe,subprocess,0,141.15,59.62
+116,2026-11-06 16:40:12,1174,17804,DeepSeek Harness.exe,renderer,129.38,790.88,841.3
+116,2026-11-06 16:40:12,1174,5036,DeepSeek Harness.exe,main,3.28,124.77,142.99
+116,2026-11-06 16:40:12,1174,21464,DeepSeek Harness.exe,subprocess,1.56,148.91,58.37
+116,2026-11-06 16:40:12,1174,23088,DeepSeek Harness.exe,main,0,79.98,24.51
+116,2026-11-06 16:40:12,1174,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.21
+117,2026-11-06 16:40:23,1184.3,19156,powershell.exe,smtc-bridge,0.31,91.08,104.6
+117,2026-11-06 16:40:23,1184.3,21364,DeepSeek Harness.exe,host,2.03,493.64,645.06
+117,2026-11-06 16:40:23,1184.3,9896,DeepSeek Harness.exe,subprocess,0.16,149.75,59.96
+117,2026-11-06 16:40:23,1184.3,12760,DeepSeek Harness.exe,gpu,77.97,202.39,359.12
+117,2026-11-06 16:40:23,1184.3,20680,DeepSeek Harness.exe,subprocess,0,140.56,58.88
+117,2026-11-06 16:40:23,1184.3,17804,DeepSeek Harness.exe,renderer,133.28,790.47,841.39
+117,2026-11-06 16:40:23,1184.3,5036,DeepSeek Harness.exe,main,2.66,125.37,144.13
+117,2026-11-06 16:40:23,1184.3,21464,DeepSeek Harness.exe,subprocess,0.62,149.17,58.4
+117,2026-11-06 16:40:23,1184.3,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+117,2026-11-06 16:40:23,1184.3,14672,DeepSeek Harness.exe,utility,0.47,47.66,12.21
+118,2026-11-06 16:40:33,1194.5,19156,powershell.exe,smtc-bridge,0.94,91.08,104.6
+118,2026-11-06 16:40:33,1194.5,21364,DeepSeek Harness.exe,host,4.06,494.19,646.44
+118,2026-11-06 16:40:33,1194.5,9896,DeepSeek Harness.exe,subprocess,0.16,149.16,59.21
+118,2026-11-06 16:40:33,1194.5,12760,DeepSeek Harness.exe,gpu,82.34,201.48,330.02
+118,2026-11-06 16:40:33,1194.5,20680,DeepSeek Harness.exe,subprocess,0.16,140.75,58.88
+118,2026-11-06 16:40:33,1194.5,17804,DeepSeek Harness.exe,renderer,136.09,795.57,846.59
+118,2026-11-06 16:40:33,1194.5,5036,DeepSeek Harness.exe,main,2.5,125,143.75
+118,2026-11-06 16:40:33,1194.5,21464,DeepSeek Harness.exe,subprocess,0.78,149.35,58.85
+118,2026-11-06 16:40:33,1194.5,23088,DeepSeek Harness.exe,main,0.16,79.78,24.26
+118,2026-11-06 16:40:33,1194.5,14672,DeepSeek Harness.exe,utility,0.31,47.65,12.21
+119,2026-11-06 16:40:43,1204.7,19156,powershell.exe,smtc-bridge,0.62,91.28,104.6
+119,2026-11-06 16:40:43,1204.7,21364,DeepSeek Harness.exe,host,1.25,493.86,645.59
+119,2026-11-06 16:40:43,1204.7,9896,DeepSeek Harness.exe,subprocess,0.31,149.34,59.46
+119,2026-11-06 16:40:43,1204.7,12760,DeepSeek Harness.exe,gpu,74.53,201.99,337.41
+119,2026-11-06 16:40:43,1204.7,20680,DeepSeek Harness.exe,subprocess,0.31,140.95,59.14
+119,2026-11-06 16:40:43,1204.7,17804,DeepSeek Harness.exe,renderer,126.72,798.11,849.27
+119,2026-11-06 16:40:43,1204.7,5036,DeepSeek Harness.exe,main,1.09,126.06,145.34
+119,2026-11-06 16:40:43,1204.7,21464,DeepSeek Harness.exe,subprocess,2.19,148.84,58.13
+119,2026-11-06 16:40:43,1204.7,23088,DeepSeek Harness.exe,main,0.16,79.51,23.76
+119,2026-11-06 16:40:43,1204.7,14672,DeepSeek Harness.exe,utility,0.47,47.65,12.21
+120,2026-11-06 16:40:53,1214.9,19156,powershell.exe,smtc-bridge,0.62,91.27,104.6
+120,2026-11-06 16:40:53,1214.9,21364,DeepSeek Harness.exe,host,8.28,468.08,618.46
+120,2026-11-06 16:40:53,1214.9,9896,DeepSeek Harness.exe,subprocess,0,149.55,59.49
+120,2026-11-06 16:40:53,1214.9,12760,DeepSeek Harness.exe,gpu,58.44,201.91,351.81
+120,2026-11-06 16:40:53,1214.9,20680,DeepSeek Harness.exe,subprocess,0,141.12,59.62
+120,2026-11-06 16:40:53,1214.9,17804,DeepSeek Harness.exe,renderer,119.38,801.05,851.5
+120,2026-11-06 16:40:53,1214.9,5036,DeepSeek Harness.exe,main,3.91,125.77,145.27
+120,2026-11-06 16:40:53,1214.9,21464,DeepSeek Harness.exe,subprocess,0.47,149.15,58.45
+120,2026-11-06 16:40:53,1214.9,23088,DeepSeek Harness.exe,main,0,79.6,24.01
+120,2026-11-06 16:40:53,1214.9,14672,DeepSeek Harness.exe,utility,0,47.66,12.21
+121,2026-11-06 16:41:04,1225.1,14676,DeepSeek Harness.exe,subprocess,0,149.73,60.18
+121,2026-11-06 16:41:04,1225.1,19156,powershell.exe,smtc-bridge,0.78,89.29,102.61
+121,2026-11-06 16:41:04,1225.1,21364,DeepSeek Harness.exe,host,2.5,468.31,619.12
+121,2026-11-06 16:41:04,1225.1,9896,DeepSeek Harness.exe,subprocess,0,149.71,59.96
+121,2026-11-06 16:41:04,1225.1,12760,DeepSeek Harness.exe,gpu,82.5,201.73,352.71
+121,2026-11-06 16:41:04,1225.1,20680,DeepSeek Harness.exe,subprocess,0,140.52,58.62
+121,2026-11-06 16:41:04,1225.1,17804,DeepSeek Harness.exe,renderer,130.31,801.48,851.72
+121,2026-11-06 16:41:04,1225.1,5036,DeepSeek Harness.exe,main,7.97,125.89,145.68
+121,2026-11-06 16:41:04,1225.1,23088,DeepSeek Harness.exe,main,0,79.89,24.51
+121,2026-11-06 16:41:04,1225.1,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+122,2026-11-06 16:41:14,1235.5,14676,DeepSeek Harness.exe,subprocess,0.78,150.1,60.57
+122,2026-11-06 16:41:14,1235.5,19156,powershell.exe,smtc-bridge,0.47,89.29,102.61
+122,2026-11-06 16:41:14,1235.5,21364,DeepSeek Harness.exe,host,0.16,468.59,619.26
+122,2026-11-06 16:41:14,1235.5,9896,DeepSeek Harness.exe,subprocess,0,149.11,59.21
+122,2026-11-06 16:41:14,1235.5,12760,DeepSeek Harness.exe,gpu,69.53,204.63,563.46
+122,2026-11-06 16:41:14,1235.5,20680,DeepSeek Harness.exe,subprocess,0,140.71,58.88
+122,2026-11-06 16:41:14,1235.5,17804,DeepSeek Harness.exe,renderer,130.47,745.56,790.28
+122,2026-11-06 16:41:14,1235.5,5036,DeepSeek Harness.exe,main,6.25,126.02,146.07
+122,2026-11-06 16:41:14,1235.5,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+122,2026-11-06 16:41:14,1235.5,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+123,2026-11-06 16:41:24,1245.7,14676,DeepSeek Harness.exe,subprocess,0.78,148.64,58.57
+123,2026-11-06 16:41:24,1245.7,19156,powershell.exe,smtc-bridge,0.78,89.29,102.61
+123,2026-11-06 16:41:24,1245.7,21364,DeepSeek Harness.exe,host,0.62,468.84,619.72
+123,2026-11-06 16:41:24,1245.7,9896,DeepSeek Harness.exe,subprocess,0,149.3,59.21
+123,2026-11-06 16:41:24,1245.7,12760,DeepSeek Harness.exe,gpu,74.53,201.96,432.19
+123,2026-11-06 16:41:24,1245.7,20680,DeepSeek Harness.exe,subprocess,0,140.9,59.14
+123,2026-11-06 16:41:24,1245.7,17804,DeepSeek Harness.exe,renderer,132.5,746.16,790.62
+123,2026-11-06 16:41:24,1245.7,5036,DeepSeek Harness.exe,main,3.44,125.55,145.73
+123,2026-11-06 16:41:24,1245.7,23088,DeepSeek Harness.exe,main,0.16,79.7,24.01
+123,2026-11-06 16:41:24,1245.7,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+124,2026-11-06 16:41:34,1255.9,14676,DeepSeek Harness.exe,subprocess,0.62,149.02,58.38
+124,2026-11-06 16:41:34,1255.9,19156,powershell.exe,smtc-bridge,0.31,89.29,102.61
+124,2026-11-06 16:41:34,1255.9,21364,DeepSeek Harness.exe,host,1.41,466.89,618.6
+124,2026-11-06 16:41:34,1255.9,9896,DeepSeek Harness.exe,subprocess,0.16,149.5,59.48
+124,2026-11-06 16:41:34,1255.9,12760,DeepSeek Harness.exe,gpu,68.28,202.2,381.19
+124,2026-11-06 16:41:34,1255.9,20680,DeepSeek Harness.exe,subprocess,0.16,141.11,59.42
+124,2026-11-06 16:41:34,1255.9,17804,DeepSeek Harness.exe,renderer,126.88,751.78,795.91
+124,2026-11-06 16:41:34,1255.9,5036,DeepSeek Harness.exe,main,12.66,124.59,141.59
+124,2026-11-06 16:41:34,1255.9,23088,DeepSeek Harness.exe,main,0.16,79.99,24.51
+124,2026-11-06 16:41:34,1255.9,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+125,2026-11-06 16:41:45,1266.1,19156,powershell.exe,smtc-bridge,0.47,89.29,102.61
+125,2026-11-06 16:41:45,1266.1,21364,DeepSeek Harness.exe,host,1.09,433.64,584.7
+125,2026-11-06 16:41:45,1266.1,9896,DeepSeek Harness.exe,subprocess,0,149.66,59.96
+125,2026-11-06 16:41:45,1266.1,12760,DeepSeek Harness.exe,gpu,65.94,201.92,368.35
+125,2026-11-06 16:41:45,1266.1,20680,DeepSeek Harness.exe,subprocess,0,140.48,58.62
+125,2026-11-06 16:41:45,1266.1,17804,DeepSeek Harness.exe,renderer,121.25,767.2,811.86
+125,2026-11-06 16:41:45,1266.1,5036,DeepSeek Harness.exe,main,8.44,125.07,142.56
+125,2026-11-06 16:41:45,1266.1,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+125,2026-11-06 16:41:45,1266.1,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+126,2026-11-06 16:41:55,1276.2,19156,powershell.exe,smtc-bridge,0.16,89.29,102.61
+126,2026-11-06 16:41:55,1276.2,21364,DeepSeek Harness.exe,host,3.12,449.12,601.61
+126,2026-11-06 16:41:55,1276.2,9896,DeepSeek Harness.exe,subprocess,0,149.07,59.21
+126,2026-11-06 16:41:55,1276.2,12760,DeepSeek Harness.exe,gpu,56.09,202.21,367.03
+126,2026-11-06 16:41:55,1276.2,20680,DeepSeek Harness.exe,subprocess,0,140.66,58.88
+126,2026-11-06 16:41:55,1276.2,17804,DeepSeek Harness.exe,renderer,128.12,777.1,820.24
+126,2026-11-06 16:41:55,1276.2,5036,DeepSeek Harness.exe,main,3.75,124.57,142.17
+126,2026-11-06 16:41:55,1276.2,23088,DeepSeek Harness.exe,main,0,79.8,24.26
+126,2026-11-06 16:41:55,1276.2,14672,DeepSeek Harness.exe,utility,0.31,47.66,12.21
+127,2026-11-06 16:42:05,1286.4,19156,powershell.exe,smtc-bridge,0.62,83.56,95.83
+127,2026-11-06 16:42:05,1286.4,21364,DeepSeek Harness.exe,host,7.97,435.28,588.81
+127,2026-11-06 16:42:05,1286.4,9896,DeepSeek Harness.exe,subprocess,0,149.25,59.21
+127,2026-11-06 16:42:05,1286.4,12760,DeepSeek Harness.exe,gpu,64.38,202.2,370.91
+127,2026-11-06 16:42:05,1286.4,20680,DeepSeek Harness.exe,subprocess,0,140.84,59.13
+127,2026-11-06 16:42:05,1286.4,17804,DeepSeek Harness.exe,renderer,122.03,794.55,837.83
+127,2026-11-06 16:42:05,1286.4,5036,DeepSeek Harness.exe,main,4.22,125.41,143.45
+127,2026-11-06 16:42:05,1286.4,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+127,2026-11-06 16:42:05,1286.4,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.21
+128,2026-11-06 16:42:15,1296.6,19156,powershell.exe,smtc-bridge,0,85.2,97.69
+128,2026-11-06 16:42:15,1296.6,21364,DeepSeek Harness.exe,host,2.66,460.89,612.29
+128,2026-11-06 16:42:15,1296.6,9896,DeepSeek Harness.exe,subprocess,0.47,149.44,59.47
+128,2026-11-06 16:42:15,1296.6,12760,DeepSeek Harness.exe,gpu,61.25,203.5,365.44
+128,2026-11-06 16:42:15,1296.6,20680,DeepSeek Harness.exe,subprocess,0.47,141.05,59.16
+128,2026-11-06 16:42:15,1296.6,17804,DeepSeek Harness.exe,renderer,122.81,804.87,848.28
+128,2026-11-06 16:42:15,1296.6,5036,DeepSeek Harness.exe,main,5.94,124.93,143.02
+128,2026-11-06 16:42:15,1296.6,23088,DeepSeek Harness.exe,main,0.16,79.62,24.01
+128,2026-11-06 16:42:15,1296.6,14672,DeepSeek Harness.exe,utility,0,47.66,12.21
+129,2026-11-06 16:42:25,1306.7,19156,powershell.exe,smtc-bridge,0.31,86.11,98.48
+129,2026-11-06 16:42:25,1306.7,21364,DeepSeek Harness.exe,host,6.09,442.57,593.57
+129,2026-11-06 16:42:25,1306.7,9896,DeepSeek Harness.exe,subprocess,0,149.66,59.75
+129,2026-11-06 16:42:25,1306.7,12760,DeepSeek Harness.exe,gpu,55.16,202.18,365.93
+129,2026-11-06 16:42:25,1306.7,20680,DeepSeek Harness.exe,subprocess,0,141.2,59.62
+129,2026-11-06 16:42:25,1306.7,17804,DeepSeek Harness.exe,renderer,123.44,811.63,855.47
+129,2026-11-06 16:42:25,1306.7,5036,DeepSeek Harness.exe,main,1.72,125.54,143.89
+129,2026-11-06 16:42:25,1306.7,23088,DeepSeek Harness.exe,main,0,79.91,24.51
+129,2026-11-06 16:42:25,1306.7,14672,DeepSeek Harness.exe,utility,0.16,47.66,12.21
+130,2026-11-06 16:42:35,1316.8,19156,powershell.exe,smtc-bridge,0.16,86.09,98.44
+130,2026-11-06 16:42:35,1316.8,21364,DeepSeek Harness.exe,host,4.38,477.59,629.32
+130,2026-11-06 16:42:35,1316.8,9896,DeepSeek Harness.exe,subprocess,0.16,149.02,58.96
+130,2026-11-06 16:42:35,1316.8,12760,DeepSeek Harness.exe,gpu,51.88,203.76,389.49
+130,2026-11-06 16:42:35,1316.8,20680,DeepSeek Harness.exe,subprocess,0.16,140.61,58.88
+130,2026-11-06 16:42:35,1316.8,17804,DeepSeek Harness.exe,renderer,123.75,827.96,871.91
+130,2026-11-06 16:42:35,1316.8,5036,DeepSeek Harness.exe,main,5.94,125.22,143.66
+130,2026-11-06 16:42:35,1316.8,23088,DeepSeek Harness.exe,main,0.16,79.52,23.76
+130,2026-11-06 16:42:35,1316.8,14672,DeepSeek Harness.exe,utility,0,47.66,12.21
+131,2026-11-06 16:42:45,1327,19156,powershell.exe,smtc-bridge,0.62,86.09,98.44
+131,2026-11-06 16:42:45,1327,21364,DeepSeek Harness.exe,host,1.88,495.84,648.05
+131,2026-11-06 16:42:45,1327,9896,DeepSeek Harness.exe,subprocess,0,149.2,59.21
+131,2026-11-06 16:42:45,1327,12760,DeepSeek Harness.exe,gpu,48.59,202.73,378.55
+131,2026-11-06 16:42:45,1327,20680,DeepSeek Harness.exe,subprocess,0,140.79,58.88
+131,2026-11-06 16:42:45,1327,17804,DeepSeek Harness.exe,renderer,118.91,825.67,863.54
+131,2026-11-06 16:42:45,1327,5036,DeepSeek Harness.exe,main,2.97,125.57,144.41
+131,2026-11-06 16:42:45,1327,23088,DeepSeek Harness.exe,main,0,79.71,24.01
+131,2026-11-06 16:42:45,1327,14672,DeepSeek Harness.exe,utility,0,47.65,12.21
+132,2026-11-06 16:42:56,1337.1,19156,powershell.exe,smtc-bridge,0.78,86.09,98.44
+132,2026-11-06 16:42:56,1337.1,21364,DeepSeek Harness.exe,host,1.56,493.07,645.17
+132,2026-11-06 16:42:56,1337.1,9896,DeepSeek Harness.exe,subprocess,0,149.39,59.46
+132,2026-11-06 16:42:56,1337.1,12760,DeepSeek Harness.exe,gpu,47.66,203.29,375.79
+132,2026-11-06 16:42:56,1337.1,20680,DeepSeek Harness.exe,subprocess,0,141,59.15
+132,2026-11-06 16:42:56,1337.1,17804,DeepSeek Harness.exe,renderer,124.22,832.94,867.51
+132,2026-11-06 16:42:56,1337.1,5036,DeepSeek Harness.exe,main,3.75,126.17,145.19
+132,2026-11-06 16:42:56,1337.1,23088,DeepSeek Harness.exe,main,0,80,24.51
+132,2026-11-06 16:42:56,1337.1,14672,DeepSeek Harness.exe,utility,0.16,47.65,12.21
+133,2026-11-06 16:43:06,1347.3,19156,powershell.exe,smtc-bridge,0.47,86.1,98.44
+133,2026-11-06 16:43:06,1347.3,21364,DeepSeek Harness.exe,host,9.84,486.06,642.53
+133,2026-11-06 16:43:06,1347.3,9896,DeepSeek Harness.exe,subprocess,0,149.6,59.5
+133,2026-11-06 16:43:06,1347.3,12760,DeepSeek Harness.exe,gpu,60.16,202.71,414.5
+133,2026-11-06 16:43:06,1347.3,20680,DeepSeek Harness.exe,subprocess,0,141.15,59.62
+133,2026-11-06 16:43:06,1347.3,17804,DeepSeek Harness.exe,renderer,135.78,836.98,867.3
+133,2026-11-06 16:43:06,1347.3,5036,DeepSeek Harness.exe,main,12.81,130.87,150.74
+133,2026-11-06 16:43:06,1347.3,23088,DeepSeek Harness.exe,main,0,79.54,24.01
+133,2026-11-06 16:43:06,1347.3,14672,DeepSeek Harness.exe,utility,0.31,48.09,12.7
+134,2026-11-06 16:43:16,1357.5,19156,powershell.exe,smtc-bridge,0.31,86.19,98.88
+134,2026-11-06 16:43:16,1357.5,21364,DeepSeek Harness.exe,host,1.25,485.7,642.52
+134,2026-11-06 16:43:16,1357.5,9896,DeepSeek Harness.exe,subprocess,0,149.74,59.96
+134,2026-11-06 16:43:16,1357.5,12760,DeepSeek Harness.exe,gpu,72.66,203.29,346.19
+134,2026-11-06 16:43:16,1357.5,20680,DeepSeek Harness.exe,subprocess,0,140.56,58.88
+134,2026-11-06 16:43:16,1357.5,17804,DeepSeek Harness.exe,renderer,111.87,819.72,850.48
+134,2026-11-06 16:43:16,1357.5,5036,DeepSeek Harness.exe,main,2.97,126.44,145.52
+134,2026-11-06 16:43:16,1357.5,23088,DeepSeek Harness.exe,main,0,79.82,24.26
+134,2026-11-06 16:43:16,1357.5,14672,DeepSeek Harness.exe,utility,0,47.7,12.25
+135,2026-11-06 16:43:26,1367.7,19156,powershell.exe,smtc-bridge,0.62,86.28,98.88
+135,2026-11-06 16:43:26,1367.7,21364,DeepSeek Harness.exe,host,0.62,486.22,643.38
+135,2026-11-06 16:43:26,1367.7,9896,DeepSeek Harness.exe,subprocess,0,149.15,59.21
+135,2026-11-06 16:43:26,1367.7,12760,DeepSeek Harness.exe,gpu,72.97,207.88,389.65
+135,2026-11-06 16:43:26,1367.7,20680,DeepSeek Harness.exe,subprocess,0,140.74,58.88
+135,2026-11-06 16:43:26,1367.7,17804,DeepSeek Harness.exe,renderer,111.25,812.04,842.92
+135,2026-11-06 16:43:26,1367.7,5036,DeepSeek Harness.exe,main,7.97,125.14,141.77
+135,2026-11-06 16:43:26,1367.7,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+135,2026-11-06 16:43:26,1367.7,14672,DeepSeek Harness.exe,utility,0.16,47.7,12.25
+136,2026-11-06 16:43:36,1377.8,19156,powershell.exe,smtc-bridge,0.47,86.28,98.88
+136,2026-11-06 16:43:36,1377.8,21364,DeepSeek Harness.exe,host,3.28,485.61,641.2
+136,2026-11-06 16:43:36,1377.8,9896,DeepSeek Harness.exe,subprocess,0,149.33,59.46
+136,2026-11-06 16:43:36,1377.8,12760,DeepSeek Harness.exe,gpu,41.88,207.51,335.81
+136,2026-11-06 16:43:36,1377.8,20680,DeepSeek Harness.exe,subprocess,0,140.94,59.14
+136,2026-11-06 16:43:36,1377.8,17804,DeepSeek Harness.exe,renderer,113.28,838.76,864.8
+136,2026-11-06 16:43:36,1377.8,5036,DeepSeek Harness.exe,main,5.47,125.81,142.82
+136,2026-11-06 16:43:36,1377.8,23088,DeepSeek Harness.exe,main,0,79.63,24.01
+136,2026-11-06 16:43:36,1377.8,14672,DeepSeek Harness.exe,utility,0.16,47.7,12.26
+137,2026-11-06 16:43:46,1387.9,19156,powershell.exe,smtc-bridge,0.47,86.51,98.88
+137,2026-11-06 16:43:46,1387.9,21364,DeepSeek Harness.exe,host,2.97,507.74,661.46
+137,2026-11-06 16:43:46,1387.9,9896,DeepSeek Harness.exe,subprocess,0.16,149.54,59.48
+137,2026-11-06 16:43:46,1387.9,12760,DeepSeek Harness.exe,gpu,52.97,207.69,320.14
+137,2026-11-06 16:43:46,1387.9,20680,DeepSeek Harness.exe,subprocess,0.16,141.11,59.62
+137,2026-11-06 16:43:46,1387.9,17804,DeepSeek Harness.exe,renderer,100.63,1015.07,1041.38
+137,2026-11-06 16:43:46,1387.9,5036,DeepSeek Harness.exe,main,4.22,125.2,142.23
+137,2026-11-06 16:43:46,1387.9,23088,DeepSeek Harness.exe,main,0,79.92,24.51
+137,2026-11-06 16:43:46,1387.9,14672,DeepSeek Harness.exe,utility,0,47.7,12.25
+138,2026-11-06 16:43:56,1398.1,19156,powershell.exe,smtc-bridge,0.16,86.51,98.88
+138,2026-11-06 16:43:56,1398.1,21364,DeepSeek Harness.exe,host,5.78,472.34,622.73
+138,2026-11-06 16:43:56,1398.1,9896,DeepSeek Harness.exe,subprocess,0.16,149.69,59.96
+138,2026-11-06 16:43:56,1398.1,12760,DeepSeek Harness.exe,gpu,55.94,210.77,372.12
+138,2026-11-06 16:43:56,1398.1,20680,DeepSeek Harness.exe,subprocess,0.16,140.51,58.62
+138,2026-11-06 16:43:56,1398.1,17804,DeepSeek Harness.exe,renderer,105.94,1124.71,1148.58
+138,2026-11-06 16:43:56,1398.1,5036,DeepSeek Harness.exe,main,7.66,126.05,143.53
+138,2026-11-06 16:43:56,1398.1,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+138,2026-11-06 16:43:56,1398.1,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+139,2026-11-06 16:44:07,1408.2,19156,powershell.exe,smtc-bridge,0.16,84.25,97.99
+139,2026-11-06 16:44:07,1408.2,21364,DeepSeek Harness.exe,host,3.75,480.2,630.54
+139,2026-11-06 16:44:07,1408.2,9896,DeepSeek Harness.exe,subprocess,0,149.1,59.21
+139,2026-11-06 16:44:07,1408.2,12760,DeepSeek Harness.exe,gpu,97.5,215.39,860.73
+139,2026-11-06 16:44:07,1408.2,20680,DeepSeek Harness.exe,subprocess,0,140.69,58.88
+139,2026-11-06 16:44:07,1408.2,17804,DeepSeek Harness.exe,renderer,102.66,1134.61,1157.29
+139,2026-11-06 16:44:07,1408.2,5036,DeepSeek Harness.exe,main,8.28,127.45,145.35
+139,2026-11-06 16:44:07,1408.2,23088,DeepSeek Harness.exe,main,0,79.73,24.01
+139,2026-11-06 16:44:07,1408.2,14672,DeepSeek Harness.exe,utility,0.16,47.69,12.25
+140,2026-11-06 16:44:17,1418.4,19156,powershell.exe,smtc-bridge,0.94,85.71,99.25
+140,2026-11-06 16:44:17,1418.4,21364,DeepSeek Harness.exe,host,2.97,486.61,636.98
+140,2026-11-06 16:44:17,1418.4,9896,DeepSeek Harness.exe,subprocess,0,149.28,59.21
+140,2026-11-06 16:44:17,1418.4,12760,DeepSeek Harness.exe,gpu,56.72,214.15,322.26
+140,2026-11-06 16:44:17,1418.4,20680,DeepSeek Harness.exe,subprocess,0,140.88,59.13
+140,2026-11-06 16:44:17,1418.4,17804,DeepSeek Harness.exe,renderer,93.12,1148.87,1171.88
+140,2026-11-06 16:44:17,1418.4,5036,DeepSeek Harness.exe,main,2.5,126.45,144.57
+140,2026-11-06 16:44:17,1418.4,23088,DeepSeek Harness.exe,main,0,80.02,24.51
+140,2026-11-06 16:44:17,1418.4,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+141,2026-11-06 16:44:27,1428.5,19156,powershell.exe,smtc-bridge,0.47,85.7,99.22
+141,2026-11-06 16:44:27,1428.5,21364,DeepSeek Harness.exe,host,3.91,505.09,657.27
+141,2026-11-06 16:44:27,1428.5,9896,DeepSeek Harness.exe,subprocess,0,149.48,59.48
+141,2026-11-06 16:44:27,1428.5,12760,DeepSeek Harness.exe,gpu,45.94,199.86,321.25
+141,2026-11-06 16:44:27,1428.5,20680,DeepSeek Harness.exe,subprocess,0,141.09,59.41
+141,2026-11-06 16:44:27,1428.5,17804,DeepSeek Harness.exe,renderer,108.12,739.83,774.98
+141,2026-11-06 16:44:27,1428.5,5036,DeepSeek Harness.exe,main,4.69,126.47,144.62
+141,2026-11-06 16:44:27,1428.5,23088,DeepSeek Harness.exe,main,0,79.55,24.01
+141,2026-11-06 16:44:27,1428.5,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+142,2026-11-06 16:44:37,1438.6,19156,powershell.exe,smtc-bridge,0.78,86.02,99.22
+142,2026-11-06 16:44:37,1438.6,21364,DeepSeek Harness.exe,host,5.78,462.53,611.82
+142,2026-11-06 16:44:37,1438.6,9896,DeepSeek Harness.exe,subprocess,0,149.65,59.96
+142,2026-11-06 16:44:37,1438.6,12760,DeepSeek Harness.exe,gpu,0.16,195.31,278.06
+142,2026-11-06 16:44:37,1438.6,20680,DeepSeek Harness.exe,subprocess,0,141.23,59.62
+142,2026-11-06 16:44:37,1438.6,17804,DeepSeek Harness.exe,renderer,12.5,701.54,740.22
+142,2026-11-06 16:44:37,1438.6,5036,DeepSeek Harness.exe,main,0.47,125.93,144.25
+142,2026-11-06 16:44:37,1438.6,23088,DeepSeek Harness.exe,main,0,79.84,24.51
+142,2026-11-06 16:44:37,1438.6,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+143,2026-11-06 16:44:47,1448.7,19156,powershell.exe,smtc-bridge,0.47,86.03,99.25
+143,2026-11-06 16:44:47,1448.7,21364,DeepSeek Harness.exe,host,0.31,459.69,608.82
+143,2026-11-06 16:44:47,1448.7,9896,DeepSeek Harness.exe,subprocess,0.16,149.05,58.96
+143,2026-11-06 16:44:47,1448.7,12760,DeepSeek Harness.exe,gpu,0,194.24,277
+143,2026-11-06 16:44:47,1448.7,20680,DeepSeek Harness.exe,subprocess,0.16,140.64,58.88
+143,2026-11-06 16:44:47,1448.7,17804,DeepSeek Harness.exe,renderer,3.44,702.34,740.7
+143,2026-11-06 16:44:47,1448.7,5036,DeepSeek Harness.exe,main,0.31,126.27,144.96
+143,2026-11-06 16:44:47,1448.7,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+143,2026-11-06 16:44:47,1448.7,14672,DeepSeek Harness.exe,utility,0,47.68,12.24
+144,2026-11-06 16:44:57,1458.8,19156,powershell.exe,smtc-bridge,0.62,86.02,99.22
+144,2026-11-06 16:44:57,1458.8,21364,DeepSeek Harness.exe,host,1.09,475.82,625.05
+144,2026-11-06 16:44:57,1458.8,9896,DeepSeek Harness.exe,subprocess,0,149.23,59.21
+144,2026-11-06 16:44:57,1458.8,12760,DeepSeek Harness.exe,gpu,15.62,184.86,502.82
+144,2026-11-06 16:44:57,1458.8,20680,DeepSeek Harness.exe,subprocess,0,140.82,59.12
+144,2026-11-06 16:44:57,1458.8,17804,DeepSeek Harness.exe,renderer,60.47,745.18,752.73
+144,2026-11-06 16:44:57,1458.8,5036,DeepSeek Harness.exe,main,3.44,126.93,145.94
+144,2026-11-06 16:44:57,1458.8,23088,DeepSeek Harness.exe,main,0,79.64,24.01
+144,2026-11-06 16:44:57,1458.8,14672,DeepSeek Harness.exe,utility,0,47.68,12.24
+145,2026-11-06 16:45:07,1469,19156,powershell.exe,smtc-bridge,0.62,86.02,99.22
+145,2026-11-06 16:45:07,1469,21364,DeepSeek Harness.exe,host,2.66,481.41,630.91
+145,2026-11-06 16:45:07,1469,9896,DeepSeek Harness.exe,subprocess,0,149.43,59.47
+145,2026-11-06 16:45:07,1469,12760,DeepSeek Harness.exe,gpu,47.97,241.69,426.84
+145,2026-11-06 16:45:07,1469,20596,DeepSeek Harness.exe,subprocess,0,153.35,65.26
+145,2026-11-06 16:45:07,1469,20680,DeepSeek Harness.exe,subprocess,0.16,141.04,59.16
+145,2026-11-06 16:45:07,1469,17804,DeepSeek Harness.exe,renderer,124.53,776.73,781.53
+145,2026-11-06 16:45:07,1469,5036,DeepSeek Harness.exe,main,1.72,126.38,145.38
+145,2026-11-06 16:45:07,1469,23088,DeepSeek Harness.exe,main,0,79.94,24.51
+145,2026-11-06 16:45:07,1469,14672,DeepSeek Harness.exe,utility,0.31,47.69,12.25
+146,2026-11-06 16:45:18,1479.2,19156,powershell.exe,smtc-bridge,0.62,86.03,99.25
+146,2026-11-06 16:45:18,1479.2,21364,DeepSeek Harness.exe,host,1.56,441.6,591.47
+146,2026-11-06 16:45:18,1479.2,9896,DeepSeek Harness.exe,subprocess,0.31,149.64,59.75
+146,2026-11-06 16:45:18,1479.2,12760,DeepSeek Harness.exe,gpu,68.28,241.26,404.23
+146,2026-11-06 16:45:18,1479.2,20596,DeepSeek Harness.exe,subprocess,0.16,153.6,65.29
+146,2026-11-06 16:45:18,1479.2,20680,DeepSeek Harness.exe,subprocess,0.31,141.19,59.62
+146,2026-11-06 16:45:18,1479.2,17804,DeepSeek Harness.exe,renderer,120,784.06,787.94
+146,2026-11-06 16:45:18,1479.2,5036,DeepSeek Harness.exe,main,3.75,125.45,141.84
+146,2026-11-06 16:45:18,1479.2,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+146,2026-11-06 16:45:18,1479.2,14672,DeepSeek Harness.exe,utility,0.16,47.69,12.25
+147,2026-11-06 16:45:28,1489.3,19156,powershell.exe,smtc-bridge,0.78,86.02,99.22
+147,2026-11-06 16:45:28,1489.3,21364,DeepSeek Harness.exe,host,5.16,430.14,578.86
+147,2026-11-06 16:45:28,1489.3,9896,DeepSeek Harness.exe,subprocess,0,149,58.96
+147,2026-11-06 16:45:28,1489.3,12760,DeepSeek Harness.exe,gpu,68.44,241.49,391.52
+147,2026-11-06 16:45:28,1489.3,20596,DeepSeek Harness.exe,subprocess,0,153.86,65.57
+147,2026-11-06 16:45:28,1489.3,20680,DeepSeek Harness.exe,subprocess,0,140.59,58.88
+147,2026-11-06 16:45:28,1489.3,17804,DeepSeek Harness.exe,renderer,110.47,798.43,802.28
+147,2026-11-06 16:45:28,1489.3,5036,DeepSeek Harness.exe,main,2.97,125.44,142.3
+147,2026-11-06 16:45:28,1489.3,23088,DeepSeek Harness.exe,main,0,79.75,24.01
+147,2026-11-06 16:45:28,1489.3,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+148,2026-11-06 16:45:38,1499.5,19156,powershell.exe,smtc-bridge,0.78,87.88,101.45
+148,2026-11-06 16:45:38,1499.5,21364,DeepSeek Harness.exe,host,3.44,452.37,602.56
+148,2026-11-06 16:45:38,1499.5,9896,DeepSeek Harness.exe,subprocess,0,149.18,59.21
+148,2026-11-06 16:45:38,1499.5,12760,DeepSeek Harness.exe,gpu,66.41,241.23,422.28
+148,2026-11-06 16:45:38,1499.5,20596,DeepSeek Harness.exe,subprocess,0,154.04,66.02
+148,2026-11-06 16:45:38,1499.5,20680,DeepSeek Harness.exe,subprocess,0,140.77,58.88
+148,2026-11-06 16:45:38,1499.5,17804,DeepSeek Harness.exe,renderer,122.5,782.41,800.33
+148,2026-11-06 16:45:38,1499.5,5036,DeepSeek Harness.exe,main,6.09,126.85,143.95
+148,2026-11-06 16:45:38,1499.5,23088,DeepSeek Harness.exe,main,0,80.03,24.51
+148,2026-11-06 16:45:38,1499.5,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+149,2026-11-06 16:45:48,1509.7,19156,powershell.exe,smtc-bridge,0.31,88.15,101.45
+149,2026-11-06 16:45:48,1509.7,21364,DeepSeek Harness.exe,host,2.81,473.29,624.08
+149,2026-11-06 16:45:48,1509.7,9896,DeepSeek Harness.exe,subprocess,0,149.37,59.46
+149,2026-11-06 16:45:48,1509.7,12760,DeepSeek Harness.exe,gpu,55,241.07,378.2
+149,2026-11-06 16:45:48,1509.7,20596,DeepSeek Harness.exe,subprocess,0,153.42,65.21
+149,2026-11-06 16:45:48,1509.7,20680,DeepSeek Harness.exe,subprocess,0,140.98,59.15
+149,2026-11-06 16:45:48,1509.7,17804,DeepSeek Harness.exe,renderer,105,803.55,821.57
+149,2026-11-06 16:45:48,1509.7,5036,DeepSeek Harness.exe,main,2.81,125.67,143.04
+149,2026-11-06 16:45:48,1509.7,23088,DeepSeek Harness.exe,main,0,79.57,24.01
+149,2026-11-06 16:45:48,1509.7,14672,DeepSeek Harness.exe,utility,0.47,47.69,12.25
+150,2026-11-06 16:45:58,1519.8,19156,powershell.exe,smtc-bridge,0.47,90.69,103.56
+150,2026-11-06 16:45:58,1519.8,21364,DeepSeek Harness.exe,host,6.56,454.62,604.34
+150,2026-11-06 16:45:58,1519.8,9896,DeepSeek Harness.exe,subprocess,0,149.58,59.49
+150,2026-11-06 16:45:58,1519.8,12760,DeepSeek Harness.exe,gpu,63.75,241.15,376.43
+150,2026-11-06 16:45:58,1519.8,20596,DeepSeek Harness.exe,subprocess,0,153.67,65.49
+150,2026-11-06 16:45:58,1519.8,20680,DeepSeek Harness.exe,subprocess,0,141.14,59.62
+150,2026-11-06 16:45:58,1519.8,17804,DeepSeek Harness.exe,renderer,115.94,817.47,836.18
+150,2026-11-06 16:45:58,1519.8,5036,DeepSeek Harness.exe,main,1.56,126,143.65
+150,2026-11-06 16:45:58,1519.8,23088,DeepSeek Harness.exe,main,0,79.86,24.51
+150,2026-11-06 16:45:58,1519.8,14672,DeepSeek Harness.exe,utility,0.16,47.68,12.24
+151,2026-11-06 16:46:08,1530,11236,DeepSeek Harness.exe,subprocess,0,149.69,60.12
+151,2026-11-06 16:46:08,1530,23380,DeepSeek Harness.exe,subprocess,0,153.83,65.38
+151,2026-11-06 16:46:08,1530,19156,powershell.exe,smtc-bridge,0.16,90.68,103.52
+151,2026-11-06 16:46:08,1530,21364,DeepSeek Harness.exe,host,2.5,469.18,619.92
+151,2026-11-06 16:46:08,1530,9896,DeepSeek Harness.exe,subprocess,0,149.73,59.96
+151,2026-11-06 16:46:08,1530,12760,DeepSeek Harness.exe,gpu,68.59,241.72,380.44
+151,2026-11-06 16:46:08,1530,20680,DeepSeek Harness.exe,subprocess,0,140.55,58.88
+151,2026-11-06 16:46:08,1530,17804,DeepSeek Harness.exe,renderer,116.25,814.6,832.8
+151,2026-11-06 16:46:08,1530,5036,DeepSeek Harness.exe,main,6.56,125.86,143.71
+151,2026-11-06 16:46:08,1530,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+151,2026-11-06 16:46:08,1530,14672,DeepSeek Harness.exe,utility,0.16,47.68,12.24
+152,2026-11-06 16:46:19,1540.3,11236,DeepSeek Harness.exe,subprocess,0,150.04,60.49
+152,2026-11-06 16:46:19,1540.3,23380,DeepSeek Harness.exe,subprocess,0,154.11,65.67
+152,2026-11-06 16:46:19,1540.3,19156,powershell.exe,smtc-bridge,0.31,86.62,99.13
+152,2026-11-06 16:46:19,1540.3,21364,DeepSeek Harness.exe,host,1.25,459.26,608.78
+152,2026-11-06 16:46:19,1540.3,9896,DeepSeek Harness.exe,subprocess,0,149.14,59.21
+152,2026-11-06 16:46:19,1540.3,12760,DeepSeek Harness.exe,gpu,66.25,240.21,356.3
+152,2026-11-06 16:46:19,1540.3,20680,DeepSeek Harness.exe,subprocess,0,140.73,58.88
+152,2026-11-06 16:46:19,1540.3,17804,DeepSeek Harness.exe,renderer,119.53,821.54,839.76
+152,2026-11-06 16:46:19,1540.3,5036,DeepSeek Harness.exe,main,2.5,126.14,144.28
+152,2026-11-06 16:46:19,1540.3,23088,DeepSeek Harness.exe,main,0,79.67,24.01
+152,2026-11-06 16:46:19,1540.3,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+153,2026-11-06 16:46:29,1550.5,11236,DeepSeek Harness.exe,subprocess,0,150.49,61.17
+153,2026-11-06 16:46:29,1550.5,23380,DeepSeek Harness.exe,subprocess,0,153.48,64.87
+153,2026-11-06 16:46:29,1550.5,19156,powershell.exe,smtc-bridge,0.62,83.94,96.34
+153,2026-11-06 16:46:29,1550.5,21364,DeepSeek Harness.exe,host,0.47,459.36,608.99
+153,2026-11-06 16:46:29,1550.5,9896,DeepSeek Harness.exe,subprocess,0,149.32,59.46
+153,2026-11-06 16:46:29,1550.5,12760,DeepSeek Harness.exe,gpu,68.12,240.18,347.98
+153,2026-11-06 16:46:29,1550.5,20680,DeepSeek Harness.exe,subprocess,0,140.92,59.14
+153,2026-11-06 16:46:29,1550.5,17804,DeepSeek Harness.exe,renderer,97.34,760.43,779.19
+153,2026-11-06 16:46:29,1550.5,5036,DeepSeek Harness.exe,main,0.78,125.66,143.96
+153,2026-11-06 16:46:29,1550.5,23088,DeepSeek Harness.exe,main,0,79.96,24.51
+153,2026-11-06 16:46:29,1550.5,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+154,2026-11-06 16:46:39,1560.7,11236,DeepSeek Harness.exe,subprocess,0,148.88,58.32
+154,2026-11-06 16:46:39,1560.7,23380,DeepSeek Harness.exe,subprocess,0,153.74,65.16
+154,2026-11-06 16:46:39,1560.7,19156,powershell.exe,smtc-bridge,0,87.53,100.7
+154,2026-11-06 16:46:39,1560.7,21364,DeepSeek Harness.exe,host,2.66,488.28,639.44
+154,2026-11-06 16:46:39,1560.7,9896,DeepSeek Harness.exe,subprocess,0,149.52,59.48
+154,2026-11-06 16:46:39,1560.7,12760,DeepSeek Harness.exe,gpu,71.72,241.5,391.76
+154,2026-11-06 16:46:39,1560.7,20680,DeepSeek Harness.exe,subprocess,0,141.14,59.42
+154,2026-11-06 16:46:39,1560.7,17804,DeepSeek Harness.exe,renderer,125.31,785.34,803.91
+154,2026-11-06 16:46:39,1560.7,5036,DeepSeek Harness.exe,main,5.16,126.36,145.11
+154,2026-11-06 16:46:39,1560.7,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+154,2026-11-06 16:46:39,1560.7,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+155,2026-11-06 16:46:49,1570.9,11236,DeepSeek Harness.exe,subprocess,0,149.13,58.6
+155,2026-11-06 16:46:49,1570.9,23380,DeepSeek Harness.exe,subprocess,0,153.99,65.43
+155,2026-11-06 16:46:49,1570.9,19156,powershell.exe,smtc-bridge,0.62,89.53,103.06
+155,2026-11-06 16:46:49,1570.9,21364,DeepSeek Harness.exe,host,2.34,483.89,634.48
+155,2026-11-06 16:46:49,1570.9,9896,DeepSeek Harness.exe,subprocess,0,149.68,59.96
+155,2026-11-06 16:46:49,1570.9,12760,DeepSeek Harness.exe,gpu,62.81,240.79,391.33
+155,2026-11-06 16:46:49,1570.9,20680,DeepSeek Harness.exe,subprocess,0,140.5,58.62
+155,2026-11-06 16:46:49,1570.9,17804,DeepSeek Harness.exe,renderer,117.34,796.33,814.78
+155,2026-11-06 16:46:49,1570.9,5036,DeepSeek Harness.exe,main,4.06,126.18,145.06
+155,2026-11-06 16:46:49,1570.9,23088,DeepSeek Harness.exe,main,0,79.77,24.01
+155,2026-11-06 16:46:49,1570.9,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+156,2026-11-06 16:46:59,1581,11236,DeepSeek Harness.exe,subprocess,0.16,149.39,58.89
+156,2026-11-06 16:46:59,1581,23380,DeepSeek Harness.exe,subprocess,0.16,154.19,65.9
+156,2026-11-06 16:46:59,1581,19156,powershell.exe,smtc-bridge,0.62,89.53,103.06
+156,2026-11-06 16:46:59,1581,21364,DeepSeek Harness.exe,host,0.31,484.09,634.92
+156,2026-11-06 16:46:59,1581,9896,DeepSeek Harness.exe,subprocess,0.16,149.09,59.21
+156,2026-11-06 16:46:59,1581,12760,DeepSeek Harness.exe,gpu,62.81,241.68,396.67
+156,2026-11-06 16:46:59,1581,20680,DeepSeek Harness.exe,subprocess,0.16,140.68,58.88
+156,2026-11-06 16:46:59,1581,17804,DeepSeek Harness.exe,renderer,125.63,790.95,809.28
+156,2026-11-06 16:46:59,1581,5036,DeepSeek Harness.exe,main,5.94,126.53,145.87
+156,2026-11-06 16:46:59,1581,23088,DeepSeek Harness.exe,main,0,79.5,23.76
+156,2026-11-06 16:46:59,1581,14672,DeepSeek Harness.exe,utility,0,47.68,12.24
+157,2026-11-06 16:47:10,1591.2,11236,DeepSeek Harness.exe,subprocess,0,149.59,59.34
+157,2026-11-06 16:47:10,1591.2,23380,DeepSeek Harness.exe,subprocess,0.16,153.64,65.15
+157,2026-11-06 16:47:10,1591.2,19156,powershell.exe,smtc-bridge,0.16,89.71,103.06
+157,2026-11-06 16:47:10,1591.2,21364,DeepSeek Harness.exe,host,0,484.18,635.09
+157,2026-11-06 16:47:10,1591.2,9896,DeepSeek Harness.exe,subprocess,0,149.27,59.21
+157,2026-11-06 16:47:10,1591.2,12760,DeepSeek Harness.exe,gpu,8.91,224.41,324.22
+157,2026-11-06 16:47:10,1591.2,20680,DeepSeek Harness.exe,subprocess,0,140.87,59.13
+157,2026-11-06 16:47:10,1591.2,6988,DeepSeek Harness.exe,subprocess,0,150.27,60.57
+157,2026-11-06 16:47:10,1591.2,17804,DeepSeek Harness.exe,renderer,21.72,775.5,808.12
+157,2026-11-06 16:47:10,1591.2,5036,DeepSeek Harness.exe,main,0.62,126.13,145.41
+157,2026-11-06 16:47:10,1591.2,23088,DeepSeek Harness.exe,main,0,79.59,24.01
+157,2026-11-06 16:47:10,1591.2,14672,DeepSeek Harness.exe,utility,0,47.68,12.24
+158,2026-11-06 16:47:20,1601.4,11236,DeepSeek Harness.exe,subprocess,0,149.02,58.6
+158,2026-11-06 16:47:20,1601.4,23380,DeepSeek Harness.exe,subprocess,0,153.88,65.42
+158,2026-11-06 16:47:20,1601.4,19156,powershell.exe,smtc-bridge,0.16,89.89,103.06
+158,2026-11-06 16:47:20,1601.4,21364,DeepSeek Harness.exe,host,1.09,502.72,653.55
+158,2026-11-06 16:47:20,1601.4,9896,DeepSeek Harness.exe,subprocess,0,149.47,59.48
+158,2026-11-06 16:47:20,1601.4,12760,DeepSeek Harness.exe,gpu,0,224.36,324.17
+158,2026-11-06 16:47:20,1601.4,20680,DeepSeek Harness.exe,subprocess,0,141.08,59.16
+158,2026-11-06 16:47:20,1601.4,17804,DeepSeek Harness.exe,renderer,8.91,736.25,769.63
+158,2026-11-06 16:47:20,1601.4,5036,DeepSeek Harness.exe,main,0.47,125.57,145.01
+158,2026-11-06 16:47:20,1601.4,23088,DeepSeek Harness.exe,main,0,79.88,24.51
+158,2026-11-06 16:47:20,1601.4,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+159,2026-11-06 16:47:30,1611.5,11236,DeepSeek Harness.exe,subprocess,0.16,149.29,58.89
+159,2026-11-06 16:47:30,1611.5,23380,DeepSeek Harness.exe,subprocess,0.16,154.08,65.87
+159,2026-11-06 16:47:30,1611.5,19156,powershell.exe,smtc-bridge,0,89.89,103.06
+159,2026-11-06 16:47:30,1611.5,21364,DeepSeek Harness.exe,host,5.94,468.62,618.47
+159,2026-11-06 16:47:30,1611.5,9896,DeepSeek Harness.exe,subprocess,0.16,149.64,59.96
+159,2026-11-06 16:47:30,1611.5,12760,DeepSeek Harness.exe,gpu,0.16,224.36,324.17
+159,2026-11-06 16:47:30,1611.5,20680,DeepSeek Harness.exe,subprocess,0.16,141.23,59.62
+159,2026-11-06 16:47:30,1611.5,17804,DeepSeek Harness.exe,renderer,12.03,739.28,770.53
+159,2026-11-06 16:47:30,1611.5,5036,DeepSeek Harness.exe,main,0.31,125.93,145.76
+159,2026-11-06 16:47:30,1611.5,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+159,2026-11-06 16:47:30,1611.5,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+160,2026-11-06 16:47:40,1621.6,11236,DeepSeek Harness.exe,subprocess,0,149.54,59.17
+160,2026-11-06 16:47:40,1621.6,23380,DeepSeek Harness.exe,subprocess,0,153.52,65.09
+160,2026-11-06 16:47:40,1621.6,19156,powershell.exe,smtc-bridge,0.16,88.59,101.83
+160,2026-11-06 16:47:40,1621.6,21364,DeepSeek Harness.exe,host,1.72,483.54,634.43
+160,2026-11-06 16:47:40,1621.6,9896,DeepSeek Harness.exe,subprocess,0,149.04,58.96
+160,2026-11-06 16:47:40,1621.6,12760,DeepSeek Harness.exe,gpu,0,224.36,324.17
+160,2026-11-06 16:47:40,1621.6,20680,DeepSeek Harness.exe,subprocess,0,140.63,58.88
+160,2026-11-06 16:47:40,1621.6,17804,DeepSeek Harness.exe,renderer,11.56,725.86,757.43
+160,2026-11-06 16:47:40,1621.6,5036,DeepSeek Harness.exe,main,0.78,124.36,141.08
+160,2026-11-06 16:47:40,1621.6,23088,DeepSeek Harness.exe,main,0,79.67,24.01
+160,2026-11-06 16:47:40,1621.6,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+161,2026-11-06 16:47:50,1631.8,11236,DeepSeek Harness.exe,subprocess,0,148.94,58.37
+161,2026-11-06 16:47:50,1631.8,23380,DeepSeek Harness.exe,subprocess,0,153.77,65.11
+161,2026-11-06 16:47:50,1631.8,19156,powershell.exe,smtc-bridge,0.16,88.59,101.83
+161,2026-11-06 16:47:50,1631.8,21364,DeepSeek Harness.exe,host,1.88,483.18,634.52
+161,2026-11-06 16:47:50,1631.8,9896,DeepSeek Harness.exe,subprocess,0,149.22,59.21
+161,2026-11-06 16:47:50,1631.8,12760,DeepSeek Harness.exe,gpu,0,224.36,324.17
+161,2026-11-06 16:47:50,1631.8,17804,DeepSeek Harness.exe,renderer,10.47,742.52,774.59
+161,2026-11-06 16:47:50,1631.8,5036,DeepSeek Harness.exe,main,0.94,124.46,141.33
+161,2026-11-06 16:47:50,1631.8,23088,DeepSeek Harness.exe,main,0,79.96,24.51
+161,2026-11-06 16:47:50,1631.8,14672,DeepSeek Harness.exe,utility,0,47.69,12.25
+162,2026-11-06 16:48:00,1641.9,11236,DeepSeek Harness.exe,subprocess,0.31,149.18,58.63
+162,2026-11-06 16:48:00,1641.9,23380,DeepSeek Harness.exe,subprocess,0.31,154.07,65.45
+162,2026-11-06 16:48:00,1641.9,19156,powershell.exe,smtc-bridge,0.16,88.59,101.83
+162,2026-11-06 16:48:00,1641.9,21364,DeepSeek Harness.exe,host,1.72,500.84,651.77
+162,2026-11-06 16:48:00,1641.9,9896,DeepSeek Harness.exe,subprocess,0.31,149.42,59.47
+162,2026-11-06 16:48:00,1641.9,12760,DeepSeek Harness.exe,gpu,0,224.36,324.17
+162,2026-11-06 16:48:00,1641.9,17804,DeepSeek Harness.exe,renderer,10.78,734.65,768.16
+162,2026-11-06 16:48:00,1641.9,5036,DeepSeek Harness.exe,main,0.47,125.03,142.49
+162,2026-11-06 16:48:00,1641.9,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+162,2026-11-06 16:48:00,1641.9,14672,DeepSeek Harness.exe,utility,0.31,47.68,12.24
+163,2026-11-06 16:48:10,1652,11236,DeepSeek Harness.exe,subprocess,0,149.53,58.98
+163,2026-11-06 16:48:10,1652,23380,DeepSeek Harness.exe,subprocess,0,154.23,65.86
+163,2026-11-06 16:48:10,1652,19156,powershell.exe,smtc-bridge,0.31,90.64,103.99
+163,2026-11-06 16:48:10,1652,21364,DeepSeek Harness.exe,host,6.41,473.16,624.13
+163,2026-11-06 16:48:10,1652,9896,DeepSeek Harness.exe,subprocess,0,149.64,59.75
+163,2026-11-06 16:48:10,1652,12760,DeepSeek Harness.exe,gpu,0,224.36,324.17
+163,2026-11-06 16:48:10,1652,17804,DeepSeek Harness.exe,renderer,12.19,740.31,774.26
+163,2026-11-06 16:48:10,1652,5036,DeepSeek Harness.exe,main,0.62,125.37,142.96
+163,2026-11-06 16:48:10,1652,23088,DeepSeek Harness.exe,main,0,79.76,24.01
+163,2026-11-06 16:48:10,1652,14672,DeepSeek Harness.exe,utility,0,47.68,12.24
+163,2026-11-06 16:48:10,1652,8432,DeepSeek Harness.exe,subprocess,0,153.45,66.43
+164,2026-11-06 16:48:21,1662.3,11236,DeepSeek Harness.exe,subprocess,0,149.62,59.34
+164,2026-11-06 16:48:21,1662.3,23380,DeepSeek Harness.exe,subprocess,0,153.69,65.11
+164,2026-11-06 16:48:21,1662.3,19156,powershell.exe,smtc-bridge,0.47,90.79,103.99
+164,2026-11-06 16:48:21,1662.3,21364,DeepSeek Harness.exe,host,1.88,486.39,638.24
+164,2026-11-06 16:48:21,1662.3,9896,DeepSeek Harness.exe,subprocess,0,149,58.96
+164,2026-11-06 16:48:21,1662.3,12760,DeepSeek Harness.exe,gpu,46.72,240.86,486.71
+164,2026-11-06 16:48:21,1662.3,17804,DeepSeek Harness.exe,renderer,97.5,825.62,831.29
+164,2026-11-06 16:48:21,1662.3,5036,DeepSeek Harness.exe,main,3.59,124.98,142.53
+164,2026-11-06 16:48:21,1662.3,23088,DeepSeek Harness.exe,main,0,80.05,24.51
+164,2026-11-06 16:48:21,1662.3,14672,DeepSeek Harness.exe,utility,0.31,47.68,12.24
+164,2026-11-06 16:48:21,1662.3,8432,DeepSeek Harness.exe,subprocess,0,151.89,63.7
+165,2026-11-06 16:48:31,1672.5,11236,DeepSeek Harness.exe,subprocess,0,149.05,58.57
+165,2026-11-06 16:48:31,1672.5,23380,DeepSeek Harness.exe,subprocess,0,154.03,65.48
+165,2026-11-06 16:48:31,1672.5,19156,powershell.exe,smtc-bridge,0.31,92.45,105.06
+165,2026-11-06 16:48:31,1672.5,21364,DeepSeek Harness.exe,host,2.66,490.95,645.47
+165,2026-11-06 16:48:31,1672.5,9896,DeepSeek Harness.exe,subprocess,0,149.18,59.21
+165,2026-11-06 16:48:31,1672.5,12760,DeepSeek Harness.exe,gpu,64.22,240.57,409.34
+165,2026-11-06 16:48:31,1672.5,17804,DeepSeek Harness.exe,renderer,111.09,909.01,914.08
+165,2026-11-06 16:48:31,1672.5,5036,DeepSeek Harness.exe,main,7.03,125.86,143.54
+165,2026-11-06 16:48:31,1672.5,23088,DeepSeek Harness.exe,main,0,79.58,24.01
+165,2026-11-06 16:48:31,1672.5,14672,DeepSeek Harness.exe,utility,0.16,47.67,12.21
+165,2026-11-06 16:48:31,1672.5,8432,DeepSeek Harness.exe,subprocess,0,152.15,63.98
+166,2026-11-06 16:48:41,1682.7,11236,DeepSeek Harness.exe,subprocess,0.16,149.31,58.85
+166,2026-11-06 16:48:41,1682.7,23380,DeepSeek Harness.exe,subprocess,0.31,154.15,65.86
+166,2026-11-06 16:48:41,1682.7,19156,powershell.exe,smtc-bridge,0.62,92.43,105.02
+166,2026-11-06 16:48:41,1682.7,21364,DeepSeek Harness.exe,host,11.56,480.61,631.34
+166,2026-11-06 16:48:41,1682.7,9896,DeepSeek Harness.exe,subprocess,0.16,149.37,59.46
+166,2026-11-06 16:48:41,1682.7,12760,DeepSeek Harness.exe,gpu,56.09,240.24,437.18
+166,2026-11-06 16:48:41,1682.7,17804,DeepSeek Harness.exe,renderer,121.09,999.75,1018.9
+166,2026-11-06 16:48:41,1682.7,5036,DeepSeek Harness.exe,main,8.12,125.65,143.34
+166,2026-11-06 16:48:41,1682.7,23088,DeepSeek Harness.exe,main,0.16,79.88,24.51
+166,2026-11-06 16:48:41,1682.7,14672,DeepSeek Harness.exe,utility,0,47.68,12.21
+166,2026-11-06 16:48:41,1682.7,8432,DeepSeek Harness.exe,subprocess,0.16,152.43,64.27
+167,2026-11-06 16:48:51,1692.9,11236,DeepSeek Harness.exe,subprocess,0,149.49,59.27
+167,2026-11-06 16:48:51,1692.9,23380,DeepSeek Harness.exe,subprocess,0.16,153.59,65.09
+167,2026-11-06 16:48:51,1692.9,19156,powershell.exe,smtc-bridge,0.78,92.67,105.26
+167,2026-11-06 16:48:51,1692.9,21364,DeepSeek Harness.exe,host,0.62,480.65,631.47
+167,2026-11-06 16:48:51,1692.9,9896,DeepSeek Harness.exe,subprocess,0.16,149.58,59.49
+167,2026-11-06 16:48:51,1692.9,12760,DeepSeek Harness.exe,gpu,59.69,240.41,409.18
+167,2026-11-06 16:48:51,1692.9,17804,DeepSeek Harness.exe,renderer,108.91,1002.48,1021.78
+167,2026-11-06 16:48:51,1692.9,5036,DeepSeek Harness.exe,main,10.31,126.28,144.39
+167,2026-11-06 16:48:51,1692.9,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+167,2026-11-06 16:48:51,1692.9,14672,DeepSeek Harness.exe,utility,0,47.67,12.21
+167,2026-11-06 16:48:51,1692.9,8432,DeepSeek Harness.exe,subprocess,0.16,152.59,64.71
+168,2026-11-06 16:49:02,1703.1,11236,DeepSeek Harness.exe,subprocess,0,148.91,58.49
+168,2026-11-06 16:49:02,1703.1,23380,DeepSeek Harness.exe,subprocess,0,153.88,65.4
+168,2026-11-06 16:49:02,1703.1,19156,powershell.exe,smtc-bridge,0.62,92.92,105.53
+168,2026-11-06 16:49:02,1703.1,21364,DeepSeek Harness.exe,host,0.78,480.88,631.92
+168,2026-11-06 16:49:02,1703.1,9896,DeepSeek Harness.exe,subprocess,0,149.73,59.96
+168,2026-11-06 16:49:02,1703.1,12760,DeepSeek Harness.exe,gpu,67.34,240.46,406.42
+168,2026-11-06 16:49:02,1703.1,17804,DeepSeek Harness.exe,renderer,114.06,1054.97,1074.54
+168,2026-11-06 16:49:02,1703.1,5036,DeepSeek Harness.exe,main,10,125.96,144.09
+168,2026-11-06 16:49:02,1703.1,23088,DeepSeek Harness.exe,main,0,79.69,24.01
+168,2026-11-06 16:49:02,1703.1,14672,DeepSeek Harness.exe,utility,0,47.67,12.21
+168,2026-11-06 16:49:02,1703.1,8432,DeepSeek Harness.exe,subprocess,0,152.03,63.97
+169,2026-11-06 16:49:12,1713.4,11236,DeepSeek Harness.exe,subprocess,0,149.21,58.55
+169,2026-11-06 16:49:12,1713.4,23380,DeepSeek Harness.exe,subprocess,0,154.08,65.86
+169,2026-11-06 16:49:12,1713.4,19156,powershell.exe,smtc-bridge,0.31,92.91,105.5
+169,2026-11-06 16:49:12,1713.4,21364,DeepSeek Harness.exe,host,2.34,490.65,641.16
+169,2026-11-06 16:49:12,1713.4,9896,DeepSeek Harness.exe,subprocess,0,149.14,59.21
+169,2026-11-06 16:49:12,1713.4,12760,DeepSeek Harness.exe,gpu,61.72,241.71,461.11
+169,2026-11-06 16:49:12,1713.4,17804,DeepSeek Harness.exe,renderer,117.66,1167.61,1188.8
+169,2026-11-06 16:49:12,1713.4,5036,DeepSeek Harness.exe,main,9.06,126.64,145.13
+169,2026-11-06 16:49:12,1713.4,23088,DeepSeek Harness.exe,main,0,79.98,24.51
+169,2026-11-06 16:49:12,1713.4,14672,DeepSeek Harness.exe,utility,0.47,47.7,12.25
+169,2026-11-06 16:49:12,1713.4,8432,DeepSeek Harness.exe,subprocess,0,152.3,64.27
+170,2026-11-06 16:49:22,1723.7,11236,DeepSeek Harness.exe,subprocess,0.16,149.55,58.93
+170,2026-11-06 16:49:22,1723.7,23380,DeepSeek Harness.exe,subprocess,0.16,153.57,65.12
+170,2026-11-06 16:49:22,1723.7,19156,powershell.exe,smtc-bridge,0.31,92.91,105.5
+170,2026-11-06 16:49:22,1723.7,21364,DeepSeek Harness.exe,host,0.94,490.88,641.6
+170,2026-11-06 16:49:22,1723.7,9896,DeepSeek Harness.exe,subprocess,0.16,149.32,59.46
+170,2026-11-06 16:49:22,1723.7,12760,DeepSeek Harness.exe,gpu,55.31,240.23,352.55
+170,2026-11-06 16:49:22,1723.7,17804,DeepSeek Harness.exe,renderer,94.38,1160.04,1183.25
+170,2026-11-06 16:49:22,1723.7,5036,DeepSeek Harness.exe,main,3.75,126.3,144.83
+170,2026-11-06 16:49:22,1723.7,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+170,2026-11-06 16:49:22,1723.7,14672,DeepSeek Harness.exe,utility,0,47.7,12.25
+170,2026-11-06 16:49:22,1723.7,8432,DeepSeek Harness.exe,subprocess,0.16,152.52,64.75
+171,2026-11-06 16:49:32,1733.9,11236,DeepSeek Harness.exe,subprocess,0,149.69,59.3
+171,2026-11-06 16:49:32,1733.9,23380,DeepSeek Harness.exe,subprocess,0,153.85,65.18
+171,2026-11-06 16:49:32,1733.9,19156,powershell.exe,smtc-bridge,0,92.92,105.53
+171,2026-11-06 16:49:32,1733.9,21364,DeepSeek Harness.exe,host,0.94,491.05,642.17
+171,2026-11-06 16:49:32,1733.9,9896,DeepSeek Harness.exe,subprocess,0,149.54,59.48
+171,2026-11-06 16:49:32,1733.9,12760,DeepSeek Harness.exe,gpu,60.62,244.35,564.93
+171,2026-11-06 16:49:32,1733.9,17804,DeepSeek Harness.exe,renderer,95.16,1204.19,1227.73
+171,2026-11-06 16:49:32,1733.9,5036,DeepSeek Harness.exe,main,5.62,127.18,145.73
+171,2026-11-06 16:49:32,1733.9,23088,DeepSeek Harness.exe,main,0,79.78,24.26
+171,2026-11-06 16:49:32,1733.9,14672,DeepSeek Harness.exe,utility,0,47.7,12.25
+171,2026-11-06 16:49:32,1733.9,8432,DeepSeek Harness.exe,subprocess,0,151.91,63.94
+172,2026-11-06 16:49:43,1744.1,11236,DeepSeek Harness.exe,subprocess,0,149.14,58.56
+172,2026-11-06 16:49:43,1744.1,23380,DeepSeek Harness.exe,subprocess,0.16,154.3,65.71
+172,2026-11-06 16:49:43,1744.1,19156,powershell.exe,smtc-bridge,0.78,92.89,105.47
+172,2026-11-06 16:49:43,1744.1,21364,DeepSeek Harness.exe,host,0.94,491.36,642.78
+172,2026-11-06 16:49:43,1744.1,9896,DeepSeek Harness.exe,subprocess,0,149.7,59.96
+172,2026-11-06 16:49:43,1744.1,12760,DeepSeek Harness.exe,gpu,58.44,240.39,434.16
+172,2026-11-06 16:49:43,1744.1,17804,DeepSeek Harness.exe,renderer,105.16,1340.16,1362.57
+172,2026-11-06 16:49:43,1744.1,5036,DeepSeek Harness.exe,main,13.91,127.48,146.43
+172,2026-11-06 16:49:43,1744.1,23088,DeepSeek Harness.exe,main,0,79.51,23.76
+172,2026-11-06 16:49:43,1744.1,14672,DeepSeek Harness.exe,utility,0,47.7,12.25
+172,2026-11-06 16:49:43,1744.1,8432,DeepSeek Harness.exe,subprocess,0,152.2,64
+173,2026-11-06 16:49:53,1754.3,11236,DeepSeek Harness.exe,subprocess,0.16,149.42,58.86
+173,2026-11-06 16:49:53,1754.3,23380,DeepSeek Harness.exe,subprocess,0.31,154.32,66.01
+173,2026-11-06 16:49:53,1754.3,19156,powershell.exe,smtc-bridge,0.62,93.14,105.74
+173,2026-11-06 16:49:53,1754.3,21364,DeepSeek Harness.exe,host,2.66,487.1,638.67
+173,2026-11-06 16:49:53,1754.3,9896,DeepSeek Harness.exe,subprocess,0.31,149.11,59.21
+173,2026-11-06 16:49:53,1754.3,12760,DeepSeek Harness.exe,gpu,59.53,240.82,356.19
+173,2026-11-06 16:49:53,1754.3,17804,DeepSeek Harness.exe,renderer,92.97,1322.8,1345.32
+173,2026-11-06 16:49:53,1754.3,5036,DeepSeek Harness.exe,main,4.22,125.29,141.97
+173,2026-11-06 16:49:53,1754.3,23088,DeepSeek Harness.exe,main,0,79.59,24.01
+173,2026-11-06 16:49:53,1754.3,14672,DeepSeek Harness.exe,utility,0,47.7,12.25
+173,2026-11-06 16:49:53,1754.3,8432,DeepSeek Harness.exe,subprocess,0.31,152.48,64.29
+174,2026-11-06 16:50:03,1764.4,11236,DeepSeek Harness.exe,subprocess,0,149.62,59.34
+174,2026-11-06 16:50:03,1764.4,23380,DeepSeek Harness.exe,subprocess,0.16,153.8,65.33
+174,2026-11-06 16:50:03,1764.4,19156,powershell.exe,smtc-bridge,0.31,93.15,105.77
+174,2026-11-06 16:50:03,1764.4,21364,DeepSeek Harness.exe,host,8.28,467.73,617.03
+174,2026-11-06 16:50:03,1764.4,9896,DeepSeek Harness.exe,subprocess,0,149.29,59.21
+174,2026-11-06 16:50:03,1764.4,12760,DeepSeek Harness.exe,gpu,61.56,240.03,354.64
+174,2026-11-06 16:50:03,1764.4,17804,DeepSeek Harness.exe,renderer,100.78,1277.27,1300.93
+174,2026-11-06 16:50:03,1764.4,5036,DeepSeek Harness.exe,main,2.97,125.23,141.91
+174,2026-11-06 16:50:03,1764.4,23088,DeepSeek Harness.exe,main,0,79.88,24.51
+174,2026-11-06 16:50:03,1764.4,14672,DeepSeek Harness.exe,utility,0,47.7,12.25
+174,2026-11-06 16:50:03,1764.4,8432,DeepSeek Harness.exe,subprocess,0,152.62,64.7
+175,2026-11-06 16:50:13,1774.6,11236,DeepSeek Harness.exe,subprocess,0.16,149.09,58.55
+175,2026-11-06 16:50:13,1774.6,23380,DeepSeek Harness.exe,subprocess,0,154.05,65.38
+175,2026-11-06 16:50:13,1774.6,19156,powershell.exe,smtc-bridge,0.31,93.38,105.98
+175,2026-11-06 16:50:13,1774.6,21364,DeepSeek Harness.exe,host,1.56,444.09,593.62
+175,2026-11-06 16:50:13,1774.6,9896,DeepSeek Harness.exe,subprocess,0,149.49,59.48
+175,2026-11-06 16:50:13,1774.6,12760,DeepSeek Harness.exe,gpu,61.41,241.15,597.21
+175,2026-11-06 16:50:13,1774.6,17804,DeepSeek Harness.exe,renderer,94.38,1283.44,1307.22
+175,2026-11-06 16:50:13,1774.6,5036,DeepSeek Harness.exe,main,10.94,125.63,142.71
+175,2026-11-06 16:50:13,1774.6,23088,DeepSeek Harness.exe,main,0,79.52,23.76
+175,2026-11-06 16:50:13,1774.6,14672,DeepSeek Harness.exe,utility,0,47.69,12.24
+175,2026-11-06 16:50:13,1774.6,8432,DeepSeek Harness.exe,subprocess,0,152.11,63.98
+176,2026-11-06 16:50:23,1785,11236,DeepSeek Harness.exe,subprocess,0.16,149.52,59.03
+176,2026-11-06 16:50:23,1785,23380,DeepSeek Harness.exe,subprocess,0.16,154.33,65.74
+176,2026-11-06 16:50:23,1785,19156,powershell.exe,smtc-bridge,0.31,93.38,105.98
+176,2026-11-06 16:50:23,1785,21364,DeepSeek Harness.exe,host,2.66,464.79,615.49
+176,2026-11-06 16:50:23,1785,9896,DeepSeek Harness.exe,subprocess,0.16,149.66,59.96
+176,2026-11-06 16:50:23,1785,12760,DeepSeek Harness.exe,gpu,50.47,244.28,477.75
+176,2026-11-06 16:50:23,1785,17804,DeepSeek Harness.exe,renderer,94.22,1272.95,1295.67
+176,2026-11-06 16:50:23,1785,5036,DeepSeek Harness.exe,main,8.28,126.08,143.27
+176,2026-11-06 16:50:23,1785,23088,DeepSeek Harness.exe,main,0,79.69,24.01
+176,2026-11-06 16:50:23,1785,14672,DeepSeek Harness.exe,utility,0,47.69,12.24
+176,2026-11-06 16:50:23,1785,8432,DeepSeek Harness.exe,subprocess,0.16,152.39,64.28
+177,2026-11-06 16:50:34,1795.1,11236,DeepSeek Harness.exe,subprocess,0.31,149.8,59.38
+177,2026-11-06 16:50:34,1795.1,23380,DeepSeek Harness.exe,subprocess,0.31,154.35,66.07
+177,2026-11-06 16:50:34,1795.1,19156,powershell.exe,smtc-bridge,0.78,88.33,101.09
+177,2026-11-06 16:50:34,1795.1,21364,DeepSeek Harness.exe,host,6.72,450.32,600.56
+177,2026-11-06 16:50:34,1795.1,9896,DeepSeek Harness.exe,subprocess,0.31,149.06,58.96
+177,2026-11-06 16:50:34,1795.1,12760,DeepSeek Harness.exe,gpu,46.09,240.89,376.89
+177,2026-11-06 16:50:34,1795.1,17804,DeepSeek Harness.exe,renderer,95.31,1276.64,1300
+177,2026-11-06 16:50:34,1795.1,5036,DeepSeek Harness.exe,main,5,125.74,142.96
+177,2026-11-06 16:50:34,1795.1,23088,DeepSeek Harness.exe,main,0.16,79.97,24.51
+177,2026-11-06 16:50:34,1795.1,14672,DeepSeek Harness.exe,utility,0.16,47.69,12.24
+177,2026-11-06 16:50:34,1795.1,8432,DeepSeek Harness.exe,subprocess,0.31,152.56,64.69
