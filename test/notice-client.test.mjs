@@ -1,11 +1,14 @@
-// Contracts for the v0.4.0 workspace-notice surface in lib/client.js:
+// Contracts for the workspace-notice surface in lib/client.js:
 //
 //   - 浮窗未触发 (no SMTC session) + 有提问/轮次结束 → the pill renders the
 //     notice headline itself ("xx会话区有提问" / "xx会话区第x轮对话结束"),
-//     hover-expand shows the full list.
-//   - 浮窗触发 (SMTC active) → ONLY a red dot at the island's bottom-right;
-//     clicking it opens the full notice list; the gear ✕ returns to lyrics.
-//   - idle + no notice → still completely hidden (the pre-0.4.0 contract).
+//     hover-expand shows the full list; HOVERING also acks, so the pill fades
+//     out (not blinks away) once collapsed (the ghost fade).
+//   - 浮窗触发 (SMTC active) → a new notice first INSERTS itself into the
+//     collapsed row for NOTICE_INSERT_MS (cross-fading in), then hands back to
+//     the lyric row and the quiet red dot at the island's bottom-right; the
+//     click opens the notice view (leaving acks), the gear ✕ returns to lyrics.
+//   - idle + no notice (and no ghost fading) → completely hidden.
 //
 // Real React drives the real component (fake React / serialized HTML do not
 // carry production handlers — see procedures/测试-歌词插件静态页面通过但实际交互失败).
@@ -19,6 +22,7 @@ let plugin;
 let seq = 0;
 const timers = new Map();
 const pending = [];
+const posted = [];
 
 vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), {
 	window: {
@@ -27,7 +31,14 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 		matchMedia: () => ({ matches: true }), innerWidth: 1200, innerHeight: 800,
 	},
 	document: undefined, console, AbortController, AbortSignal,
-	fetch: () => new Promise((resolve) => pending.push({ resolve })),
+	fetch: (url, options) => new Promise((resolve) => {
+		if (String(url).includes('/notice/ack')) {
+			posted.push({ url, options });
+			resolve({ ok: true, json: async () => ({ ok: true }) });
+			return;
+		}
+		pending.push({ url, options, resolve });
+	}),
 	Event: class {}, localStorage: { getItem: () => null, setItem() {} },
 	setTimeout: (fn, ms) => { const id = ++seq; timers.set(id, { fn, ms }); return id; },
 	clearTimeout: (id) => timers.delete(id),
@@ -97,16 +108,33 @@ assert.ok(JSON.stringify(emptyTree).includes('当前没有会话区提示'));
 
 // ---- source-shape contracts (a paint-order defect headless cannot see) --------
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
-assert.match(src, /if \(!smtcActive && !noticeMode\) return null;/,
-	'idle WITHOUT a notice stays hidden — the combined early-return condition');
+assert.match(src, /if \(!smtcActive && !noticeMode && !noticeGhost\) return null;/,
+	'idle WITHOUT a notice (or ghost) stays hidden — the combined early-return condition');
 assert.match(src, /const notices = sanitizeNotices\(st === null \? null : st\.notice\);[\s\S]{0,400}const noticeMode = !smtcActive && notices\.length > 0;/,
 	'notice mode is derived from the shared poll BEFORE any early return');
-assert.match(src, /panelView !== "notices"\s*\?\s*h\("button", \{\s*type: "button", className: "dnl-dot"/,
-	'the red dot is a button gated on the notices view');
+// The insert window is render-phase state (the first frame must already
+// show the notice row — an effect would paint a frame late, the v0.3.30 lesson).
+assert.match(src, /if \(noticeKey !== "" && noticeKey !== noticeKeyRef\.current\) \{[\s\S]{0,200}?setInsertDeadline\(Date\.now\(\) \+ NOTICE_INSERT_MS\);/,
+	'a NEW notice while media plays arms the insert window during render');
+assert.match(src, /const inserting = smtcActive && insertDeadline > Date\.now\(\) && notices\.length > 0;/,
+	'inserting derives from the deadline, not an effect');
+// Ack wiring.
+assert.match(src, /const NOTICE_ACK_ROUTE = "\/dsh-netease-lyrics\/notice\/ack";/, 'the ack route exists');
+assert.match(src, /const ackNotices = \(\) => \{/,
+	'hovering the notice pill acknowledges it');
+// The dot renders through dotHold so it can fade out instead of blinking away.
+assert.match(src, /dotPresent \|\| \(dotHold && smtcActive\)/,
+	'the dot stays mounted one fade cycle after its condition clears');
+assert.match(src, /className: "dnl-dot" \+ \(dotPresent \? "" : " dnl-dot-out"\)/,
+	'the fading dot is tagged for the fade-out animation');
 assert.match(CSS, /\.dnl-dot\{[^}]*position:absolute[^}]*right:4px;bottom:4px/,
 	'the dot anchors at the island bottom-right');
-assert.match(CSS, /@media\(prefers-reduced-motion:reduce\)\{\.dnl-dot::before\{animation:none\}\}/,
-	'reduced motion stills the dot pulse');
+assert.match(CSS, /\.dnl-dot-out::before\{animation:dnl-dot-out/,
+	'the retiring dot runs a fade animation');
+assert.match(CSS, /\.dnl-host-fade\{[^}]*animation:dnl-host-out/,
+	'the ghost pill host fades before unmounting');
+assert.match(CSS, /@media\(prefers-reduced-motion:reduce\)\{\.dnl-dot::before\{animation:none\}\.dnl-dot-out::before\{animation:none;opacity:0\}\.dnl-host-fade\{animation:none;opacity:0\}\}/,
+	'reduced motion stills the dot pulse, retires the fading dot and ghost instantly');
 assert.match(CSS, /\.dnl-notice-row-q\{[^}]*color-mix/, 'question rows are visually distinct');
 
 // ---- real React: the island renders notice mode without SMTC ------------------
@@ -117,6 +145,17 @@ const firePoll = () => {
 		if (t.ms === 500) { timers.delete(id); t.fn(); return true; }
 	}
 	return false;
+};
+// Tolerance: the insert timer is scheduled as (deadline - Date.now()), which
+// drifts a few ms below NOTICE_INSERT_MS; 200ms absorbs it.
+const fireTimers = (ms, tolerance = 0) => {
+	let fired = 0;
+	for (const [id, t] of [...timers]) {
+		if (t.repeat) continue;
+		if (Math.abs(t.ms - ms) > tolerance) continue;
+		timers.delete(id); t.fn(); fired += 1;
+	}
+	return fired;
 };
 const resolve = async (payload) => {
 	await act(async () => {
@@ -146,14 +185,15 @@ const idleTurnEnd = {
 		{ workspace: 'beta', question: null, turnEnd: { turn: 3, outcome: 'completed', at: 2 } },
 	] },
 };
-const trackWithNotice = {
+const trackBase = {
 	active: true, playing: true, title: 'T', artist: 'A', app: 'test', pollMs: 500,
 	durationSec: 100, positionSec: 1, canToggle: true, coverSerial: 0,
 	lyric: { status: 'matched', songId: 1, lines: [{ t: 0, text: 'First' }] },
-	notice: { serial: 9, items: [
-		{ workspace: 'alpha', question: { kind: 'user-question', preview: '要继续吗？', at: 3 }, turnEnd: null },
-	] },
 };
+const trackWithNotice = { ...trackBase, notice: { serial: 9, items: [
+	{ workspace: 'alpha', question: { kind: 'user-question', preview: '要继续吗？', at: 3 }, turnEnd: null },
+] } };
+const INSERT_MS = 1800, FADE_MS = 260, COLLAPSE_MS = 420;
 
 let renderer;
 try {
@@ -171,23 +211,11 @@ try {
 		'the collapsed pill carries the headline');
 	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'notice mode shows no red dot');
 	assert.equal(byClass(renderer, 'dnl-halo').length, 0, 'notice mode shows no breathing halo');
-	// hover-expand reveals the full list.
-	await act(async () => { island.props.onMouseEnter({}); await flush(); });
-	assert.equal(byClass(renderer, 'dnl-notices').length, 1);
-	assert.ok(textOf(renderer.root.findByProps({ className: 'dnl-notice-detail' })).includes('要继续吗？'),
-		'the expanded list shows the full question preview');
-	assert.equal(byClass(renderer, 'dnl-gear').length, 0, 'notice mode has no gear');
-	// leaving collapses again (the 420ms grace timer). The panel content stays
-	// mounted (grid 0fr collapse is CSS-only), so the contract is the inert
-	// wrapper, not the element's disappearance.
-	await act(async () => { island.props.onMouseLeave(); await flush(); });
-	act(() => { for (const [id, t] of [...timers]) if (t.ms === 420) { timers.delete(id); t.fn(); } });
-	const grow = byClass(renderer, 'dnl-grow')[0];
-	assert.equal(grow.props['aria-hidden'], 'true', 'the notice list collapses on leave');
-	assert.equal(grow.props.inert, '', 'the collapsed panel is inert');
 
 	// the headline follows the newest notice — as a LyricTransition cross-fade:
 	// the outgoing layer keeps the old headline while the new layer fades in.
+	// (Tested BEFORE the ghost flow: after a fade-out unmount the transition
+	// state is gone, and the re-mount is an APPEARANCE, not a switch.)
 	act(() => firePoll());
 	await resolve(idleTurnEnd);
 	const headlines = byClass(renderer, 'dnl-notice-text').map(textOf);
@@ -196,29 +224,99 @@ try {
 		'the pill reports the round ending in the requested wording');
 	assert.ok(headlines.some((text) => text.includes('alpha会话区有提问')),
 		'the outgoing headline is still fading out');
+	act(() => fireTimers(FADE_MS, 50)); // clear the cross-fade layers
 
-	// notices cleared while idle → hidden again.
+	// hover-expand reveals the full list AND acknowledges (POST /notice/ack).
+	posted.length = 0;
+	await act(async () => { island.props.onMouseEnter({}); await flush(); });
+	assert.equal(byClass(renderer, 'dnl-notices').length, 1);
+	assert.equal(posted.length, 1, 'hovering the notice pill acks');
+	assert.ok(textOf(renderer.root.findByProps({ className: 'dnl-notice-detail' })).includes('本轮对话已完成'),
+		'the expanded list shows the round outcome');
+	assert.equal(byClass(renderer, 'dnl-gear').length, 0, 'notice mode has no gear');
+	// leaving collapses again (the 420ms grace timer). The panel content stays
+	// mounted (grid 0fr collapse is CSS-only), so the contract is the inert
+	// wrapper, not the element's disappearance.
+	await act(async () => { island.props.onMouseLeave(); await flush(); });
+	act(() => fireTimers(COLLAPSE_MS));
+	const grow = byClass(renderer, 'dnl-grow')[0];
+	assert.equal(grow.props['aria-hidden'], 'true', 'the notice list collapses on leave');
+	assert.equal(grow.props.inert, '', 'the collapsed panel is inert');
+
+	// the host cleared the notices (the ack): the ghost pill FADES instead of
+	// vanishing — the host element stays one fade cycle, tagged for the fade
+	// animation, then unmounts.
 	act(() => firePoll());
 	await resolve({ active: false, pollMs: 500 });
-	assert.equal(renderer.toJSON(), null, 'idle + no notice hides the island again');
+	const host = renderer.root.findAll((n) => typeof n.type === 'string'
+		&& String(n.props.className || '').startsWith('dnl-host'))[0];
+	assert.ok(host, 'the ghost pill is still mounted while fading');
+	assert.ok(String(host.props.className).includes('dnl-host-fade'),
+		'the retiring pill is tagged for the fade-out');
+	act(() => fireTimers(FADE_MS, 50));
+	assert.equal(renderer.toJSON(), null, 'after the fade the idle island unmounts');
 
-	// ---- SMTC active: only the red dot; click for the full list ----------------
+	// ---- SMTC active: the notice INSERTS first, then hands off to the dot -----
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: undefined });
+	assert.equal(byClass(renderer, 'dnl-notice-text').length, 0, 'lyric row only, no notice row');
+	// A notice arriving DURING playback: the first frame already shows the
+	// notice row (render-phase insert), the lyric row cross-fades out, and no
+	// dot is up yet (the row itself is announcing).
 	act(() => firePoll());
 	await resolve(trackWithNotice);
-	assert.equal(byClass(renderer, 'dnl-dot').length, 1, 'active + notice shows the red dot');
+	assert.ok(byClass(renderer, 'dnl-notice-text').length >= 1,
+		'the notice row inserts into the collapsed pill while media plays');
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'no dot during the insert window');
+	// After NOTICE_INSERT_MS the row hands back to the lyric (cross-faded) and
+	// the dot appears.
+	act(() => fireTimers(INSERT_MS, 200));
+	assert.ok(byClass(renderer, 'dnl-now-text').some((n) => textOf(n).includes('First')),
+		'the lyric row returns after the insert window');
+	assert.equal(byClass(renderer, 'dnl-dot').length, 1, 'the dot takes over after the insert window');
 	const island2 = renderer.root.findByProps({ role: 'status' });
-	assert.equal(island2.props['aria-label'], '当前歌词：First', 'the lyric aria stays untouched');
+	assert.equal(island2.props['aria-label'], '当前歌词：First', 'the lyric aria is restored');
 	assert.equal(byClass(renderer, 'dnl-notices').length, 0, 'the full list is NOT shown until the dot is clicked');
+	// Clicking the dot opens the notice view.
 	await act(async () => { renderer.root.findByProps({ className: 'dnl-dot' }).props.onClick({ stopPropagation() {} }); await flush(); });
 	assert.equal(byClass(renderer, 'dnl-notices').length, 1, 'clicking the dot opens the notice list');
 	assert.ok(textOf(renderer.root.findByProps({ className: 'dnl-notice-title' })).includes('alpha会话区有提问'));
-	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'the dot hides while the list is open');
-	// the gear ✕ returns to lyrics and the dot comes back.
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'clicking the dot retires it at once (no fade under the panel)');
+	// Leaving the expanded notice view acks and collapses; the panel stays on
+	// the notices view (the gear ✕ is the way back), so no dot while reading.
+	posted.length = 0;
+	await act(async () => { island2.props.onMouseLeave(); await flush(); });
+	act(() => fireTimers(COLLAPSE_MS));
+	assert.equal(posted.length, 1, 'leaving the notice view acks the notices');
+	// The panel content stays mounted (grid 0fr collapse is CSS-only, and the
+	// list keeps its snapshot while reading) — the contract is the inert wrapper.
+	assert.equal(byClass(renderer, 'dnl-grow')[0].props['aria-hidden'], 'true', 'the list collapses');
+	assert.equal(byClass(renderer, 'dnl-grow')[0].props.inert, '', 'the collapsed panel is inert');
+	// The gear ✕ returns to lyrics; with the notices acked the dot does NOT
+	// come back (viewing consumed them).
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: undefined });
 	const gear = renderer.root.findByProps({ 'aria-label': '返回歌词' });
 	await act(async () => { gear.props.onClick({ stopPropagation() {} }); await flush(); });
 	assert.equal(byClass(renderer, 'dnl-lines').length, 1, 'lyrics view is back');
-	assert.equal(byClass(renderer, 'dnl-notices').length, 0);
-	assert.equal(byClass(renderer, 'dnl-dot').length, 1, 'the dot returns with the lyrics view');
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'an acked notice does not bring the dot back');
+
+	// ---- passive clear: the dot FADES out (stays mounted, tagged) -------------
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 11, items: [
+		{ workspace: 'beta', question: null, turnEnd: { turn: 6, outcome: 'completed', at: 5 } }] } });
+	act(() => fireTimers(INSERT_MS, 200));
+	assert.equal(byClass(renderer, 'dnl-dot').length, 1, 'the dot is up again after a fresh notice');
+	// The host clears it without any user interaction (TTL / settled remotely):
+	// the button must fade out instead of blinking away.
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: undefined });
+	const fadingDot = byClass(renderer, 'dnl-dot')[0];
+	assert.ok(fadingDot, 'the dot is still mounted while fading');
+	assert.ok(String(fadingDot.props.className).includes('dnl-dot-out'), 'the dot is tagged as fading out');
+	assert.equal(fadingDot.props['aria-hidden'], 'true', 'the fading dot is hidden from a11y');
+	act(() => fireTimers(FADE_MS, 50));
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'the dot unmounts after the fade');
 
 	// active + no notice → no dot at all.
 	act(() => firePoll());
@@ -229,4 +327,4 @@ try {
 }
 assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot timers removed on unmount');
 
-console.log('PASS: workspace notices — idle pill shows the headline (提问/第x轮对话结束), active pill shows only the red dot, click opens the full list, gear returns to lyrics');
+console.log('PASS: workspace notices — idle pill shows the headline and fades after ack; active pill inserts the notice then hands off to the quiet dot; dot fades out after viewing');

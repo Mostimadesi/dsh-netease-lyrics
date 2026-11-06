@@ -5,7 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { createLyricRetry } from '../lib/lyric-retry.js';
 import { fingerprintOf } from '../lib/lyric-service.js';
-import { applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor } from '../lib/notice-aggregate.js';
+import { ackNotices, applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor } from '../lib/notice-aggregate.js';
 
 // Evaluate the host with inert IO and a Windows platform on every test machine.
 // No real PowerShell process, filesystem writes, network requests or timers run.
@@ -50,7 +50,7 @@ function makeHarness() {
 		process: { platform: 'win32', env: {}, pid: 42 },
 		console: { log() {}, warn() {} }, Buffer, URL,
 		setTimeout: schedule, clearTimeout: cancel, fingerprintOf, createLyricRetry,
-		applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor,
+		ackNotices, applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor,
 		createLyricService(options) {
 			const service = {
 				options, requests: [], invalidated: [],
@@ -116,7 +116,7 @@ function makeHarness() {
 	}
 	function emit(proc, message) { proc.stdout.emit('data', JSON.stringify(message) + '\n'); }
 	function fire(timer) { assert(timers.delete(timer), 'timer is scheduled'); timer.fn(); }
-	return { apply, state, coverResponse, command, emit, fire, timers, spawned, services, listeners };
+	return { apply, state, coverResponse, command, emit, fire, timers, spawned, services, listeners, registered };
 }
 
 const track = (title = 'Song', durationSec = 200) => ({
@@ -357,6 +357,28 @@ const matched = name => ({ status: 'matched', songName: name, lines: [{ t: 0, te
 	assert.equal(h.state().notice.items.length, 1);
 	h.listeners.get('session/disposed').at(-1)(session);
 	assert.equal(h.state().notice.items.length, 0, 'a disposed session drops its notices');
+
+	// POST /notice/ack consumes the round-ending notices (never questions).
+	fire('session/event', { type: 'tool/call', data: { name: 'ask_user_question', callId: 'c3',
+		arguments: JSON.stringify({ questions: [{ id: 'q3', question: '再问一次？' }] }) } });
+	fire('session/event', { type: 'turn/end', data: { turn: 7, reason: { kind: 'completed' } } });
+	const mkResponse = () => ({ writeHead(code) { this.code = code; }, end(body) { this.body = String(body); } });
+	const ackReq = new EventEmitter();
+	ackReq.method = 'POST';
+	ackReq.headers = { host: '127.0.0.1:19387' };
+	const ackRes = mkResponse();
+	const ackDone = h.registered.get('/dsh-netease-lyrics/notice/ack')(ackReq, ackRes);
+	await ackDone;
+	assert.equal(JSON.parse(ackRes.body).ok, true);
+	assert.equal(JSON.parse(ackRes.body).dropped, true, 'the ack dropped the round ending');
+	const afterAck = h.state().notice.items;
+	assert.equal(afterAck.length, 1);
+	assert.ok(afterAck[0].question, 'the question survives the ack');
+	assert.equal(afterAck[0].turnEnd, null);
+	// GET is rejected (method not allowed).
+	const getRes = mkResponse();
+	h.registered.get('/dsh-netease-lyrics/notice/ack')({ method: 'GET', headers: { host: '127.0.0.1:19387' } }, getRes);
+	assert.equal(getRes.code, 405, 'ack is POST-only');
 
 	// Teardown unsubscribes both observers.
 	dispose();

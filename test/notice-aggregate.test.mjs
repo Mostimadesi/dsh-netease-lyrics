@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict';
 import {
 	NOTICE_MAX_ITEMS, NOTICE_TURN_TTL_MS,
-	applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices,
+	ackNotices, applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices,
 	isRootSession, noticesForWire, sessionCwdOf, workspaceTitleFor,
 } from '../lib/notice-aggregate.js';
 
@@ -257,4 +257,45 @@ assert.equal(basenameOf(''), '');
 	assert.deepEqual(noticesForWire({ serial: 3, sessions: {} }), { serial: 0, items: [] });
 }
 
-console.log('PASS: notice aggregation — root-session fold (approval / ask_user_question incl. PTC / turn end), settle semantics, dispose, TTL + live-session pruning, ordering and caps');
+// ---- ackNotices: viewing consumes round-endings, never questions ---------------
+{
+	// A question + a round ending on the same session: ack drops the ending,
+	// keeps the question (answering is the conversation's job).
+	const state = createNoticeState();
+	const session = rootSession();
+	applyNoticeEvent(state, session, { type: 'tool/call',
+		data: { name: 'ask_user_question', callId: 'q1', arguments: askArgs() } }, 1000);
+	applyNoticeEvent(state, session, { type: 'turn/end', data: { turn: 2, reason: { kind: 'completed' } } }, 1500);
+	assert.equal(ackNotices(state, { now: 2000 }), true);
+	let wire = noticesForWire(state, { now: 2100 });
+	assert.equal(wire.items.length, 1);
+	assert.ok(wire.items[0].question, 'the question survives the ack');
+	assert.equal(wire.items[0].turnEnd, null, 'the round ending is consumed');
+
+	// Only round endings: the ack empties the state entirely.
+	const only = createNoticeState();
+	applyNoticeEvent(only, rootSession('s9', 'D:\\ws\\gamma'), { type: 'turn/end',
+		data: { turn: 4, reason: { kind: 'completed' } } }, 1000);
+	assert.equal(ackNotices(only, { now: 1100 }), true);
+	assert.equal(ackNotices(only, { now: 1200 }), false, 'a repeat ack is a no-op');
+	assert.equal(noticesForWire(only, { now: 1300 }).items.length, 0);
+
+	// An ack cannot erase notices that arrived AFTER the user looked: the
+	// snapshot is re-computed first (a fresh question lands between the poll
+	// the user saw and the ack reaching the host).
+	const late = createNoticeState();
+	const a = rootSession('sa', 'D:\\ws\\a');
+	applyNoticeEvent(late, a, { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } }, 1000);
+	applyNoticeEvent(late, rootSession('sb', 'D:\\ws\\b'), { type: 'tool/call',
+		data: { name: 'ask_user_question', callId: 'q2', arguments: askArgs('新问题') } }, 1100);
+	assert.equal(ackNotices(late, { now: 1200 }), true);
+	const lateWire = noticesForWire(late, { now: 1300 });
+	assert.equal(lateWire.items.length, 1);
+	assert.equal(lateWire.items[0].sessionId, 'sb', 'the newer question survives');
+
+	// Hostile shapes degrade to no-ops.
+	assert.equal(ackNotices(null), false);
+	assert.equal(ackNotices({ serial: 1, sessions: {} }), false);
+}
+
+console.log('PASS: notice aggregation — root-session fold (approval / ask_user_question incl. PTC / turn end), settle semantics, dispose, TTL + live-session pruning, ordering and caps, ack keeps questions');

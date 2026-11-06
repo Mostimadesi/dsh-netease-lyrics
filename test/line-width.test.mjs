@@ -71,28 +71,35 @@ assert.match(src, /wrap\.style\.width = width \+ "px"/, 'the effect writes an ex
 // Width follows the CURRENT line (the user rejected a fixed width as worse than
 // the jump); the CSS transition is what removes the snap.
 assert.match(src, /const lineTextForHooks = /, 'the measured text is the current line');
-// v0.4.0 added `noticeMode`: notice mode renders a different collapsed row, so
-// the effect must forget its last measurement when the island flips modes.
-assert.match(src, /\[lineTextForHooks, prefs\.font, st\?\.active, expanded, noticeMode\]/,
-	'the width effect re-runs on expand/collapse AND on notice-mode flips');
-assert.match(src, /if \(noticeMode\) \{[\s\S]{0,200}?lastLineWidth\.current = 0;/,
-	'notice mode resets the width measurement cache');
+// v0.4.1: `noticeMode` widened into `noticeRowShown` (notice mode / transient
+// insert window / ghost fade all render the notice row), so the effect must
+// re-run on that flag AND clear any pinned width when it flips.
+assert.match(src, /\[lineTextForHooks, prefs\.font, st\?\.active, expanded, noticeRowShown\]/,
+	'the width effect re-runs on expand/collapse AND on notice-row flips');
+assert.match(src, /if \(noticeRowShown\) \{[\s\S]{0,260}?lastLineWidth\.current = 0;/,
+	'notice rows reset the width measurement cache');
 // The measured width must apply ONLY to the collapsed pill. While expanded the
 // panel owns the width: `.dnl-now-wrap` is collapsed by grid-template-rows:0fr,
 // which zeroes its HEIGHT but not its width, so a long line widened the whole
 // expanded capsule (measured 362 -> 598px). During a drag the song keeps
 // playing, so every long line stretched the window mid-gesture.
 assert.match(src, /if \(expanded\) \{[\s\S]{0,160}?wrap\.style\.width = "";/,
-	'the explicit width is cleared while expanded');assert.ok(src.indexOf('const nowWrapRef = useRef(null)') < src.indexOf('if (!smtcActive && !noticeMode) return null;'),
+	'the explicit width is cleared while expanded');assert.ok(src.indexOf('const nowWrapRef = useRef(null)') < src.indexOf('if (!smtcActive && !noticeMode && !noticeGhost) return null;'),
 	'the width hook is declared before the early return (constant hook order)');
 
-// HEIGHT was the other half of the "text jumps around" bug: a line with a
-// translation is ~39px tall vs ~22px without, so switching lines moved the text
-// vertically by 17px in one frame. Every line must keep the translation row
-// reserved once the track has any translation.
-assert.match(src, /const hasAnyTranslation = lines\.some/, 'the track-wide translation check exists');
-assert.match(src, /className: "dnl-now-reserve"/, 'a reserve placeholder is rendered on untranslated lines');
-assert.match(CSS, /\.dnl-now-reserve\{[^}]*height:16px/, 'the reserve placeholder occupies the translation row');
+// v0.4.1 replaced the track-wide translation reservation (the reported "the
+// text sits high because the blank translation row is always reserved", which
+// also reserved on the title/fallback label). Now EVERY line renders the same
+// .dnl-now-trans span and lines without a translation collapse it via a 0fr
+// grid track that transitions — the row appears/disappears smoothly and the
+// pill centres its content in every case.
+assert.doesNotMatch(src, /hasAnyTranslation/, 'no track-wide translation reservation remains');
+assert.doesNotMatch(src, /dnl-now-reserve/, 'the hidden reserve placeholder is gone');
+assert.match(src, /dnl-now-trans" \+ \(currentLine && typeof currentLine\.trans === "string" && currentLine\.trans\.trim\(\) \? "" : " dnl-now-trans-empty"\)/,
+	'every line renders the same translation span, tagged when empty');
+assert.match(CSS, /\.dnl-now-trans\{[^}]*grid-template-rows:1fr/, 'the translation row is a grid track');
+assert.match(CSS, /\.dnl-now-trans-empty\{[^}]*grid-template-rows:0fr/, 'empty translation rows collapse to zero height');
+assert.match(CSS, /\.dnl-now-trans\{[^}]*transition:grid-template-rows \.2s ease/, 'the row height change animates');
 
 // 3. The cross-fade transition must still be present (the user reported the
 //    line-change transition looked removed; the width jump was what broke it).
