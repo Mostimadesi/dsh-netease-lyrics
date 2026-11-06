@@ -1,6 +1,6 @@
 # dsh-netease-lyrics
 
-> **dev 分支（v0.3.23）**：胶囊与环境悬浮歌词，并包含生命周期、效率与本地歌词兼容性修复。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
+> **dev 分支（v0.3.24）**：胶囊与环境悬浮歌词，并包含生命周期、效率与本地歌词兼容性修复，以及从设置视图返回后胶囊偶发不收起的修复。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
 
 DSH 歌词伴侣，两个浮层并存：
 
