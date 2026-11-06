@@ -2,9 +2,13 @@
 #
 # Adds ONE host row: the plugin that supervises the SMTC bridge child
 # process, matches the current track against NetEase / QQ / KuGou search,
-# fetches and caches lyrics, and serves state/cover/rematch routes. The browser
-# half (declared via the `dsh.client` manifest in package.json) renders BOTH the
-# top-center capsule and the ambient floating lyrics into `shell.overlay`.
+# fetches and caches lyrics, serves state/cover/rematch routes, and folds
+# the process-wide session event stream into workspace notices (questions /
+# finished rounds — see lib/notice-aggregate.js). The browser half
+# (declared via the `dsh.client` manifest in package.json) renders BOTH the
+# top-center capsule and the ambient floating lyrics into `shell.overlay`,
+# plus the notice surface (headline pill without media, red dot while
+# playing).
 #
 # Additive `insert` only — no shipped row is overridden.
 # All knobs live in this row's config (see lib/index.js normalizeConfig):

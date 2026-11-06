@@ -1,5 +1,65 @@
 # Changelog
 
+## 0.4.0 - 2026-11-06 (dev)
+
+- **新功能：会话区提示（工作区通知）。** 任意工作区的会话「有提问 / 一轮对话结束」时，
+  插件现在会通知用户——两种形态由浮窗是否触发（有无 SMTC 媒体会话）决定：
+  - **浮窗未触发**（无任何 SMTC 信息）：胶囊直接显示提示语本身——
+    「**xx会话区有提问**」（待回答的 `ask_user_question` / 待确认的授权请求）或
+    「**xx会话区第x轮对话结束**」（`turn/end`）；hover 展开可见完整列表
+    （问题预览、轮次结局、时间）。多条时显示 `+n` 角标，最新提示经
+    `LyricTransition` 交叉淡入。
+  - **浮窗触发**（正在显示歌词）：只在胶囊**右下角显示一个红点**
+    （18×18 方形命中区 + 10px 红点，带轻微脉冲；`prefers-reduced-motion` 下静止），
+    点击红点才展开完整提示列表；齿轮 ✕ 返回歌词视图，红点复现。
+    红点打开的列表与无媒体模式的列表共用同一 builder（`noticeList`），不会漂移。
+- **数据链路**（宿主半边）：
+  - 新增 `lib/notice-aggregate.js`（纯函数、零 I/O、零依赖）：
+    - 通过 `ctx.on('session/event', …, { global: true })` 订阅**全进程**会话事件流，
+      折叠每个**根会话**（子代理会话带 `header.parentSession`，直接跳过）的通知状态。
+    - 提问判定沿用 `@deepseek-ai/dsh-user-questions` 投影折叠的 settle 语义
+      （`pending` / `TOOL_OUTCOME_UNKNOWN` 保持可回答；答案批次 / 失败结束提问），
+      但**不**看 request-header 的 timed 标志——阻塞式 `ask_user_question` 同样值得提示。
+      `approval/asked` + `approval/decided`（never 策略下背靠背出现）合起来无净通知。
+    - `turn/end` 记录「第 x 轮结束」；下一次 `turn/start` 使其失效；
+      序列化时超过 10 分钟（TTL）的「轮次结束」自动退役——陈旧提示不会永远挂着。
+    - 会话从 store 移除（`session/disposed`）时丢弃其全部通知。
+  - `state.json` 新增 `notice: { serial, items[] }` 字段：`serial` 随状态递增，
+    `items` 里每会话至多一条（提问优先于轮次结束，最新的在前，上限 12 条）。
+  - 工作区显示名在**序列化时**解析：优先 `workspaceRegistry`（按 sessionIds
+    归属，其次按 cwd 路径匹配，Windows 大小写不敏感），服务缺席时回退目录名。
+    这样晚到的 registry 不需要刷新钩子，下一个轮询周期自然生效。
+  - 订阅经 `safeOn` 防御式接线（root 无 `on` 的裸测试环境照常工作），
+    折叠器 try/catch 包裹——畸形事件不会影响事件总线（observe-only，不阻塞 append）。
+  - 禁用插件清空通知状态；重启用新状态（不会复活禁用期间观察到的事件）。
+- **渲染契约**（浏览器半边，`lib/client.js`）：
+  - `noticeMode = 无SMTC && 有通知`：隐藏条件从 `st === null || st.active !== true`
+    改为 `!smtcActive && !noticeMode`；通知模式下无呼吸灯（呼吸灯宣告「正在播放」），
+    无齿轮（面板即完整列表），`aria-label` 改读「会话区提示：…」。
+  - 宽度测量 effect 增加 `noticeMode` 依赖并在该模式下重置 `lastLineWidth` 缓存
+    ——通知行没有 `nowWrapRef`，不重置会在恢复歌词后跳过相同句的宽度写入。
+  - `sanitizeNotices` 与 `sanitizeLines` 同级的防御层：畸形行跳过、字段归一、
+    硬上限 12 条；`时钟标签/结局标签/标题文案` 全部纯函数，已导出到 `__test`。
+  - hook 全部保持在合并早退 `if (!smtcActive && !noticeMode) return null` 之前
+    （v0.3.18 事故教训：hook 数量变化会卸载整个组件）。
+- **测试**（全部已接入 `npm test`，**拿 0.3.31 验证会失败**）：
+  - `test/notice-aggregate.test.mjs`：根会话折叠全集（approval、ask_user_question
+    含 PTC 变体、turn end/start）、settle 语义、dispose、TTL + 活跃会话修剪、
+    排序与上限、恶意输入不抛错。
+  - `test/notice-client.test.mjs`：真实 React 驱动真实组件——空闲+通知出胶囊
+    （含中文文案逐字断言）、hover 展开完整列表、420ms 收起、交叉淡入两层并存、
+    播放中只有红点、点红点开列表、齿轮返回歌词、红点复现、无通知无红点、
+    空闲无通知仍完全隐藏（0.3.x 契约不回退）；另有源码形状契约
+    （早退条件、红点按钮、CSS 锚点、reduced-motion 降级）。
+  - `test/host-lifecycle.test.mjs` 新增宿主集成块：事件→`state.json`
+    全链路、子会话忽略、`session/disposed` 丢弃、teardown 退订两个事件。
+  - `test/line-width.test.mjs` 契约更新：依赖数组必须含 `noticeMode`，
+    且通知模式重置测量缓存（断言文字描述各自的不变量）。
+- `npm run check`（六文件）/ `npm test`（fail 0）/ `npm run test:bridge` 全套通过。
+- **需用户重启 DSH 实机确认**：① 无媒体时有提问/轮次结束，胶囊显示对应文案；
+  ② 播放中同一通知只出现红点，点击展开列表；③ 提示消失（回答/下一轮开始）
+  后胶囊/红点随之消失。
+
 ## 0.3.31 - 2026-11-06 (dev)
 
 - **修复：展开态下拖动，胶囊窗口会被横向拉长。**

@@ -1,6 +1,6 @@
 # dsh-netease-lyrics
 
-> **dev 分支（v0.3.26）**：胶囊与环境悬浮歌词。含生命周期、效率与本地歌词兼容性修复、设置返回后胶囊偶发不收起的修复、收起态胶囊左侧整条区域可拖动，以及换句"乱跳"的真正修复（收起态宽度做平滑过渡，交叉淡入淡出保留）；另有 30 分钟 CPU/内存稳定性采样报告。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
+> **dev 分支（v0.4.0）**：胶囊与环境悬浮歌词 + 会话区提示（任意工作区有提问 / 第 x 轮对话结束时：无媒体显示提示胶囊，播放中只显示右下角红点）。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
 
 DSH 歌词伴侣，两个浮层并存：
 
@@ -8,7 +8,11 @@ DSH 歌词伴侣，两个浮层并存：
    滚动歌词窗口 + 进度条 + **播放控制**（后退 5 秒 / 上一首 / 播放暂停 / 下一首 / 前进 5 秒）；
 2. **环境悬浮歌词**（v0.3.0 新增，灵感来自 [limpbus-lyrics「都市回响」](https://github.com/Celine258/idea-from-limbus-company-dancing-lyrics)）：歌词句随机浮现在面板左右两侧，轻微倾斜、逐字浮现、随播放起伏、退场淡出或加速跌落——像桌面上飘过的歌词雨。
 
-无 SMTC 会话时整块隐藏；悬浮层 `pointer-events:none`，不遮挡任何面板操作。
+此外（v0.4.0 新增）：**会话区提示**——插件订阅宿主的全会话事件流，任意工作区的会话
+「有提问 / 一轮对话结束」都会通知你：没有媒体时胶囊显示「xx会话区有提问 / xx会话区第x轮对话结束」，
+播放中则只在胶囊右下角亮一个红点，点开才见完整列表（详见下文专节）。
+
+无 SMTC 会话且无会话提示时整块隐藏；悬浮层 `pointer-events:none`，不遮挡任何面板操作。
 
 播放状态取自 Windows **SMTC**（系统媒体控件）——不登录、不读 cookie、不访问账号数据，
 网易云、QQ 音乐、酷狗音乐以及任何注册了 SMTC 的播放器都能作为播放来源。
@@ -42,11 +46,12 @@ dsh plugin --profile desktop add <克隆目录的绝对路径>
 ```
 网易云(装 InfLink-rs) ──SMTC──► powershell.exe 5.1 桥(lib/smtc-bridge.ps1) ──行JSON──► 宿主半边
 宿主半边(lib/index.js)：桥守护 + 歌曲指纹变化 → 搜索/匹配/拉词/缓存(lib/lyric-service.js)
-  GET  /dsh-netease-lyrics/state.json   状态 + 匹配结果 + 歌词行
+  另订阅全局 session/event 事件流 → 工作区通知折叠(lib/notice-aggregate.js)
+  GET  /dsh-netease-lyrics/state.json   状态 + 匹配结果 + 歌词行 + notice 通知
   GET  /dsh-netease-lyrics/cover.png    封面（按 ?v=<serial> 不可变缓存）
   POST /dsh-netease-lyrics/rematch      清掉当前曲目的匹配结论并重试（仅回环）
 浏览器半边(lib/client.js)：shell.overlay 注册两个浮层（胶囊 + 悬浮层），
-  单次轮询 + 进度外推，两个浮层共享同一状态
+  单次轮询 + 进度外推，两个浮层共享同一状态（含 notice）
 ```
 
 匹配打分：时长差（≤2s +3 / ≤5s +2 / ≤10s +1 / >10s −2）+ 标题（完全一致 +4 / 包含 +2）
@@ -88,6 +93,34 @@ dsh plugin --profile desktop add <克隆目录的绝对路径>
 | 字号 / 字体 | 12–32px（默认 18）；本机字体名，逗号分隔，留空跟随胶囊字体 |
 
 设置保存在当前浏览器 localStorage，浏览器间不共享；`prefers-reduced-motion` 下动画降级为静态显示。
+
+## 会话区提示（v0.4.0）
+
+插件订阅宿主的**全会话事件流**（`session/event`，只读旁路，不影响任何会话），把每个工作区
+会话的「提问」与「轮次结束」折叠成通知，经 `state.json` 的 `notice` 字段随轮询下发：
+
+| 事件 | 提示 |
+| --- | --- |
+| `ask_user_question` 调用（含超时转 `pending` / 崩溃修复 `TOOL_OUTCOME_UNKNOWN` 后仍可回答） | xx会话区有提问 |
+| 授权请求 `approval/asked`（未被即时决定） | xx会话区有提问 |
+| `turn/end`（一轮对话结束；下一次 `turn/start` 使提示失效） | xx会话区第x轮对话结束 |
+
+展示形态由**浮窗是否触发**（有无 SMTC 媒体会话）决定：
+
+- **无媒体**（浮窗未触发）：胶囊直接显示提示语本身；多条时带 `+n` 角标，
+  最新提示交叉淡入；hover / 点击展开完整列表（问题预览、轮次结局、时间）。
+- **播放中**（浮窗触发）：胶囊右下角只亮一个**红点**（带轻微脉冲）；
+  点击红点展开完整提示列表，齿轮 ✕ 返回歌词、红点复现。
+
+细节约定：
+
+- 只统计**根会话**——子代理 / workflow 子会话（带 `parentSession`）不提示；
+- 工作区名优先取 `workspaceRegistry` 的显示名（按会话归属，其次按 cwd 路径匹配），
+  服务不可用时回退目录名；
+- 「第 x 轮结束」提示保留 10 分钟后自动退役；提问在会话移除（`session/disposed`）时一并丢弃；
+- 每会话至多一条（提问优先），wire 上限 12 条；禁用插件清空全部通知；
+- 验证边界：`approval/asked` 与 `approval/decided` 在 never 策略下背靠背出现，
+  极端情况下轮询间隙可能闪现一瞬后自愈。
 
 ## 字体颜色与双语显示（胶囊）
 
@@ -345,8 +378,8 @@ QQ 音乐的 SMTC 会话可能先于在线曲库就绪，瞬时失败此前会�
 
 ```powershell
 npm ci --ignore-scripts --legacy-peer-deps
-npm run check         # 五个生产 JS 文件语法检查
-npm test              # 真实 React 生命周期、共享轮询、宿主恢复、取消旧曲请求、解析/缓存/控件/编排
+npm run check         # 六个生产 JS 文件语法检查
+npm test              # 真实 React 生命周期、共享轮询、宿主恢复、取消旧曲请求、解析/缓存/控件/编排/会话通知
 npm run test:bridge   # PowerShell 5.1：会话选择、时钟、封面清理和有限重试；不启动 WinRT 桥
 ```
 

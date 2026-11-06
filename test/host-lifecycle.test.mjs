@@ -5,6 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { createLyricRetry } from '../lib/lyric-retry.js';
 import { fingerprintOf } from '../lib/lyric-service.js';
+import { applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor } from '../lib/notice-aggregate.js';
 
 // Evaluate the host with inert IO and a Windows platform on every test machine.
 // No real PowerShell process, filesystem writes, network requests or timers run.
@@ -21,6 +22,7 @@ function makeHarness() {
 	const spawned = [];
 	const services = [];
 	const registered = new Map();
+	const listeners = new Map();
 	const schedule = (fn, ms) => {
 		const timer = { fn, ms, unref() {} };
 		timers.add(timer);
@@ -48,6 +50,7 @@ function makeHarness() {
 		process: { platform: 'win32', env: {}, pid: 42 },
 		console: { log() {}, warn() {} }, Buffer, URL,
 		setTimeout: schedule, clearTimeout: cancel, fingerprintOf, createLyricRetry,
+		applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor,
 		createLyricService(options) {
 			const service = {
 				options, requests: [], invalidated: [],
@@ -74,6 +77,16 @@ function makeHarness() {
 			effect(fn) { cleanup = fn(); },
 			inject(_services, callback) { callback({ webServer }); },
 			get: () => webServer, webServer,
+			// Real cordis returns a disposer from ctx.on; the notice wiring
+			// pushes that into its disposers, so simulate the same contract.
+			on(name, listener) {
+				const list = listeners.get(name) ?? (listeners.set(name, []), listeners.get(name));
+				list.push(listener);
+				return () => {
+					const at = list.indexOf(listener);
+					if (at >= 0) list.splice(at, 1);
+				};
+			},
 		};
 		context.plugin.apply(root, { localLyrics: false, maxAutoRetries: 2, retryDelayMs: 5000 });
 		return () => cleanup();
@@ -103,7 +116,7 @@ function makeHarness() {
 	}
 	function emit(proc, message) { proc.stdout.emit('data', JSON.stringify(message) + '\n'); }
 	function fire(timer) { assert(timers.delete(timer), 'timer is scheduled'); timer.fn(); }
-	return { apply, state, coverResponse, command, emit, fire, timers, spawned, services };
+	return { apply, state, coverResponse, command, emit, fire, timers, spawned, services, listeners };
 }
 
 const track = (title = 'Song', durationSec = 200) => ({
@@ -295,6 +308,60 @@ const matched = name => ({ status: 'matched', songName: name, lines: [{ t: 0, te
 	assert.equal(h.state().coverSerial, 0, 'session loss clears artwork');
 	assert.equal(h.coverResponse().code, 404);
 	dispose();
+}
+
+// Workspace notices: globally observed session events surface in state.json,
+// following the settle semantics (question → answered/rejected, round ended →
+// next round starts). This is the host-side integration of the v0.4.0 module.
+{
+	const h = makeHarness();
+	const dispose = h.apply();
+	const session = { id: 'session-1', header: { cwd: 'D:\\ws\\alpha' } };
+	const fire = (name, event) => h.listeners.get(name).at(-1)(session, event);
+
+	// ask_user_question opens a question notice; a reply settles it.
+	fire('session/event', { type: 'tool/call', data: { name: 'ask_user_question', callId: 'c1',
+		arguments: JSON.stringify({ questions: [{ id: 'q1', question: '要继续吗？' }] }) } });
+	let notice = h.state().notice;
+	assert.equal(notice.items.length, 1, 'the question appears in state.json');
+	assert.equal(notice.items[0].workspace, 'alpha', 'title falls back to the cwd basename without a registry');
+	assert.equal(notice.items[0].question.kind, 'user-question');
+	assert.equal(notice.items[0].question.preview, '要继续吗？');
+	fire('session/event', { type: 'user/message', data: { id: 'm1',
+		source: { kind: 'user-question-reply', callId: 'c1' }, content: [] } });
+	assert.equal(h.state().notice.items.length, 0, 'a reply settles the question notice');
+
+	// approval asked → decided (the never-policy back-to-back pair) nets to nothing.
+	fire('session/event', { type: 'approval/asked', data: { id: 'a1', toolName: 'pwsh', reason: 'run command' } });
+	fire('session/event', { type: 'approval/decided', data: { id: 'a1', outcome: 'rejected' } });
+	assert.equal(h.state().notice.items.length, 0, 'a decided approval leaves no notice');
+
+	// turn/end reports the round; turn/start retires the stale ending.
+	fire('session/event', { type: 'turn/end', data: { turn: 3, reason: { kind: 'completed' } } });
+	notice = h.state().notice;
+	assert.equal(notice.items.length, 1);
+	assert.equal(notice.items[0].turnEnd.turn, 3);
+	assert.equal(notice.items[0].turnEnd.outcome, 'completed');
+	assert.ok(notice.serial > 0, 'the serial advances with the state');
+	fire('session/event', { type: 'turn/start', data: { turn: 4 } });
+	assert.equal(h.state().notice.items.length, 0, 'the next round starting retires the stale ending');
+
+	// Subagent (child) sessions never generate notices.
+	const child = { id: 'session-2', header: { cwd: 'D:\\ws\\alpha', parentSession: 'session-1' } };
+	h.listeners.get('session/event').at(-1)(child, { type: 'turn/end', data: { turn: 9, reason: { kind: 'completed' } } });
+	assert.equal(h.state().notice.items.length, 0, 'child sessions are ignored');
+
+	// session/disposed drops a still-pending question.
+	fire('session/event', { type: 'tool/call', data: { name: 'ask_user_question', callId: 'c2',
+		arguments: JSON.stringify({ questions: [{ id: 'q2', question: '确认？' }] }) } });
+	assert.equal(h.state().notice.items.length, 1);
+	h.listeners.get('session/disposed').at(-1)(session);
+	assert.equal(h.state().notice.items.length, 0, 'a disposed session drops its notices');
+
+	// Teardown unsubscribes both observers.
+	dispose();
+	assert.equal(h.listeners.get('session/event').length, 0, 'teardown unsubscribes session/event');
+	assert.equal(h.listeners.get('session/disposed').length, 0, 'teardown unsubscribes session/disposed');
 }
 
 console.log('PASS: host lifecycle — failed spawn, pipe error, retired child, teardown, stale promises, version/duration observation identity, service disposal, artwork clear protocol.');

@@ -71,15 +71,19 @@ assert.match(src, /wrap\.style\.width = width \+ "px"/, 'the effect writes an ex
 // Width follows the CURRENT line (the user rejected a fixed width as worse than
 // the jump); the CSS transition is what removes the snap.
 assert.match(src, /const lineTextForHooks = /, 'the measured text is the current line');
-assert.match(src, /\[lineTextForHooks, prefs\.font, st\?\.active, expanded\]/,
-	'the width effect also re-runs on expand/collapse');
+// v0.4.0 added `noticeMode`: notice mode renders a different collapsed row, so
+// the effect must forget its last measurement when the island flips modes.
+assert.match(src, /\[lineTextForHooks, prefs\.font, st\?\.active, expanded, noticeMode\]/,
+	'the width effect re-runs on expand/collapse AND on notice-mode flips');
+assert.match(src, /if \(noticeMode\) \{[\s\S]{0,200}?lastLineWidth\.current = 0;/,
+	'notice mode resets the width measurement cache');
 // The measured width must apply ONLY to the collapsed pill. While expanded the
 // panel owns the width: `.dnl-now-wrap` is collapsed by grid-template-rows:0fr,
 // which zeroes its HEIGHT but not its width, so a long line widened the whole
 // expanded capsule (measured 362 -> 598px). During a drag the song keeps
 // playing, so every long line stretched the window mid-gesture.
 assert.match(src, /if \(expanded\) \{[\s\S]{0,160}?wrap\.style\.width = "";/,
-	'the explicit width is cleared while expanded');assert.ok(src.indexOf('const nowWrapRef = useRef(null)') < src.indexOf('if (st === null || st.active !== true) return null;'),
+	'the explicit width is cleared while expanded');assert.ok(src.indexOf('const nowWrapRef = useRef(null)') < src.indexOf('if (!smtcActive && !noticeMode) return null;'),
 	'the width hook is declared before the early return (constant hook order)');
 
 // HEIGHT was the other half of the "text jumps around" bug: a line with a

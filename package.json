@@ -1,7 +1,7 @@
 {
   "name": "dsh-netease-lyrics",
-  "version": "0.3.31",
-  "description": "Lyrics companion for DeepSeek Harness: reads the current SMTC media session (NetEase via BetterNCM + InfLink-rs, QQ Music, KuGou, or any SMTC player), matches the track against NetEase, then QQ Music, then KuGou and Migu (falling back to a local .lrc sidecar or embedded tags), and renders BOTH a hover-expandable capsule with a breathing halo and limpbus-style ambient floating lyrics. Zero runtime dependencies.",
+  "version": "0.4.0",
+  "description": "Lyrics companion for DeepSeek Harness: reads the current SMTC media session (NetEase via BetterNCM + InfLink-rs, QQ Music, KuGou, or any SMTC player), matches the track against NetEase, then QQ Music, then KuGou and Migu (falling back to a local .lrc sidecar or embedded tags), renders BOTH a hover-expandable capsule with a breathing halo and limpbus-style ambient floating lyrics, and folds every workspace's pending questions / finished conversation rounds into notices (headline pill without media, red dot on the capsule while playing). Zero runtime dependencies.",
   "type": "module",
   "main": "lib/index.js",
   "engines": {
@@ -9,9 +9,9 @@
     "dsh": ">=0.1.5-rc.1"
   },
   "scripts": {
-    "test": "node --test test/client-lifecycle.test.mjs test/client-react.test.mjs && node test/manifest-encoding.test.mjs && node test/capsule-pin.test.mjs && node test/halo-kick.test.mjs && node test/line-crossfade.test.mjs && node test/line-hysteresis.test.mjs && node test/line-width.test.mjs && node test/host-lifecycle.test.mjs && node test/lyric-cancellation.test.mjs && node test/render-audit.test.mjs && node test/local-lyrics.test.mjs && node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/lyric-retry.test.mjs && node test/ambient-client.test.mjs && node test/motion-frame.test.mjs && node test/control-route.test.mjs",
+    "test": "node --test test/client-lifecycle.test.mjs test/client-react.test.mjs && node test/manifest-encoding.test.mjs && node test/capsule-pin.test.mjs && node test/halo-kick.test.mjs && node test/line-crossfade.test.mjs && node test/line-hysteresis.test.mjs && node test/line-width.test.mjs && node test/host-lifecycle.test.mjs && node test/notice-aggregate.test.mjs && node test/notice-client.test.mjs && node test/lyric-cancellation.test.mjs && node test/render-audit.test.mjs && node test/local-lyrics.test.mjs && node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/lyric-retry.test.mjs && node test/ambient-client.test.mjs && node test/motion-frame.test.mjs && node test/control-route.test.mjs",
     "test:bridge": "powershell -NoProfile -ExecutionPolicy Bypass -File test/media-selection.test.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File test/timeline-sync.test.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File test/cover-state.test.ps1",
-    "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/lyric-service.js && node --check lib/lyric-retry.js && node --check lib/local-lyrics.js"
+    "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/lyric-service.js && node --check lib/lyric-retry.js && node --check lib/local-lyrics.js && node --check lib/notice-aggregate.js"
   },
   "exports": {
     ".": "./lib/index.js",
@@ -25,6 +25,7 @@
     "lib/lyric-service.js",
     "lib/lyric-retry.js",
     "lib/local-lyrics.js",
+    "lib/notice-aggregate.js",
     "lib/smtc-bridge.ps1",
     "cordis.patch.yml",
     "README.md",
@@ -46,7 +47,8 @@
     "smtc",
     "dynamic-island",
     "ambient",
-    "floating-lyrics"
+    "floating-lyrics",
+    "workspace-notices"
   ],
   "repository": {
     "type": "git",
