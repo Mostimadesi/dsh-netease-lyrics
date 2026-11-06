@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.3.30 - 2026-11-06 (dev)
+
+- **「换句时闪过另一句」的真正原因找到了：交叉淡入的「淡出层」是在
+  `useEffect` 里创建的，也就是浏览器已经绘制之后。**
+  - 机制：换句那一帧 `previous === null`，新句**没有 `dnl-fade-in` 类**、
+    以满不透明度直接出现；随后 effect 才把旧句以 `dnl-fade-out`
+    （opacity 从 1 开始）插进来、新句的 `dnl-fade-in` 从 0 重新开始 ——
+    于是**刚切走的那句又盖回屏幕**，然后才真正交叉淡入到新句。
+    在收起态窄胶囊上，这就是"该切下一句，中间却快速闪过别的一句"。
+  - 修法：抽出 `nextTransitionFrame(frame, identity, children)`，在**渲染期**
+    派生 `previous`（React 官方 "adjust state when props change" 模式）。
+    第一帧就同时带旧层和新层，淡入淡出只跑一次。effect 只负责 240ms 后
+    **清除**旧层，绝不再创建它。
+  - **为什么之前多轮探针都判错**：headless（无 GPU）会把 effect 在同一帧内
+    冲刷掉，两种写法截图像素完全一致（实测逐帧 opacity 序列一模一样）。
+    这个缺陷只在真实 GPU 合成的 DSH 窗口里可见 —— 靠浏览器探针**测不出来**。
+    用户实机验证：撤回这处改动后"闪另一句"立刻复现，恢复后消失。
+  - 测试：新增 `test/line-crossfade.test.mjs`（`nextTransitionFrame` 的纯函数
+    契约 + 源码形状断言"effect 不得创建 previous"），已接入 `npm test`；
+    **拿修复前版本验证会失败**。这一条专门防止该改动被再次误删
+    —— 本轮曾把它当作"实测无差别"而 stash 掉，实机立刻回归。
+- `npm run check` / `npm test`（fail 0）全套通过。
+
 ## 0.3.29 - 2026-11-06 (dev)
 
 - **「闪过另一句」的真正根因（第三次定位，这次有实测对照）：一次陈旧的
