@@ -68,16 +68,35 @@ const wrapNode = (renderer) => renderer.root.findAll((n) => typeof n.type === 's
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 assert.match(src, /const nowWrapRef = useRef\(null\)/, 'a ref targets the lyric wrapper');
 assert.match(src, /wrap\.style\.width = width \+ "px"/, 'the effect writes an explicit px width');
+// Width follows the CURRENT line (the user rejected a fixed width as worse than
+// the jump); the CSS transition is what removes the snap.
+assert.match(src, /const lineTextForHooks = /, 'the measured text is the current line');
 assert.match(src, /\[lineTextForHooks, prefs\.font, st\?\.active\]/,
-	'the width effect is keyed on the line text (re-measures on every line change)');
+	'the width effect is keyed on the current line text');
 assert.ok(src.indexOf('const nowWrapRef = useRef(null)') < src.indexOf('if (st === null || st.active !== true) return null;'),
 	'the width hook is declared before the early return (constant hook order)');
+
+// HEIGHT was the other half of the "text jumps around" bug: a line with a
+// translation is ~39px tall vs ~22px without, so switching lines moved the text
+// vertically by 17px in one frame. Every line must keep the translation row
+// reserved once the track has any translation.
+assert.match(src, /const hasAnyTranslation = lines\.some/, 'the track-wide translation check exists');
+assert.match(src, /className: "dnl-now-reserve"/, 'a reserve placeholder is rendered on untranslated lines');
+assert.match(CSS, /\.dnl-now-reserve\{[^}]*height:16px/, 'the reserve placeholder occupies the translation row');
 
 // 3. The cross-fade transition must still be present (the user reported the
 //    line-change transition looked removed; the width jump was what broke it).
 assert.match(src, /function LyricTransition\(props\)/, 'line cross-fade still exists');
 assert.match(CSS, /\.dnl-fade-in\{animation:dnl-lyric-in/, 'fade-in animation intact');
 assert.match(CSS, /\.dnl-fade-out\{[^}]*animation:dnl-lyric-out/, 'fade-out animation intact');
+
+// 3b. Entering through the left gutter must NOT expand the capsule, otherwise
+//     the hover expansion resizes the capsule and the drag handle under the
+//     pointer mid-gesture (measured: 61x34 -> 362x341, drag produced no move).
+assert.match(src, /hostRef\.current\?\.querySelector\?\.\("\.dnl-drag"\)/,
+	'the hover handler inspects the drag handle box');
+assert.match(src, /event\.clientX >= box\.left && event\.clientX <= box\.right/,
+	'a pointer entering the gutter is not expanded');
 
 // 4. Sanity: the component still mounts with real React and a real line change
 //    does not throw (the measurement effect must be tolerant of a null ref).
