@@ -872,6 +872,14 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'no pseudo-element overlay on the island at all');
 	assert(/\.dnl-drag\{[^}]*position:absolute/.test(plugin.__test.CSS),
 		'the drag handle is still its own absolutely-positioned button');
+	// Electron keeps a window drag strip at the top and the capsule lives at
+	// top:12px inside it. Without opting out, a pointerdown on the capsule is
+	// consumed by the window ("the click goes to the DSH window") and the whole
+	// widget becomes undraggable. Same hard requirement dsh-audio-pulse documents.
+	assert(/\.dnl-host\{[^}]*-webkit-app-region:initial/.test(plugin.__test.CSS),
+		'the overlay opts out of the window drag region');
+	assert(/\.dnl-island\{[^}]*-webkit-app-region:no-drag/.test(plugin.__test.CSS),
+		'the capsule itself is a no-drag region');
 	// The whole left gutter (the island's 30px padding box) must be draggable in
 	// BOTH states, including the COLLAPSED pill. A small centred 20x28 handle
 	// left ~half of that strip hittable only by the island (click-to-pin), which

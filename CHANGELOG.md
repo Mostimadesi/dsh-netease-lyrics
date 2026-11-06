@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.3.28 - 2026-11-06 (dev)
+
+用户再次澄清了两个现象，此前两轮都判断错了方向，本轮按用户描述**先复现、再修**：
+
+- **「换句时快速闪过另一句歌词」的真因：`positionSec` 抖动 + 行索引无迟滞。**
+  不是宽度、不是译文、不是高度。真实播放器的位置上报本来就有抖动
+  （SMTC 快照常抖 ±0.2s，时钟还会在其上插值）。`currentLineIndex` 是纯二分
+  `t <= pos`，没有记忆：抖动在行边界来回跨一次，索引就来回翻，
+  `LyricTransition` 于是反复把**上一句**重新渲染进交叉淡入
+  —— 视觉上就是"该切到下一句，中间却闪了另一句"。
+  - 复现（真实 Chrome，pos 在 5s 边界 `4.8 ↔ 5.2` 抖动）：
+    `B2 → OUT:B2/IN:A1 → OUT:A1/IN:B2 → B2 → OUT:B2/IN:A1 → A1 → B2`
+    —— 11 次切换，A1 反复闪现；平滑播放则只有 `A1→B2→C3` 正常推进。
+  - 修法：新增 `stickyLineIndex` + `LINE_HYSTERESIS_SEC = 0.35`。
+    前进要越过 `t(下一句) + 0.35`，后退要低于 `t(当前句) − 0.35`；
+    带内一律保持屏幕上那一句。真实跳转/拖动进度仍是立即生效。
+  - 复验（同一抖动场景）：`A1 → OUT:A1/IN:B2 → B2`，**只切换 1 次**，无闪现；
+    平滑播放、小回退场景均正常。
+  - 测试：新增 `test/line-hysteresis.test.mjs`（纯函数 + 源码契约），
+    已接入 `npm test`；**拿未修复版验证会失败**。
+- **「左侧完全拖不动」的真因：点在 DSH 窗口的拖拽区上，不是胶囊。**
+  本 CSS 此前**一处 `app-region` 都没有**。DSH 的 Electron 窗口顶部有窗口
+  拖拽条，而胶囊固定在 `top:12px` 正落在其中 —— 在其上按下指针会被窗口
+  拿去拖窗口，页面根本收不到事件，所以"点到的其实是 DSH 窗口"。
+  同类插件 `dsh-audio-pulse` 明确注释这是 body-level overlay 的硬性要求。
+  - 修法：`.dnl-host` 加 `-webkit-app-region:initial`（声明这是页面图层、
+    不打穿窗口拖拽区），`.dnl-island` 加 `-webkit-app-region:no-drag`
+    （胶囊内部永远是"不拖窗口"区域）。
+  - 测试：`test/ambient-client.test.mjs` 增加两条 CSS 契约断言。
+- `npm run check` / `npm test`（fail 0）/ `npm run test:bridge` 全套通过。
+
 ## 0.3.27 - 2026-11-06 (dev)
 
 用户实机反馈两点，均已在真实 Chrome 里复现并修复：
