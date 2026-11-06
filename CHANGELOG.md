@@ -2,6 +2,19 @@
 
 ## 0.3.28 - 2026-11-06 (dev)
 
+- **紧急修复：package.json 被写入 UTF-8 BOM，导致插件完全无法加载**。
+  报错 `Unexpected token '\uFEFF', "﻿{ "name"... is not valid JSON`。
+  根因：改版本号时用了 Windows PowerShell 5.1 的
+  `Set-Content -Encoding UTF8`，**它会写 BOM**（这个坑我自己都写进经验卡了，
+  却还是踩了）。宿主用裸 `JSON.parse` 读 manifest，带 BOM 直接抛错 ——
+  `npm test` 却照常通过（npm 自己会剥 BOM），所以测试没能拦住。
+  - 修法：以 `UTF8Encoding(false)` 重写 `package.json`，首字节恢复为 `7B`（`{`）。
+  - **防回归**：新增 `test/manifest-encoding.test.mjs`，检查 `package.json`、
+    同目录 `*.json` 与 `cordis.patch.yml` 均无 BOM 且 JSON 可解析；已接入
+    `npm test`。已用"重新注入 BOM"验证过它确实会失败。
+  - 教训：改 JSON/YAML 清单**只用编辑器或带 `UTF8Encoding($false)` 的写入**，
+    不要用 `Set-Content -Encoding UTF8`；并且"测试通过"不等于"宿主能加载"。
+
 用户再次澄清了两个现象，此前两轮都判断错了方向，本轮按用户描述**先复现、再修**：
 
 - **「换句时快速闪过另一句歌词」的真因：`positionSec` 抖动 + 行索引无迟滞。**
