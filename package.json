@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "node --test test/client-lifecycle.test.mjs test/client-react.test.mjs && node test/capsule-pin.test.mjs && node test/host-lifecycle.test.mjs && node test/lyric-cancellation.test.mjs && node test/render-audit.test.mjs && node test/local-lyrics.test.mjs && node test/multisource.test.mjs && node test/lyric-service.test.mjs && node test/lyric-retry.test.mjs && node test/ambient-client.test.mjs && node test/motion-frame.test.mjs && node test/control-route.test.mjs",
-    "test:bridge": "powershell -NoProfile -File test/media-selection.test.ps1 && powershell -NoProfile -File test/timeline-sync.test.ps1 && powershell -NoProfile -File test/cover-state.test.ps1",
+    "test:bridge": "powershell -NoProfile -ExecutionPolicy Bypass -File test/media-selection.test.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File test/timeline-sync.test.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File test/cover-state.test.ps1",
     "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/lyric-service.js && node --check lib/lyric-retry.js && node --check lib/local-lyrics.js"
   },
   "exports": {
