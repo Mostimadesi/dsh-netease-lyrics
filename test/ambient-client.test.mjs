@@ -409,7 +409,7 @@ const HIDDEN = { active: true, playing: true, title: 'T', coverSerial: 0,
 	lyric: { status: 'matched', songId: 7, lines: [{ t: 0, text: '啊' }] } };
 
 let gearTree = gear.openGear(HIDDEN);
-const glowSelect = nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源');
+const glowSelect = nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯模式');
 assert(glowSelect, 'glow colour-source selector exists in the capsule settings');
 assert.equal(glowSelect.props.value, 'theme', 'default follows the theme');
 const paceSelect = nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏');
@@ -423,13 +423,13 @@ assert.equal(calmHalo.props.style['--dnl-glow-dur'], '8.4s', 'calm pace slows th
 assert.equal(calmHalo.props.style['--dnl-glow-amp'], '.8', 'calm pace dims the lamp');
 
 gearTree = gear.openGear({ ...HIDDEN, coverSerial: 9 });
-nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
+nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯模式')
 	.props.onChange({ target: { value: 'cover' } });
 assert.equal(JSON.parse(store.get('dsh.netease-lyrics.display.v1')).glow, 'cover', 'cover mode persisted');
 assert(nodes(gear.openGear({ ...HIDDEN, coverSerial: 9 })).some(n => String(n.props.className || '').startsWith('dnl-halo')), 'cover mode keeps the halo');
 
 gearTree = gear.openGear(HIDDEN);
-nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯颜色来源')
+nodes(gearTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸灯模式')
 	.props.onChange({ target: { value: 'off' } });
 const offTree = gear.openGear(HIDDEN);
 assert(!nodes(offTree).find(n => n.type === 'select' && n.props['aria-label'] === '呼吸节奏'),
@@ -852,7 +852,7 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'settings view renders exactly one button (the way back), so the view is never a trap');
 
 	// The moved knobs are present.
-	for (const label of ['面板不透明度', '原文颜色', '译文颜色', '当前句高亮', '呼吸灯颜色来源', '歌词字体']) {
+	for (const label of ['面板不透明度', '原文颜色', '译文颜色', '当前句高亮', '呼吸灯模式', '歌词字体']) {
 		assert(nodes(tree).some(n => n.props && n.props['aria-label'] === label), 'capsule settings expose: ' + label);
 	}
 
@@ -924,7 +924,7 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 
 	// They must no longer be on the plugin settings page (moved, not duplicated).
 	const page = nodes(renderCfg());
-	assert(!page.some(n => n.props && n.props['aria-label'] === '呼吸灯颜色来源'), 'halo knob left the settings page');
+	assert(!page.some(n => n.props && n.props['aria-label'] === '呼吸灯模式'), 'halo knob left the settings page');
 	assert(!page.some(n => n.props && n.props['aria-label'] === '面板不透明度'), 'opacity knob is capsule-only');
 
 	// And back again.

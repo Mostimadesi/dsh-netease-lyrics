@@ -1,0 +1,36 @@
+feat: configurable chime, notice-burst halo mode, capsule skins (v0.4.6)
+
+Three user-requested items:
+
+- Sound is fully user-configurable now: four synthesized presets
+  (ding - the original two-tone; bell - fundamental plus inharmonic
+  partials; chord - a rising C6-E6-G6 arpeggio; pulse - three short
+  triangle-wave pings, the loudest personality for noisy rooms), a
+  repeat count of 1-3 (replays are pre-scheduled on the AUDIO clock
+  with a 0.35s gap - one effect call, immune to tab throttling), and
+  a volume level of 1-10 (per-tone gain = level x 0.06; default 5 =
+  0.30, louder than the old fixed 0.18 the user found too easy to
+  miss behind other audio). New dispatcher playNoticeSound(style,
+  repeats, volume); playNoticeChime stays as a legacy entry point.
+- New halo mode 呼吸灯 -> 仅通知到达时: dark during normal play,
+  and while a notice row is on screen (idle pill / insert window /
+  ghost fade) the halo lights up ENLARGED 1.45x, brighter and at a
+  fast 1.15s cadence (dnl-halo-burst - transform-only scaling keeps
+  the blurred borders off the repaint path), pairing the arrival
+  chime with a visible beat. The hand-off to the red dot darkens it
+  again. The pace knob hides in this mode (cadence is fixed); the
+  glowMode computation learned the new value (it fell back to theme
+  before - the test caught it).
+- Two new capsule skins (设置 -> 歌词胶囊 -> 胶囊样式):
+  frosted (24px blur + saturation + top light-edge highlight) and
+  solid (opaque theme card, squarer corners, deeper shadow - readable
+  over any wallpaper; the panel-opacity knob naturally stops
+  applying). Class-level overrides; the default pill is untouched.
+
+Tests: pulse x3 schedules all nine tones up front, volume drives the
+per-tone gain, the burst halo's three states (dark in plain play /
+lit during the insert window / dark after the hand-off), the idle
+pill glows, the solid skin class lands, and source contracts for
+NOTICE_SOUNDS / the dispatcher / the burst rules / the skins. The
+ambient suite's glow-select aria-label was renamed in step (5 hits).
+All verified failing against v0.4.5.

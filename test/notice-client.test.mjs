@@ -25,11 +25,19 @@ const pending = [];
 const posted = [];
 const storeMap = new Map();
 const audioCalls = [];
+const gainTargets = [];
 class FakeAudioContext {
 	constructor() { this.state = "running"; this.currentTime = 0; this.destination = {}; audioCalls.push("ctx"); }
 	createGain() {
 		audioCalls.push("gain");
-		return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} };
+		return {
+			gain: {
+				setValueAtTime() {},
+				linearRampToValueAtTime(value) { gainTargets.push(Number(value)); },
+				exponentialRampToValueAtTime() {},
+			},
+			connect() {},
+		};
 	}
 	createOscillator() {
 		audioCalls.push("osc");
@@ -227,7 +235,20 @@ assert.match(src, /if \(noticeRowShown && !expanded\) ackNotices\(\);/,
 assert.match(src, /const NOTICE_ACK_ROUTE = "\/dsh-netease-lyrics\/notice\/ack";/, 'the ack route exists');
 // v0.4.5: arrival chime + retention + master switch + memoization.
 assert.match(src, /function playNoticeChime\(\) \{/, 'the synthesized arrival chime exists');
-assert.match(src, /const soundOn = noticeOn && noticePrefs\.sound !== false;[\s\S]{0,300}playNoticeChime\(\);/,
+// v0.4.6: configurable sound, burst halo, capsule skins.
+assert.match(src, /const NOTICE_SOUNDS = \[/, 'the four sound presets exist');
+assert.match(src, /function playNoticeSound\(style, repeats, volume\) \{/,
+	'the sound dispatcher takes style/repeats/volume');
+assert.match(src, /playNoticeSound\(noticePrefs\.soundStyle, noticePrefs\.soundRepeats, noticePrefs\.soundVolume\)/,
+	'the arrival effect plays the configured sound');
+assert.match(src, /glowMode === "notice" \? noticeRowShown : !noticeMode/,
+	'notice glow lights only while a notice row shows');
+assert.match(src, /\.dnl-halo-burst\{transform:scale\(1\.45\)/,
+	'the burst halo is enlarged');
+assert.match(src, /"notice", "仅通知到达时"/, 'the glow select offers the notice mode');
+assert.match(src, /\.dnl-style-frosted\{/, 'the frosted skin exists');
+assert.match(src, /\.dnl-style-solid\{/, 'the solid skin exists');
+assert.match(src, /const soundOn = noticeOn && noticePrefs\.sound !== false;[\s\S]{0,400}playNoticeSound\(/,
 	'the chime plays from the arrival effect');
 assert.match(src, /expireTurnEnds\(rawNotices, noticePrefs\.ttlMinutes, Date\.now\(\)\)/,
 	'the retention setting expires round endings');
@@ -545,13 +566,13 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 		act(() => firePoll());
 		await resolve({ active: false, pollMs: 500, notice: { serial: 32, items: [
 			{ workspace: 'alpha', question: { kind: 'user-question', preview: 'p', at: Date.now() }, turnEnd: null }] } });
-		assert.equal(audioCalls.filter((c) => c === 'start').length, 1,
-			'a genuine arrival plays the chime exactly once');
+		assert.equal(audioCalls.filter((c) => c === 'start').length, 2,
+			'a genuine arrival plays the default ding pattern (two tones)');
 		act(() => firePoll());
 		await resolve({ active: false, pollMs: 500, notice: { serial: 33, items: [
 			{ workspace: 'beta', question: null, turnEnd: { turn: 22, outcome: 'completed', at: Date.now() - 1000 } }] } });
-		assert.equal(audioCalls.filter((c) => c === 'start').length, 1,
-			'the cooldown suppresses a rapid second chime');
+		assert.equal(audioCalls.filter((c) => c === 'start').length, 2,
+			'the cooldown suppresses a rapid second pattern');
 		act(() => firePoll());
 		await resolve({ active: false, pollMs: 500, notice: { serial: 34, items: [
 			{ workspace: 'beta', question: null, turnEnd: { turn: 23, outcome: 'completed', at: Date.now() - 20 * 60000 } }] } });
@@ -565,6 +586,66 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 		storeMap.delete(PREFS_KEY);
 	}
 	assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'prefs block leaves no timers');
+}
+
+// ---- v0.4.6: custom sound (style / repeats / volume) ---------------------------
+{
+	const PREFS_KEY = 'dsh.netease-lyrics.notice.v1';
+	let r4;
+	try {
+		// pulse × 3 repeats at volume 8: three tones per pattern, three
+		// pre-scheduled patterns on the audio clock, per-tone gain 0.48.
+		storeMap.set(PREFS_KEY, JSON.stringify({ soundStyle: 'pulse', soundRepeats: 3, soundVolume: 8 }));
+		audioCalls.length = 0; gainTargets.length = 0;
+		act(() => { r4 = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ active: false, pollMs: 500 });
+		act(() => firePoll());
+		await resolve({ active: false, pollMs: 500, notice: { serial: 40, items: [
+			{ workspace: 'beta', question: null, turnEnd: { turn: 30, outcome: 'completed', at: Date.now() - 1000 } }] } });
+		assert.equal(audioCalls.filter((c) => c === 'start').length, 9,
+			'pulse × 3 repeats schedules all nine tones up front');
+		assert.ok(gainTargets.some((v) => Math.abs(v - 0.48) < 0.001),
+			'volume level 8 drives the per-tone gain (8 × 0.06)');
+	} finally {
+		if (r4) await act(async () => { r4.unmount(); await flush(); });
+		storeMap.delete(PREFS_KEY);
+	}
+	assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'sound block leaves no timers');
+}
+
+// ---- v0.4.6: halo 仅通知到达时 + capsule skins --------------------------------
+{
+	const DISPLAY_KEY = 'dsh.netease-lyrics.display.v1';
+	const islandOf = (r) => r.root.findAll((n) => typeof n.type === 'string'
+		&& String(n.props.className || '').startsWith('dnl-island'))[0];
+	let r5;
+	try {
+		storeMap.set(DISPLAY_KEY, JSON.stringify({ glow: 'notice' }));
+		act(() => { r5 = TestRenderer.create(React.createElement(Island)); });
+		// Playing with no notice: dark.
+		await resolve({ ...trackBase, notice: undefined });
+		assert.equal(byClass(r5, 'dnl-halo').length, 0, 'notice glow: no halo during plain playback');
+		// A notice arrives → insert window → burst halo while the notice row shows.
+		act(() => firePoll());
+		await resolve(trackWithNotice);
+		assert.ok(byClass(r5, 'dnl-halo-burst').length === 1, 'the burst halo shows during the insert window');
+		act(() => fireTimers(INSERT_MS, 200));
+		assert.equal(byClass(r5, 'dnl-halo').length, 0,
+			'the burst goes dark once the notice row hands off to the dot');
+		await act(async () => { r5.unmount(); await flush(); });
+		// The idle notice pill glows too; the solid skin rides the island class.
+		storeMap.set(DISPLAY_KEY, JSON.stringify({ glow: 'notice', capsuleStyle: 'solid' }));
+		act(() => { r5 = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ active: false, pollMs: 500, notice: { serial: 41, items: [
+			{ workspace: 'beta', question: null, turnEnd: { turn: 31, outcome: 'completed', at: Date.now() - 1000 } }] } });
+		assert.ok(byClass(r5, 'dnl-halo-burst').length === 1, 'the idle notice pill glows');
+		assert.ok(String(islandOf(r5).props.className).includes('dnl-style-solid'),
+			'the solid skin class is applied to the island');
+	} finally {
+		if (r5) await act(async () => { r5.unmount(); await flush(); });
+		storeMap.delete(DISPLAY_KEY);
+	}
+	assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'halo block leaves no timers');
 }
 
 // ---- cold-mount replay suppression (v0.4.3): refresh/hot-reload while media
