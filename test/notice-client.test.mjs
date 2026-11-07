@@ -140,6 +140,10 @@ assert.match(src, /if \(noticeKey !== "" && noticeKey !== noticeKeyRef\.current\
 	'a NEW notice while media plays arms the insert window during render');
 assert.match(src, /const inserting = smtcActive && insertDeadline > Date\.now\(\) && notices\.length > 0;/,
 	'inserting derives from the deadline, not an effect');
+assert.match(src, /const polledBefore = everPolledRef\.current;[\s\S]{0,400}if \(smtcActive && polledBefore\) setInsertDeadline/,
+	'the insert window never arms on the cold-mount poll (replay suppression)');
+assert.match(src, /if \(noticeRowShown && !expanded\) ackNotices\(\);/,
+	'hover-ack only fires while the notice row is actually on screen');
 // Ack wiring.
 assert.match(src, /const NOTICE_ACK_ROUTE = "\/dsh-netease-lyrics\/notice\/ack";/, 'the ack route exists');
 assert.match(src, /const ackNotices = \(\) => \{/,
@@ -215,7 +219,7 @@ const trackBase = {
 const trackWithNotice = { ...trackBase, notice: { serial: 9, items: [
 	{ workspace: 'alpha', question: { kind: 'user-question', preview: '要继续吗？', at: 3 }, turnEnd: null },
 ] } };
-const INSERT_MS = 1800, FADE_MS = 260, COLLAPSE_MS = 420;
+const INSERT_MS = 4000, FADE_MS = 260, COLLAPSE_MS = 420;
 
 let renderer;
 try {
@@ -346,6 +350,23 @@ try {
 	act(() => fireTimers(FADE_MS, 50));
 	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'the dot unmounts after the fade');
 
+	// ---- hover-ack gating (v0.4.3): lyric hover must NOT consume notices -----
+	const island3 = renderer.root.findByProps({ role: 'status' });
+	posted.length = 0;
+	await act(async () => { island3.props.onMouseEnter({}); await flush(); });
+	assert.equal(posted.length, 0, 'hovering the LYRIC capsule does not ack unseen notices');
+	assert.equal(byClass(renderer, 'dnl-grow')[0].props['aria-hidden'], undefined, 'the lyric panel opened for reading');
+	// Hovering DURING the insert window DOES count: the headline is on screen.
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 15, items: [
+		{ workspace: 'beta', question: null, turnEnd: { turn: 9, outcome: 'completed', at: 7 } }] } });
+	assert.ok(byClass(renderer, 'dnl-notice-text').length >= 1, 'a fresh notice inserts while media plays');
+	await act(async () => { island3.props.onMouseLeave(); await flush(); });
+	act(() => fireTimers(COLLAPSE_MS));
+	posted.length = 0;
+	await act(async () => { island3.props.onMouseEnter({}); await flush(); });
+	assert.equal(posted.length, 1, 'hovering during the insert window acks (the headline was visible)');
+
 	// ---- main-view session: notices of the conversation the user is IN stay --
 	act(() => firePoll());
 	await resolve({ ...trackBase, notice: { serial: 12, items: [
@@ -382,4 +403,31 @@ try {
 }
 assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot timers removed on unmount');
 
-console.log('PASS: workspace notices — idle pill shows the headline and fades after ack; active pill inserts the notice then hands off to the quiet dot; dot fades out after viewing');
+// ---- cold-mount replay suppression (v0.4.3): refresh/hot-reload while media
+// plays with a standing notice must go STRAIGHT to the dot — no 4s insert
+// replay of an already-seen notice on every remount.
+{
+	let r2;
+	try {
+		act(() => { r2 = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ ...trackBase, notice: { serial: 20, items: [
+			{ workspace: 'beta', question: null, turnEnd: { turn: 12, outcome: 'completed', at: 9 } }] } });
+		assert.equal(byClass(r2, 'dnl-dot').length, 1,
+			'cold mount with playing media + standing notice goes straight to the dot');
+		assert.equal(byClass(r2, 'dnl-notice-text').length, 0, 'no insert replay on cold mount');
+		const insertTimerPending = [...timers.values()].some((t) => !t.repeat && Math.abs(t.ms - INSERT_MS) <= 200);
+		assert.equal(insertTimerPending, false, 'no insert window timer scheduled on cold mount');
+		// A genuinely NEW notice after the mount still inserts.
+		act(() => firePoll());
+		await resolve({ ...trackBase, notice: { serial: 21, items: [
+			{ workspace: 'beta', question: null, turnEnd: { turn: 13, outcome: 'completed', at: 10 } }] } });
+		assert.ok(byClass(r2, 'dnl-notice-text').length >= 1, 'post-mount arrivals still insert');
+		act(() => fireTimers(INSERT_MS, 200));
+		assert.equal(byClass(r2, 'dnl-dot').length, 1, 'the hand-off works after a post-mount insert');
+	} finally {
+		if (r2) await act(async () => { r2.unmount(); await flush(); });
+	}
+	assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'cold-mount block leaves no timers');
+}
+
+console.log('PASS: workspace notices — idle pill shows the headline and fades after ack; active pill inserts the notice (4 s) then hands off to the quiet dot; lyric hover never acks, insert hover does; cold mounts skip the replay');

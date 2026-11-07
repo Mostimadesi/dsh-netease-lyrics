@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.4.3 - 2026-11-07 (dev)
+
+自审后按用户决策落地的三项（自审报告其余项暂缓）：
+
+- **① 插入窗口 1.8s → 4s**（用户指定 3~5s，取中值）。播放中通知的折叠行
+  替换显示更久，悬停胶囊时有真实的时间看到通知标题。
+- **② 修 hover-ack 误消费（自审 P0）。** v0.4.1 起 `onMouseEnter` 无条件
+  ack——歌词模式下悬停胶囊读歌词也会把**没看过的**通知静默消费掉（注释
+  声称"歌词模式下是 no-op"是错的：有红点时 notices 恰恰非空）。现在仅在
+  **折叠行实际显示通知时**（通知胶囊 / 插入窗口 / ghost 行）且未展开时 ack；
+  悬停歌词行不再触发。插入窗口内的悬停仍算查看（标题就在屏上）。
+- **③ 冷挂载重放抑制（自审 P1 的修复）。** 之前的连续性逻辑在「页面刷新 /
+  热重载 / 重开窗口」后首次轮询同时带来"媒体播放中 + 既有通知"时，会重放
+  一次插入窗口（v0.4.1 是 1.8s；窗口延长到 4s 后重放会更吵）。新增
+  `everPolledRef`：插入窗口只为**挂载后新到达**的通知（或跨两个轮询观察到
+  的真实媒体启动）武装；冷挂载直接显示红点。
+- **自审 P2（点击通知跳转对应会话）调研结论：当前 client runtime 无可用
+  API，暂缓。** 已核实：会话切换的真实入口是 `dsh-client-ui-workspace` 的
+  `UiWorkspaceService.openSession()`（`replaceMain` = `sessions.retain(source:
+  "mainView")` **加上** 内部 `selection` store 更新），但该控制器是
+  workspace bundle 的闭包局部实例，未 `reflect.provide`；裸调
+  `sessions.retain(source:"mainView")` 只加保留计数、不切换中央面板，且会
+  永久污染 mainView 语义（我们自己的未读过滤就建立在它之上）。client
+  runtime 全部提供的服务面：actionCards / documentPreviews / layout /
+  modules / pluginNavigation（仅插件页导航）/ resources / sessions /
+  sidebarRight(Tabs) / uiRenderer / userQuestionPanels——均无会话导航。
+  待上游暴露 `openSession` 钩子或服务后一行即可接入。
+- **测试**：hover 门控（歌词 hover 不 ack / 插入窗口 hover ack）、冷挂载
+  直达红点且无插入计时器、挂载后新通知仍插入、reduced-motion 契约更新、
+  源码契约（polledBefore 抑制 + noticeRowShown 门控）。全套拿 v0.4.2
+  负向验证会失败。
+- `npm run check` / `npm test`（fail 0）/ `npm run test:bridge` 全套通过。
+
 ## 0.4.2 - 2026-11-07 (dev)
 
 两个打磨点（用户实测 v0.4.1 后的反馈）：
