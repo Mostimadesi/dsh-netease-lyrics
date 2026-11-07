@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.4.2 - 2026-11-07 (dev)
+
+两个打磨点（用户实测 v0.4.1 后的反馈）：
+
+- **① 红点的出现/点击退场补齐过渡。**
+  - **出现淡入**：红点亮起改为 0.18s 淡入（`dnl-dot-in`，透明度 0→0.95 +
+    轻微放大回弹），呼吸（`dnl-dot-pulse`）延迟 0.18s 接管——插入窗口结束
+    那一刻红点不再「啪」地弹出。
+  - **点击淡出**：v0.4.1 点击红点打开列表时是**立即卸载**（"主动交互立即
+    退场"），用户反馈消失太快缺过渡——改回与被动清除一致的 260ms 淡出
+    （`dnl-dot-out`），在展开面板下方完成，视觉连续。
+  - `prefers-reduced-motion`：入场直接定格为静态可见（opacity .95），
+    退场立即消失（原实现退场态 opacity 0，入场漏了定格）。
+- **② 切换到「触发红点提示的会话」时，红点自动消失。**
+  - 调研结论：宿主进程没有「当前主视图会话」事件（session 事件表无
+    focus/active 类）；但**浏览器侧 client runtime** 的 `sessions` service
+    暴露 `list.getSnapshot().byId[id].retainedBy.mainView > 0`——这正是 DSH
+    官方 UI 判定「用户正在看的会话」的信号（官方未读标记 completionUnread
+    同样对 main 视图豁免）。插件 client bundle 经 runner facade 的
+    `ctx.get('sessions')` 可选查询拿到它。
+  - 实现：`mainSessionIdOf()` 纯函数（防 try/catch，服务缺失/抛错返回 null）
+    + `sanitizeNotices` 保留 wire `sessionId` + 派生区过滤
+    `notices.filter(item => item.sessionId !== mainSessionId)`——纯展示层：
+    用户切到该会话，其提问/轮次结束通知在**下一个轮询 tick（≤500ms）内**
+    从胶囊/红点淡出；切走后自然恢复显示。所有既有淡入淡出机制原样复用。
+  - 边界：主视图判定读取频率 = 轮询节奏（无额外接线）；多窗口/多客户端时
+    任何持有 mainView retain 的会话都算「在看」（与官方语义一致）。
+- **测试**（拿 v0.4.1 负向验证会失败，已验证）：
+  `mainSessionIdOf` 单测（正常/零值/缺服务/抛快照）、`sessionId` 保留断言、
+  main-view 过滤交互流（在看的会话无红点 → 切走红点恢复 → 切回淡出）、
+  点击红点改为淡出断言、出现淡入 CSS 契约、reduced-motion 新形状契约。
+- `npm run check` / `npm test`（fail 0）/ `npm run test:bridge` 全套通过。
+
 ## 0.4.1 - 2026-11-07 (dev)
 
 三个打磨点（用户实测 v0.4.0 后的反馈）：

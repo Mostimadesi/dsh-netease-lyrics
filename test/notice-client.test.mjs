@@ -47,12 +47,16 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 });
 
 const routes = new Map();
+// The main-view session, switchable between test phases (the DSH client
+// runtime's `retainedBy.mainView > 0` signal, faked as a snapshot store).
+let mainById = { s1: { id: 's1', retainedBy: { mainView: 1 } } };
+const fakeSessions = { list: { getSnapshot: () => ({ byId: mainById }) } };
 plugin.apply({ slots: {
 	inject: (_, cb) => cb(),
 	register: (opts, component) => { routes.set(opts.key || opts.id, component); return () => {}; },
-} });
+}, get: (name) => (name === 'sessions' ? fakeSessions : undefined) });
 const Island = routes.get('dsh-netease-lyrics-island');
-const { sanitizeNotices, noticeHeadline, noticeClockLabel, noticeList, CSS } = plugin.__test;
+const { sanitizeNotices, noticeHeadline, noticeClockLabel, noticeList, mainSessionIdOf, CSS } = plugin.__test;
 
 // ---- pure helpers ------------------------------------------------------------
 // NOTE: values returned from the vm-loaded plugin live in the vm realm, so
@@ -71,6 +75,7 @@ const cleaned = sanitizeNotices({ serial: 2, items: [
 	{ workspace: '', question: { kind: 'nonsense', preview: 5, at: 'bad' }, turnEnd: null },
 ] });
 assert.equal(cleaned.length, 2, 'only well-formed rows survive');
+assert.equal(cleaned[0].sessionId, '', 'a missing session id normalizes to empty');
 assert.equal(cleaned[0].workspace, 'alpha');
 assert.equal(cleaned[0].question.kind, 'user-question', 'unknown kinds normalize to user-question');
 assert.equal(cleaned[0].at, 3000, 'item at = max(question, turnEnd)');
@@ -106,11 +111,28 @@ assert.ok(listTree.props.children[0].props.className === 'dnl-notice-head');
 const emptyTree = noticeList([]);
 assert.ok(JSON.stringify(emptyTree).includes('当前没有会话区提示'));
 
+// ---- mainSessionIdOf: the client runtime's main-view signal -------------------
+assert.equal(mainSessionIdOf(fakeSessions), 's1', 'the retainedBy.mainView row is the main session');
+assert.equal(mainSessionIdOf({ list: { getSnapshot: () => ({ byId: {
+	s2: { id: 's2', retainedBy: { mainView: 0 } },
+	s3: { id: 's3', retainedBy: {} },
+} }) } }), null, 'no mainView retain reads as none');
+assert.equal(mainSessionIdOf(null), null, 'a missing service reads as none');
+assert.equal(mainSessionIdOf({}), null, 'a service without list reads as none');
+assert.equal(mainSessionIdOf({ list: { getSnapshot: () => { throw new Error('boom'); } } }), null,
+	'a throwing snapshot must never break the island');
+
 // ---- source-shape contracts (a paint-order defect headless cannot see) --------
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 assert.match(src, /if \(!smtcActive && !noticeMode && !noticeGhost\) return null;/,
 	'idle WITHOUT a notice (or ghost) stays hidden — the combined early-return condition');
-assert.match(src, /const notices = sanitizeNotices\(st === null \? null : st\.notice\);[\s\S]{0,400}const noticeMode = !smtcActive && notices\.length > 0;/,
+assert.match(src, /const mainSessionId = mainSessionIdOf\(clientSessions\);[\s\S]{0,300}const notices = mainSessionId === null \? rawNotices[\s\S]{0,80}\.filter\(\(item\) => item\.sessionId !== mainSessionId\);/,
+	'notices are filtered by the main-view session BEFORE any early return');
+assert.match(src, /try \{ clientSessions = ctx\.get\("sessions"\) \|\| null; \} catch \{ clientSessions = null; \}/,
+	'apply() performs the optional sessions lookup defensively');
+assert.match(src, /animation:dnl-dot-in \.18s ease-out both,dnl-dot-pulse 2\.6s ease-in-out \.18s infinite/,
+	'the dot fades in, then breathes (no popping)');
+assert.match(src, /const rawNotices = sanitizeNotices\(st === null \? null : st\.notice\);/,
 	'notice mode is derived from the shared poll BEFORE any early return');
 // The insert window is render-phase state (the first frame must already
 // show the notice row — an effect would paint a frame late, the v0.3.30 lesson).
@@ -133,8 +155,8 @@ assert.match(CSS, /\.dnl-dot-out::before\{animation:dnl-dot-out/,
 	'the retiring dot runs a fade animation');
 assert.match(CSS, /\.dnl-host-fade\{[^}]*animation:dnl-host-out/,
 	'the ghost pill host fades before unmounting');
-assert.match(CSS, /@media\(prefers-reduced-motion:reduce\)\{\.dnl-dot::before\{animation:none\}\.dnl-dot-out::before\{animation:none;opacity:0\}\.dnl-host-fade\{animation:none;opacity:0\}\}/,
-	'reduced motion stills the dot pulse, retires the fading dot and ghost instantly');
+assert.match(CSS, /@media\(prefers-reduced-motion:reduce\)\{\.dnl-dot::before\{animation:none;opacity:\.95\}\.dnl-dot-out::before\{animation:none;opacity:0\}\.dnl-host-fade\{animation:none;opacity:0\}\}/,
+	'reduced motion stills the dot pulse (visible, static), retires the fading dot and ghost instantly');
 assert.match(CSS, /\.dnl-notice-row-q\{[^}]*color-mix/, 'question rows are visually distinct');
 
 // ---- real React: the island renders notice mode without SMTC ------------------
@@ -277,11 +299,17 @@ try {
 	const island2 = renderer.root.findByProps({ role: 'status' });
 	assert.equal(island2.props['aria-label'], '当前歌词：First', 'the lyric aria is restored');
 	assert.equal(byClass(renderer, 'dnl-notices').length, 0, 'the full list is NOT shown until the dot is clicked');
-	// Clicking the dot opens the notice view.
+	// Clicking the dot opens the notice view; the dot FADES OUT under the
+	// opening panel (dotPresent flips with the view, dotHold keeps it one
+	// fade cycle) — no instant removal.
 	await act(async () => { renderer.root.findByProps({ className: 'dnl-dot' }).props.onClick({ stopPropagation() {} }); await flush(); });
 	assert.equal(byClass(renderer, 'dnl-notices').length, 1, 'clicking the dot opens the notice list');
 	assert.ok(textOf(renderer.root.findByProps({ className: 'dnl-notice-title' })).includes('alpha会话区有提问'));
-	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'clicking the dot retires it at once (no fade under the panel)');
+	const clickedDot = byClass(renderer, 'dnl-dot')[0];
+	assert.ok(clickedDot, 'the dot is still mounted while fading under the panel');
+	assert.ok(String(clickedDot.props.className).includes('dnl-dot-out'), 'the clicked dot fades out instead of snapping away');
+	act(() => fireTimers(FADE_MS, 50));
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'the clicked dot unmounts after the fade');
 	// Leaving the expanded notice view acks and collapses; the panel stays on
 	// the notices view (the gear ✕ is the way back), so no dot while reading.
 	posted.length = 0;
@@ -317,6 +345,33 @@ try {
 	assert.equal(fadingDot.props['aria-hidden'], 'true', 'the fading dot is hidden from a11y');
 	act(() => fireTimers(FADE_MS, 50));
 	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'the dot unmounts after the fade');
+
+	// ---- main-view session: notices of the conversation the user is IN stay --
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 12, items: [
+		{ sessionId: 's1', workspace: 'gamma', question: null, turnEnd: { turn: 8, outcome: 'completed', at: 6 } }] } });
+	act(() => fireTimers(INSERT_MS, 200));
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0,
+		'the dot does not show for the session the user is currently viewing');
+	// Switching AWAY from that session re-shows it (next poll picks the change).
+	// The fresh serial arms a new insert window — burn it, then the dot is due.
+	mainById = { s2: { id: 's2', retainedBy: { mainView: 1 } } };
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 13, items: [
+		{ sessionId: 's1', workspace: 'gamma', question: null, turnEnd: { turn: 8, outcome: 'completed', at: 6 } }] } });
+	act(() => fireTimers(INSERT_MS, 200));
+	assert.equal(byClass(renderer, 'dnl-dot').length, 1,
+		'switching away from the session brings its notice back');
+	// Switching back fades it out again (dotPresent flips false → fade path).
+	mainById = { s1: { id: 's1', retainedBy: { mainView: 1 } } };
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 14, items: [
+		{ sessionId: 's1', workspace: 'gamma', question: null, turnEnd: { turn: 8, outcome: 'completed', at: 6 } }] } });
+	const backDot = byClass(renderer, 'dnl-dot')[0];
+	assert.ok(backDot, 'the dot is still mounted while fading after switching back');
+	assert.ok(String(backDot.props.className).includes('dnl-dot-out'), 'switching back tags the dot as fading out');
+	act(() => fireTimers(FADE_MS, 50));
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'the dot is gone after switching back');
 
 	// active + no notice → no dot at all.
 	act(() => firePoll());
