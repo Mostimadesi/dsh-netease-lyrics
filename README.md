@@ -398,6 +398,14 @@ npm run test:bridge   # PowerShell 5.1：会话选择、时钟、封面清理和
 
 具体覆盖范围和未覆盖项见 [实现复核报告](REGRESSION-AUDIT.md)。静态快照烟雾测试不替代浏览器视觉检查。
 
+**改完代码什么时候要重启 DSH**（符号链接安装时）：
+
+| 改动 | 生效方式 |
+| --- | --- |
+| `lib/client.js`（全部 UI / 交互 / CSS） | **无需重启**——DSH 自带的 `dsh-client-hmr` 每 500ms stat 轮询本包的 client 入口（mtime/ctime/size），变化即经 `/plugins/events` SSE 推给已打开页面，浏览器直接换装新 bundle（不刷新页面）。代价：插件内 React 状态重置；替换失败不回滚、错误显示在插件列表 |
+| `lib/index.js` 及宿主侧模块 | 由 `dsh-hmr` 在下一次 profile 重组合时替换（符号链接安装的包目标在文件比较范围内）；重组合由 profile/patch 变化或插件管理器操作触发，平时可等价视为「下次重启生效」 |
+| `cordis.patch.yml` / 结构性清单变化 / 首次安装 | **必须重启**（patch 行与注入表在宿主启动时应用/采集）；仅 `package.json` 内容变化不会被检测 |
+
 `test/live-qq-fallback.mjs` 访问真实 QQ 在线接口,仅手动运行,不进 CI;
 推送到 GitHub 后 `.github/workflows/ci.yml` 会在 windows-latest 上自动跑上述全部检查。
 
