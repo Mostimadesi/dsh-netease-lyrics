@@ -358,23 +358,48 @@ const matched = name => ({ status: 'matched', songName: name, lines: [{ t: 0, te
 	h.listeners.get('session/disposed').at(-1)(session);
 	assert.equal(h.state().notice.items.length, 0, 'a disposed session drops its notices');
 
-	// POST /notice/ack consumes the round-ending notices (never questions).
+	// POST /notice/ack consumes the round-ending notices (never questions);
+	// v0.4.4 adds an optional sessionIds scope consumed only for those
+	// sessions (the "user switched into this workspace" ack).
 	fire('session/event', { type: 'tool/call', data: { name: 'ask_user_question', callId: 'c3',
 		arguments: JSON.stringify({ questions: [{ id: 'q3', question: '再问一次？' }] }) } });
 	fire('session/event', { type: 'turn/end', data: { turn: 7, reason: { kind: 'completed' } } });
+	h.listeners.get('session/event').at(-1)({ id: 'session-other', header: { cwd: 'D:\\ws\\beta' } },
+		{ type: 'turn/end', data: { turn: 2, reason: { kind: 'completed' } } });
 	const mkResponse = () => ({ writeHead(code) { this.code = code; }, end(body) { this.body = String(body); } });
-	const ackReq = new EventEmitter();
-	ackReq.method = 'POST';
-	ackReq.headers = { host: '127.0.0.1:19387' };
-	const ackRes = mkResponse();
-	const ackDone = h.registered.get('/dsh-netease-lyrics/notice/ack')(ackReq, ackRes);
-	await ackDone;
+	const ackPost = async (body) => {
+		const req = new EventEmitter();
+		req.method = 'POST';
+		req.headers = { host: '127.0.0.1:19387' };
+		const res = mkResponse();
+		const done = h.registered.get('/dsh-netease-lyrics/notice/ack')(req, res);
+		if (body !== undefined) req.emit('data', Buffer.from(body));
+		req.emit('end');
+		await done;
+		return res;
+	};
+	// Scoped ack on the OTHER session: only its ending drops.
+	const scopedRes = await ackPost('{"sessionIds":["session-other"]}');
+	assert.equal(JSON.parse(scopedRes.body).ok, true);
+	assert.equal(JSON.parse(scopedRes.body).dropped, true, 'the scoped ack dropped the other session');
+	let items = h.state().notice.items;
+	assert.equal(items.length, 1, 'the unscoped session keeps its notices through a scoped ack');
+	assert.equal(items[0].sessionId, 'session-1');
+	assert.ok(items[0].question !== null);
+	assert.ok(items[0].turnEnd !== null, 'another session remains untouched');
+	// Unscoped list-read ack: consumes the remaining round ending.
+	const ackRes = await ackPost('{}');
 	assert.equal(JSON.parse(ackRes.body).ok, true);
 	assert.equal(JSON.parse(ackRes.body).dropped, true, 'the ack dropped the round ending');
-	const afterAck = h.state().notice.items;
-	assert.equal(afterAck.length, 1);
-	assert.ok(afterAck[0].question, 'the question survives the ack');
-	assert.equal(afterAck[0].turnEnd, null);
+	items = h.state().notice.items;
+	assert.equal(items.length, 1);
+	assert.ok(items[0].question, 'the question survives the ack');
+	assert.equal(items[0].turnEnd, null);
+	// Empty body is the unscoped ack; a malformed scope is rejected.
+	const badRes = await ackPost('{"sessionIds":[]}');
+	assert.equal(badRes.code, 400, 'an empty scope reads as a bad request');
+	const badJsonRes = await ackPost('{not json');
+	assert.equal(badJsonRes.code, 400, 'bad json rejected');
 	// GET is rejected (method not allowed).
 	const getRes = mkResponse();
 	h.registered.get('/dsh-netease-lyrics/notice/ack')({ method: 'GET', headers: { host: '127.0.0.1:19387' } }, getRes);

@@ -1,6 +1,6 @@
 # dsh-netease-lyrics
 
-> **dev 分支（v0.4.3）**：胶囊与环境悬浮歌词 + 会话区提示（任意工作区有提问 / 第 x 轮对话结束时：无媒体显示提示胶囊，播放中先插入提示 ~4 秒再化为右下角静音红点；查看后淡出消失；切换到对应会话时红点自动淡出）。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
+> **dev 分支（v0.4.4）**：胶囊与环境悬浮歌词 + 会话区提示（任意工作区有提问 / 第 x 轮对话结束时：无媒体显示提示胶囊，播放中先插入提示 ~4 秒再化为右下角静音红点；查看后淡出消失；**切换到对应工作区时红点就消失且不再复活**）。稳定版请看 [`main`](https://github.com/Mostimadesi/dsh-netease-lyrics/tree/main)。
 
 DSH 歌词伴侣，两个浮层并存：
 
@@ -51,6 +51,7 @@ dsh plugin --profile desktop add <克隆目录的绝对路径>
   GET  /dsh-netease-lyrics/cover.png    封面（按 ?v=<serial> 不可变缓存）
   POST /dsh-netease-lyrics/rematch      清掉当前曲目的匹配结论并重试（仅回环）
   POST /dsh-netease-lyrics/notice/ack   查看后消费轮次结束类通知（提问保留）
+                                        body {} 全量消费；{"sessionIds":[...]} 定向消费（v0.4.4）
 浏览器半边(lib/client.js)：shell.overlay 注册两个浮层（胶囊 + 悬浮层），
   单次轮询 + 进度外推，两个浮层共享同一状态（含 notice）
 ```
@@ -122,10 +123,13 @@ dsh plugin --profile desktop add <克隆目录的绝对路径>
 红点的出现与退场都带过渡（0.18s 淡入 / 260ms 淡出，`prefers-reduced-motion`
 下立即定格）。
 
-**切换到对应会话即消隐**（v0.4.2）：你正打开的会话不需要它的提醒——插件读取
-浏览器侧 sessions 服务的 `retainedBy.mainView` 信号（DSH 官方未读标记同款判据），
-**当前主视图会话的提问/轮次结束通知不显示**（半个轮询周期内红点淡出）；切走后
-自然恢复显示。纯展示层过滤，不改动宿主通知状态。
+**切换到对应工作区即消隐**（v0.4.2 / v0.4.4）：你正打开的工作区不需要它的提醒——
+插件读取浏览器侧 sessions 服务的 `retainedBy.mainView` 信号（DSH 官方未读标记
+同款判据），把**当前主视图会话所在工作区的全部会话**的通知隐藏（半个轮询周期内
+红点淡出）；v0.4.4 起，进入工作区还会把该组**轮次结束通知**向宿主定向消费
+（`POST /notice/ack` 带 `sessionIds`）——**切走不再复活**；**提问类通知永不被
+消费**，同工作区的提问只是藏起来，离开后若仍未回答则恢复提示。多窗口时任何持有
+mainView retain 的会话都算「在看」（与官方语义一致）。
 
 细节约定：
 

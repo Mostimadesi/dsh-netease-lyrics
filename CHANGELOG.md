@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.4.4 - 2026-11-07 (dev)
+
+**修复「切换到对应会话时红点自动消失」的两个漏网场景**（用户实测报告）：
+
+- **工作区级分组（display filter + 定向消费）**：原过滤器按 `sessionId` 精确匹配
+  主视图会话，而用户心智是工作区级的——「先点其他工作区再点回来」时 DSH 往往
+  在工作区里打开的是**另一个会话**（甚至新建的空白会话），`sessionId` 对不上，
+  红点既不过滤也不消失。现在客户端再取 `workspaces` 服务，把主会话映射到其
+  **工作区的全部会话**（`items[].sessionIds`），按组过滤；服务缺席时回退到单会话
+  分组，行为与 v0.4.2 一致。
+- **到访即消费（不再「切走复活」）**：多提示时，之前只看显示层过滤——切走后
+  先前过滤的通知会「复活」，红点永远清不掉。现在切入某工作区时，对该组的
+  **轮次结束通知**自动发**定向 ack**（`POST /notice/ack` 新 body 参数
+  `sessionIds`）：真正消费宿主侧通知，切走不再出现；轮次在你查看期间结束时
+  同样即时被消费（effect 的 serial 依赖链）。**提问类通知依旧永不被消费**
+  ——代理还在等答案，访问只是把同工作区的提问藏起来，离开后仍提示。
+- **宿主**：`ackNotices` 新增 scoped 模式（只消费指定会话的轮次结束，遍历
+  **实时状态**而非 wire 快照——你正在看时结束的那轮也一并消费）；ack 路由
+  现在读取并校验 body（空 body = 无 scope 全量 ack；`sessionIds` 为空/非法
+  → 400；坏 JSON → 400）。
+- **跨 realm 陷阱修复**：vm 测试沙盒中 `x instanceof Map/Set` 对真正的跨 realm
+  Map/Set 恒为 false（深坑——scoped ack 会被静默降级为全量 ack，正是测试暴露的）。
+  `notice-aggregate` 对 Map/Set 全部改**结构检测**（`isMapLike`/`isSetLike`）：
+  生产同 realm 行为不变，任何跨 realm 调用方（含测试沙盒）也正确。
+- **测试**：`workspaceGroupOf` 单测、同工作区不同会话的隐藏 + 定向 ack
+  body 断言（组内含全部 session id）、提问类不消费断言、宿主 scoped ack
+  集成（含 400 路径）、聚合 scoped ack 四态。全套拿 v0.4.3 负向验证会失败。
+- `npm run check` / `npm test`（fail 0）/ `npm run test:bridge` 全套通过。
+
 ## 0.4.3 - 2026-11-07 (dev)
 
 自审后按用户决策落地的三项（自审报告其余项暂缓）：

@@ -51,12 +51,19 @@ const routes = new Map();
 // runtime's `retainedBy.mainView > 0` signal, faked as a snapshot store).
 let mainById = { s1: { id: 's1', retainedBy: { mainView: 1 } } };
 const fakeSessions = { list: { getSnapshot: () => ({ byId: mainById }) } };
+// Workspace groups, switchable too (the workspaces service's `items`).
+let workspaceItems = [
+	{ workspaceId: 'w1', sessionIds: ['s1', 's1b'] },
+	{ workspaceId: 'w2', sessionIds: ['s2'] },
+];
+const fakeWorkspaces = { list: { getSnapshot: () => ({ items: workspaceItems }) } };
 plugin.apply({ slots: {
 	inject: (_, cb) => cb(),
 	register: (opts, component) => { routes.set(opts.key || opts.id, component); return () => {}; },
-}, get: (name) => (name === 'sessions' ? fakeSessions : undefined) });
+}, get: (name) => (name === 'sessions' ? fakeSessions
+	: name === 'workspaces' ? fakeWorkspaces : undefined) });
 const Island = routes.get('dsh-netease-lyrics-island');
-const { sanitizeNotices, noticeHeadline, noticeClockLabel, noticeList, mainSessionIdOf, CSS } = plugin.__test;
+const { sanitizeNotices, noticeHeadline, noticeClockLabel, noticeList, mainSessionIdOf, workspaceGroupOf, CSS } = plugin.__test;
 
 // ---- pure helpers ------------------------------------------------------------
 // NOTE: values returned from the vm-loaded plugin live in the vm realm, so
@@ -122,12 +129,29 @@ assert.equal(mainSessionIdOf({}), null, 'a service without list reads as none');
 assert.equal(mainSessionIdOf({ list: { getSnapshot: () => { throw new Error('boom'); } } }), null,
 	'a throwing snapshot must never break the island');
 
+// ---- workspaceGroupOf: workspace-level grouping (v0.4.4) -----------------------
+{
+	const group = workspaceGroupOf(fakeWorkspaces, 's1');
+	assert.ok(group !== null, 'the main session resolves to a workspace group');
+	assert.ok(group.has('s1') && group.has('s1b'), 'the group covers the whole workspace');
+	assert.equal(group.has('s2'), false, 'other workspaces stay out');
+	assert.equal(workspaceGroupOf(fakeWorkspaces, 's2').size, 1, 'a single-session workspace groups to itself');
+	assert.equal(workspaceGroupOf(fakeWorkspaces, 'zz'), null, 'an unattached session resolves to nothing');
+	assert.equal(workspaceGroupOf(null, 's1'), null, 'a missing service reads as nothing');
+	assert.equal(workspaceGroupOf({ list: { getSnapshot: () => { throw new Error('boom'); } } }, 's1'), null,
+		'a throwing snapshot must never break the island');
+}
+
 // ---- source-shape contracts (a paint-order defect headless cannot see) --------
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 assert.match(src, /if \(!smtcActive && !noticeMode && !noticeGhost\) return null;/,
 	'idle WITHOUT a notice (or ghost) stays hidden — the combined early-return condition');
-assert.match(src, /const mainSessionId = mainSessionIdOf\(clientSessions\);[\s\S]{0,300}const notices = mainSessionId === null \? rawNotices[\s\S]{0,80}\.filter\(\(item\) => item\.sessionId !== mainSessionId\);/,
-	'notices are filtered by the main-view session BEFORE any early return');
+assert.match(src, /const mainGroup = mainSessionId === null \? null[\s\S]{0,150}workspaceGroupOf\(clientWorkspaces, mainSessionId\)[\s\S]{0,500}const notices = mainGroup === null \? rawNotices[\s\S]{0,80}\.filter\(\(item\) => !mainGroup\.has\(item\.sessionId\)\);/,
+	'notices are filtered by the WORKSPACE group of the main session BEFORE any early return');
+assert.match(src, /postNoticeAck\(\{ sessionIds: Array\.from\(mainGroup\) \}\);/,
+	'visiting a workspace posts the scoped ack naming the whole group');
+assert.match(src, /try \{ clientWorkspaces = ctx\.get\("workspaces"\) \|\| null; \} catch \{ clientWorkspaces = null; \}/,
+	'apply() performs the optional workspaces lookup defensively');
 assert.match(src, /try \{ clientSessions = ctx\.get\("sessions"\) \|\| null; \} catch \{ clientSessions = null; \}/,
 	'apply() performs the optional sessions lookup defensively');
 assert.match(src, /animation:dnl-dot-in \.18s ease-out both,dnl-dot-pulse 2\.6s ease-in-out \.18s infinite/,
@@ -393,6 +417,29 @@ try {
 	assert.ok(String(backDot.props.className).includes('dnl-dot-out'), 'switching back tags the dot as fading out');
 	act(() => fireTimers(FADE_MS, 50));
 	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'the dot is gone after switching back');
+
+	// ---- workspace-level grouping (v0.4.4): the mis-reported case ------------
+	// A DIFFERENT session of the SAME workspace (the blank conversation DSH
+	// lands on when you click the workspace row) hides it too — and the visit
+	// consumes the round ending host-side via a scoped ack.
+	posted.length = 0;
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 16, items: [
+		{ sessionId: 's1b', workspace: 'gamma', question: null, turnEnd: { turn: 15, outcome: 'completed', at: 11 } }] } });
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0,
+		'a notice from another conversation of the viewed workspace is hidden');
+	assert.equal(posted.length, 1, 'entering the workspace acks its round endings');
+	const scopedBody = JSON.parse(posted[0].options.body);
+	assert.ok(Array.isArray(scopedBody.sessionIds), 'the scoped ack names session ids');
+	assert.ok(scopedBody.sessionIds.includes('s1') && scopedBody.sessionIds.includes('s1b'),
+		'the scoped ack names the whole workspace session group');
+	// A QUESTION in the visited workspace is never consumed — no ack fires.
+	posted.length = 0;
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 17, items: [
+		{ sessionId: 's1b', workspace: 'gamma', question: { kind: 'user-question', preview: 'q', at: 12 }, turnEnd: null }] } });
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'a question from the viewed workspace stays hidden');
+	assert.equal(posted.length, 0, 'a question is never acked by visiting');
 
 	// active + no notice → no dot at all.
 	act(() => firePoll());

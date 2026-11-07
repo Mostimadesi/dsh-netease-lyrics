@@ -298,4 +298,45 @@ assert.equal(basenameOf(''), '');
 	assert.equal(ackNotices({ serial: 1, sessions: {} }), false);
 }
 
-console.log('PASS: notice aggregation — root-session fold (approval / ask_user_question incl. PTC / turn end), settle semantics, dispose, TTL + live-session pruning, ordering and caps, ack keeps questions');
+// ---- scoped ack (v0.4.4): exactly the named sessions, others strictly alone ---
+{
+	const state = createNoticeState();
+	const a = rootSession('sa', 'D:\\ws\\a');
+	const b = rootSession('sb', 'D:\\ws\\b');
+	applyNoticeEvent(state, a, { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } }, 1000);
+	applyNoticeEvent(state, b, { type: 'turn/end', data: { turn: 2, reason: { kind: 'completed' } } }, 1100);
+	applyNoticeEvent(state, b, { type: 'tool/call',
+		data: { name: 'ask_user_question', callId: 'q1', arguments: askArgs() } }, 1200);
+
+	// Scope = only sa: sa's ending drops, sb keeps BOTH its ending and question.
+	assert.equal(ackNotices(state, { now: 2000, sessionIds: new Set(['sa']) }), true);
+	let wire = noticesForWire(state, { now: 2100 });
+	assert.equal(wire.items.length, 1, 'only sb remains');
+	assert.equal(wire.items[0].sessionId, 'sb');
+	assert.ok(wire.items[0].turnEnd !== null, "another session's round ending is NOT consumed by a scoped ack");
+	assert.ok(wire.items[0].question !== null, 'questions survive the scoped ack');
+
+	// Scope = only sb: sb's ending drops, its question stays.
+	assert.equal(ackNotices(state, { now: 2200, sessionIds: new Set(['sb']) }), true);
+	wire = noticesForWire(state, { now: 2300 });
+	assert.equal(wire.items.length, 1);
+	assert.ok(wire.items[0].question !== null);
+	assert.equal(wire.items[0].turnEnd, null);
+
+	// A round that ENDS while the user is watching is consumed directly
+	// (the scoped path iterates live state, not a snapshot).
+	const state2 = createNoticeState();
+	const c = rootSession('sc', 'D:\\ws\\c');
+	applyNoticeEvent(state2, c, { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } }, 1000);
+	assert.equal(ackNotices(state2, { now: 1000, sessionIds: new Set(['sc']) }), true);
+	applyNoticeEvent(state2, c, { type: 'turn/end', data: { turn: 2, reason: { kind: 'completed' } } }, 1100);
+	assert.equal(ackNotices(state2, { now: 1200, sessionIds: new Set(['sc']) }), true,
+		'a brand-new ending inside the scoped workspace is consumed too');
+	assert.equal(noticesForWire(state2, { now: 1300 }).items.length, 0);
+
+	// A scope naming nothing/empties is a no-op and never throws.
+	assert.equal(ackNotices(state2, { now: 1400, sessionIds: new Set(['zz']) }), false);
+	assert.equal(ackNotices(state2, { now: 1400, sessionIds: new Set() }), false, 'an empty scope is not a scoped ack');
+}
+
+console.log('PASS: notice aggregation — root-session fold (approval / ask_user_question incl. PTC / turn end), settle semantics, dispose, TTL + live-session pruning, ordering and caps, unscoped + workspace-scoped acks keep questions');
