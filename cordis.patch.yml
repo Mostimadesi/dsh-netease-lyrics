@@ -12,7 +12,8 @@
 #
 # Additive `insert` only — no shipped row is overridden.
 # All knobs live in this row's config (see lib/index.js normalizeConfig):
-#   pollMs, appPatterns, apiBase, showTranslation, localLyrics, localDirs.
+#   pollMs, appPatterns, apiBase, showTranslation, localLyrics, localDirs,
+#   noticeTurnTtlMs.
 
 - insert:
     - id: dsh-netease-lyrics
@@ -26,3 +27,4 @@
         #   apiBase: 'https://music.163.com'
         #   localLyrics: true          # 四家在线歌词源都失败后，读歌曲旁的 .lrc / 内嵌歌词
         #   localDirs: [<目录>, ...]   # 本地歌词搜索目录（默认 %USERPROFILE%\Music 与 \Downloads，最多 8 个）
+        #   noticeTurnTtlMs: 600000    # 轮次结束提示的宿主保留上限（1~60 分钟；浏览器侧另有更短的设置，取两者较短）
