@@ -787,7 +787,37 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 	}
 }
 
-// ---- cold-mount replay suppression (v0.4.3): refresh/hot-reload while media
+// ---- v0.4.10b: the island holds through the SMTC grace window. A track
+// change can flip active:false for a poll or two (session teardown /
+// Closed status); one such tick used to unmount the whole capsule.
+{
+	const graceTimeouts = () => [...timers].filter(([, t]) => t.ms === 3000);
+	let r8;
+	try {
+		act(() => { r8 = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ ...trackBase });
+		assert.ok(r8.toJSON() !== null, 'playing media mounts the island');
+		// One inactive poll: within the grace the island STAYS. (firePoll
+		// between resolves: each resolve() consumes the pending fetch; a new
+		// request only exists after the poll timer fires.)
+		act(() => firePoll());
+		await resolve({ active: false, pollMs: 500 });
+		assert.ok(r8.toJSON() !== null, 'one inactive poll does not unmount (grace holds)');
+		assert.ok(graceTimeouts().length >= 1, 'the grace expiry timer is scheduled');
+		// Fire the grace expiry; the next inactive poll retires the island.
+		for (const [, t] of graceTimeouts()) t.fn();
+		await act(async () => { await flush(); });
+		act(() => firePoll());
+		await resolve({ active: false, pollMs: 500 });
+		assert.equal(r8.toJSON(), null, 'after the grace the island retires');
+		// Media returning re-arms the grace.
+		act(() => firePoll());
+		await resolve({ ...trackBase });
+		assert.ok(r8.toJSON() !== null, 'media returning remounts');
+	} finally {
+		if (r8) await act(async () => { r8.unmount(); await flush(); });
+	}
+}
 // plays with a standing notice must go STRAIGHT to the dot — no 4s insert
 // replay of an already-seen notice on every remount.
 {

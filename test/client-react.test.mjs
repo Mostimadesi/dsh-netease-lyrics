@@ -69,7 +69,15 @@ test('real React: both overlays survive idle/play/pause/track changes and clean 
     poll(); await resolve({ ...track, positionSec: 7, playing: false });
     assert.equal(intervals.size, 0, 'paused media stops local render ticks');
     poll(); await resolve({ active: false, pollMs: 500 });
-    assert.equal(renderer.toJSON(), null, 'active to idle does not violate hook order');
+    // v0.4.10b: the island holds through the SMTC grace window (a track
+    // change can flip active:false for a poll or two; one tick used to
+    // unmount the whole capsule). It retires only after the grace timer
+    // fires AND the following poll is still inactive.
+    assert.ok(renderer.toJSON(), 'the island holds through the media grace');
+    const grace = [...timeouts].find(([, t]) => t.ms === 3000);
+    assert.ok(grace, 'a grace expiry timer is scheduled');
+    await act(async () => { grace[1].fn(); for (let i = 0; i < 8; i++) await Promise.resolve(); });
+    assert.equal(renderer.toJSON(), null, 'after the grace the island retires (hook order intact)');
     poll(); await resolve({ ...track, title: 'Other track', lyric: { status: 'loading' } });
     assert.ok(renderer.toJSON(), 'idle to active renders again');
   } finally {
