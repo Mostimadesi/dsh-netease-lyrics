@@ -46,10 +46,26 @@ class FakeAudioContext {
 	resume() { audioCalls.push("resume"); return Promise.resolve(); }
 }
 
+let windowCtx = null;
+let vmEvent = null;
+const windowListeners = new Map();
 vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), {
 	window: {
 		__ModuleLoader__: { load: ({ factory }) => { plugin = factory(() => ({ default: React })); } },
-		addEventListener() {}, removeEventListener() {}, dispatchEvent() {},
+		addEventListener(name, fn) {
+			const list = windowListeners.get(name) ?? (windowListeners.set(name, []), windowListeners.get(name));
+			list.push(fn);
+		},
+		removeEventListener(name, fn) {
+			const list = windowListeners.get(name);
+			if (list) { const at = list.indexOf(fn); if (at >= 0) list.splice(at, 1); }
+		},
+		dispatchEvent(event) {
+			for (const fn of windowListeners.get(event.type) ?? []) {
+				try { fn(event); } catch { /* listener errors are contained */ }
+			}
+			return true;
+		},
 		matchMedia: () => ({ matches: true }), innerWidth: 1200, innerHeight: 800,
 		AudioContext: FakeAudioContext,
 	},
@@ -62,7 +78,9 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 		}
 		pending.push({ url, options, resolve });
 	}),
-	Event: class {},
+	Event: class {
+		constructor(type) { this.type = type; }
+	},
 	localStorage: {
 		getItem: (key) => (storeMap.has(key) ? storeMap.get(key) : null),
 		setItem: (key, value) => { storeMap.set(key, String(value)); },
@@ -726,6 +744,48 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 		if (r6) await act(async () => { r6.unmount(); await flush(); });
 		storeMap.delete(DISPLAY_KEY);
 		storeMap.delete('dsh.netease-lyrics.notice.v1');
+	}
+}
+
+// ---- v0.4.9a regression: the decor overlay must actually RENDER its spans.
+// v0.4.9 shipped a blanket `.dnl-island>*` position:relative rule that caught
+// .dnl-decor itself, collapsing the absolutely-positioned layer into a
+// 0-height block the overflow:hidden clipped into nothing — the user saw "no
+// effect on any skin". The spans must exist in the tree on a glass skin and
+// be absent on the opaque ones.
+{
+	const PREFS_KEY = 'dsh.netease-lyrics.notice.v1';
+	let r7;
+	try {
+		storeMap.set(PREFS_KEY, JSON.stringify({ decor: 'rain' }));
+		act(() => { r7 = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ ...trackBase, notice: undefined });
+		assert.ok(r7.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-rain')).length === 1,
+			'the rain decor layer renders on the default glass skin');
+		assert.ok(r7.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-streak')).length === 4,
+			'the four rain streaks render');
+		// arknights has its own framing — decor is gated off there.
+		// The switch goes through the SAME path the gear select uses:
+		// writeDisplay (store + DISPLAY_EVENT) — a bare storeMap.set never
+		// notifies useDisplay, which is exactly why an earlier draft of this
+		// assert saw a stale tree.
+		storeMap.set('dsh.netease-lyrics.display.v1', JSON.stringify({ capsuleStyle: 'arknights' }));
+		// The switch goes through the SAME path the gear select uses:
+		// writeDisplay = store write + DISPLAY_EVENT → useDisplay refreshes.
+		// (A bare storeMap.set never notifies the hook — the earlier draft of
+		// this assert saw a stale tree for exactly that reason.)
+		windowListeners.get('dsh-netease-lyrics-display').forEach((fn) => fn({ type: 'dsh-netease-lyrics-display' }));
+		await act(async () => { await flush(); });
+		const arkDecors = r7.root.findAll((n) => String(n.props.className || '').includes('dnl-decor'));
+		const arkIsland = r7.root.findAll((n) => String(n.props.className || '').startsWith('dnl-island'))[0];
+		assert.equal(arkDecors.length, 0,
+			'the decor layer is gated off on arknights (island='
+			+ String(arkIsland && arkIsland.props.className) + ', decors='
+			+ arkDecors.map((n) => n.props.className) + ')');
+	} finally {
+		if (r7) await act(async () => { r7.unmount(); await flush(); });
+		storeMap.delete(PREFS_KEY);
+		storeMap.delete('dsh.netease-lyrics.display.v1');
 	}
 }
 
