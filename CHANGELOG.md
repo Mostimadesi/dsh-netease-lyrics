@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.4.9 - 2026-11-08 (dev)
+
+**两个参考级新皮肤 + 装饰层**（用户指定参考：明日方舟 UI、女神异闻录 3 Reload、
+Wallpaper Engine 网页壁纸的雨痕/花瓣/光点；技法部分读取了本机 WE 订阅的
+`topographic.frag`（Perlin 噪声→等高线分层）与 `tech_gear.frag`（极坐标条纹）
+着色器源码，以及腾讯游戏学院《明日方舟 UI/UX 分析》的设计语言总结）：
+
+- **方舟观测**（arknights）：Diegetic HUD 语言——**切角轮廓**（clip-path
+  对角斜切 10px）、深炭渐变底、细描边环、**四角 HUD 框角**（::before 四段
+  linear-gradient 拼出 L 角）、**等高线纹理**（feTurbulence 双轴低频噪声 +
+  颜色矩阵映射为青蓝色带，烘进 data-URI SVG，栅格化一次）、极淡扫描线。
+  **强调色可设**：跟随主题色（默认）/ 方舟橙 / 观测青 / 荧黄绿——驱动描边、
+  框角与扫描线。深色工业风，亮暗壁纸均可读。
+- **月相引路**（persona）：P3 Reload 语言——**深蓝渐变玻璃**（靛蓝→午夜蓝）+
+  柔和**内发光**（inset shadow）+ 右上**月相弧光**（径向渐变圆 + 外发光）+
+  **五颗缓慢漂浮的光点**（::after 五个 radial-gradient 点 + 9s 位移关键帧，
+  合成器驱动；reduced-motion 静止）。
+- **装饰层**（会话区提示设置 → 装饰层）：**雨痕水珠**（四条斜向雨丝下落 +
+  三颗带高光的水珠凝在玻璃上）/ **花瓣飘落**（四片贝塞尔圆角花瓣旋转下落，
+  主题色染色）/ **光点浮尘**（六点缓慢漂移）。全部纯 CSS 程序化绘制
+  （无素材），transform/opacity 合成器动画；**仅玻璃类皮肤可叠加**
+  （arknights 有自己的 HUD 框架、ember/solid 为实底），reduced-motion 全静止。
+- 皮肤 select 增至七项（SKIN_IDS 同步）；方舟强调色与装饰层控件只在其皮肤
+  选中时出现。
+- **修一个测试盲区**：gear 面板新控件用**数组片段**作 children——真实 React
+  支持，ambient 测试的 fake React walker 遇到嵌套数组返回无 props 节点
+  （v0.4.0 settingsGroup 教训的复发）。改回单容器 div 包裹。`check`/
+  `test`（fail 0）/`bridge` 全绿。
+- `npm run check` / `npm test` / `npm run test:bridge` 全套通过；纯 client
+  改动热换装生效。
+
 ## 0.4.8 - 2026-11-08 (dev)
 
 **渐变玻璃参数化 + 两个壁纸衍生新皮肤**（用户指出：①三层参数应交给用户——
