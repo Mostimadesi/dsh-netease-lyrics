@@ -91,7 +91,7 @@ plugin.apply({ slots: {
 	: name === 'workspaces' ? fakeWorkspaces : undefined) });
 const Island = routes.get('dsh-netease-lyrics-island');
 const { sanitizeNotices, noticeHeadline, noticeClockLabel, noticeList, mainSessionIdOf, workspaceGroupOf,
-	readNoticePrefs, expireTurnEnds, CSS } = plugin.__test;
+	readNoticePrefs, expireTurnEnds, readDisplay, CSS } = plugin.__test;
 
 // ---- pure helpers ------------------------------------------------------------
 // NOTE: values returned from the vm-loaded plugin live in the vm realm, so
@@ -156,6 +156,23 @@ assert.equal(mainSessionIdOf(null), null, 'a missing service reads as none');
 assert.equal(mainSessionIdOf({}), null, 'a service without list reads as none');
 assert.equal(mainSessionIdOf({ list: { getSnapshot: () => { throw new Error('boom'); } } }), null,
 	'a throwing snapshot must never break the island');
+
+// ---- v0.4.8a: the skin read whitelist must cover EVERY skin the select can
+// write. v0.4.8 shipped with frosted/solid only, so picking 静谧祝愿/暗夜余烬
+// in the gear view persisted the value but readDisplay filtered it back out
+// and the select snapped to 默认 — the user's "switching does nothing" report.
+{
+	const DISPLAY_KEY = 'dsh.netease-lyrics.display.v1';
+	for (const skin of ['frosted', 'solid', 'wishes', 'ember']) {
+		storeMap.set(DISPLAY_KEY, JSON.stringify({ capsuleStyle: skin }));
+		assert.equal(readDisplay().capsuleStyle, skin,
+			'readDisplay keeps the ' + skin + ' skin (round-trip)');
+	}
+	storeMap.set(DISPLAY_KEY, JSON.stringify({ capsuleStyle: 'not-a-skin' }));
+	assert.equal(readDisplay().capsuleStyle, undefined, 'unknown skin values still drop');
+	storeMap.delete(DISPLAY_KEY);
+}
+
 
 // ---- workspaceGroupOf: workspace-level grouping (v0.4.4) -----------------------
 {
