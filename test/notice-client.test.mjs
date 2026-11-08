@@ -246,18 +246,29 @@ assert.match(src, /glowMode === "notice" \? noticeRowShown : !noticeMode/,
 assert.match(src, /\.dnl-halo-burst\{transform:scale\(1\.45\)/,
 	'the burst halo is enlarged');
 assert.match(src, /"notice", "仅通知到达时"/, 'the glow select offers the notice mode');
-assert.match(src, /\.dnl-style-frosted\{/, 'the frosted skin exists');
-// v0.4.7: the frosted skin IS the gradient glass — three signals the default
-// pill lacks (a duotone gradient ring via a border-box layer, a diagonal
-// brand tint, and an SVG feTurbulence grain). Guards a regression back to
-// "heavier blur only".
-assert.match(src, /background-image:url\(\\?"data:image\/svg\+xml,[\s\S]*?feTurbulence[\s\S]*?\\?"\),linear-gradient/,
-	'the gradient glass carries the film-grain texture + gradient layers');
-assert.match(src, /background-clip:padding-box,padding-box,border-box/,
+assert.match(src, /\.dnl-style-frosted,\.dnl-style-frosted\.dnl-expanded\{/, 'the frosted skin exists');
+// v0.4.7/v0.4.8: the frosted skin IS the gradient glass — three signals the
+// default pill lacks (a duotone gradient ring via a border-box layer, a
+// diagonal brand tint, and an SVG feTurbulence grain), and v0.4.8 moved the
+// grain/tint to ::before/::after overlays driven by user CSS variables.
+// Guards a regression back to "heavier blur only".
+assert.match(src, /\.dnl-style-frosted::before\{background-image:url\(\\?"data:image\/svg\+xml,[\s\S]*?\\?"\);opacity:var\(--dnl-gg-grain,\.3\)\}/,
+	'the film grain rides the ::before overlay driven by the grain knob');
+assert.match(src, /\.dnl-style-frosted::after\{background-image:linear-gradient[\s\S]*?var\(--dnl-gg-accent,#8b7cff\)[\s\S]*?opacity:var\(--dnl-gg-tint,\.35\)\}/,
+	'the brand/violet tint rides the ::after overlay driven by the tint knob');
+assert.match(src, /background-clip:border-box;background-origin:border-box/,
 	'the gradient ring rides a border-box layer');
-assert.match(src, /color-mix\(in srgb,color-mix\(in srgb,var\(--dsw-alias-brand-primary\) 75%,#0b0b2a\)/,
-	'the ring flows into a deep brand corner');
+assert.match(src, /color-mix\(in srgb,var\(--dsw-alias-brand-primary\) calc\(var\(--dnl-gg-ring,70\) \* 0\.75%\),#0b0b2a\)/,
+	'the ring flows into a deep brand corner, brightness scaled by the ring knob');
 assert.match(src, /\.dnl-style-solid\{/, 'the solid skin exists');
+// v0.4.8: the two wallpaper-derived presets.
+assert.match(src, /\.dnl-style-wishes,[\s\S]{0,300}#cfd4ff 65%[\s\S]{0,160}#5b67d8 65%/,
+	'the wishes preset carries its lavender→periwinkle ring');
+assert.match(src, /\.dnl-style-ember,[\s\S]{0,300}#ffb36b 70%[\s\S]{0,180}#241408 78%/,
+	'the ember preset carries its ember-orange→charred ring');
+assert.match(src, /"wishes", "静谧祝愿（紫蓝柔光）"/, 'the style select offers the wishes preset');
+assert.match(src, /"ember", "暗夜余烬（暖光炭色）"/, 'the style select offers the ember preset');
+assert.match(src, /GLASS_ACCENTS = \[/, 'the companion-colour palette exists');
 assert.match(src, /const soundOn = noticeOn && noticePrefs\.sound !== false;[\s\S]{0,400}playNoticeSound\(/,
 	'the chime plays from the arrival effect');
 assert.match(src, /expireTurnEnds\(rawNotices, noticePrefs\.ttlMinutes, Date\.now\(\)\)/,
