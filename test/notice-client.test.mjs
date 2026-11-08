@@ -161,9 +161,12 @@ assert.equal(mainSessionIdOf({ list: { getSnapshot: () => { throw new Error('boo
 // write. v0.4.8 shipped with frosted/solid only, so picking 静谧祝愿/暗夜余烬
 // in the gear view persisted the value but readDisplay filtered it back out
 // and the select snapped to 默认 — the user's "switching does nothing" report.
+// v0.4.9 did it AGAIN (forgot arknights/persona), so the whitelist is now
+// SKIN_IDS itself — this loop enumerates the constant's members so a future
+// skin added to SKIN_IDS is automatically covered here.
 {
 	const DISPLAY_KEY = 'dsh.netease-lyrics.display.v1';
-	for (const skin of ['frosted', 'solid', 'wishes', 'ember']) {
+	for (const skin of ['frosted', 'solid', 'wishes', 'ember', 'arknights', 'persona']) {
 		storeMap.set(DISPLAY_KEY, JSON.stringify({ capsuleStyle: skin }));
 		assert.equal(readDisplay().capsuleStyle, skin,
 			'readDisplay keeps the ' + skin + ' skin (round-trip)');
