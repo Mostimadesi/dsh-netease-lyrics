@@ -247,6 +247,16 @@ assert.match(src, /\.dnl-halo-burst\{transform:scale\(1\.45\)/,
 	'the burst halo is enlarged');
 assert.match(src, /"notice", "仅通知到达时"/, 'the glow select offers the notice mode');
 assert.match(src, /\.dnl-style-frosted\{/, 'the frosted skin exists');
+// v0.4.7: the frosted skin IS the gradient glass — three signals the default
+// pill lacks (a duotone gradient ring via a border-box layer, a diagonal
+// brand tint, and an SVG feTurbulence grain). Guards a regression back to
+// "heavier blur only".
+assert.match(src, /background-image:url\(\\?"data:image\/svg\+xml,[\s\S]*?feTurbulence[\s\S]*?\\?"\),linear-gradient/,
+	'the gradient glass carries the film-grain texture + gradient layers');
+assert.match(src, /background-clip:padding-box,padding-box,border-box/,
+	'the gradient ring rides a border-box layer');
+assert.match(src, /color-mix\(in srgb,color-mix\(in srgb,var\(--dsw-alias-brand-primary\) 75%,#0b0b2a\)/,
+	'the ring flows into a deep brand corner');
 assert.match(src, /\.dnl-style-solid\{/, 'the solid skin exists');
 assert.match(src, /const soundOn = noticeOn && noticePrefs\.sound !== false;[\s\S]{0,400}playNoticeSound\(/,
 	'the chime plays from the arrival effect');
