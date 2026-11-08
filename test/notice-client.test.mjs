@@ -778,10 +778,8 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 		await act(async () => { await flush(); });
 		const arkDecors = r7.root.findAll((n) => String(n.props.className || '').includes('dnl-decor'));
 		const arkIsland = r7.root.findAll((n) => String(n.props.className || '').startsWith('dnl-island'))[0];
-		assert.equal(arkDecors.length, 0,
-			'the decor layer is gated off on arknights (island='
-			+ String(arkIsland && arkIsland.props.className) + ', decors='
-			+ arkDecors.map((n) => n.props.className) + ')');
+		assert.ok(arkDecors.length === 8 && String(arkIsland.props.className).includes('dnl-style-arknights'),
+			'the decor layer is now ALLOWED on arknights (v0.4.9c) and rides the skin');
 	} finally {
 		if (r7) await act(async () => { r7.unmount(); await flush(); });
 		storeMap.delete(PREFS_KEY);
