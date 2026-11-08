@@ -669,6 +669,46 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 	assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'halo block leaves no timers');
 }
 
+// ---- v0.4.8a regression: the gear settings view must survive the gradient
+// glass skin. The tuning block references `notice`/`saveNotice`, which live
+// in BundleSettings' scope — v0.4.8 shipped without passing them into
+// capsuleSettings, so clicking the gear on a frosted island threw
+// ReferenceError and React unmounted the WHOLE capsule (the user's
+// "the capsule vanished after clicking the gear" report).
+{
+	const DISPLAY_KEY = 'dsh.netease-lyrics.display.v1';
+	storeMap.set(DISPLAY_KEY, JSON.stringify({ capsuleStyle: 'frosted' }));
+	let r6;
+	try {
+		act(() => { r6 = TestRenderer.create(React.createElement(Island)); });
+		// Playback mode: the gear lives in the lyrics panel. The standing
+		// notice shows as the dot only (no interference with the gear path).
+		await resolve({ ...trackBase, notice: undefined });
+		const island6 = r6.root.findByProps({ role: 'status' });
+		await act(async () => { island6.props.onMouseEnter({}); await flush(); });
+		// Opening the settings view must not throw; the tuning knobs must be
+		// there and adjustable.
+		await act(async () => { r6.root.findByProps({ 'aria-label': '歌词胶囊设置' }).props.onClick({ stopPropagation() {} }); await flush(); });
+		const grain = r6.root.findByProps({ 'aria-label': '渐变玻璃颗粒强度' });
+		const tint = r6.root.findByProps({ 'aria-label': '渐变玻璃罩染强度' });
+		const accent = r6.root.findByProps({ 'aria-label': '渐变玻璃伴侣色' });
+		assert.ok(grain && tint && accent, 'the glass tuning block renders in the gear view');
+		await act(async () => {
+			grain.props.onChange({ target: { value: String(55) } });
+			await flush();
+		});
+		assert.equal(JSON.parse(storeMap.get('dsh.netease-lyrics.notice.v1')).glassGrain, 55,
+			'the grain knob persists through the gear view');
+		await act(async () => { island6.props.onMouseLeave(); await flush(); });
+		act(() => fireTimers(COLLAPSE_MS));
+		assert.ok(r6.toJSON() !== null, 'the capsule survives the whole gear interaction');
+	} finally {
+		if (r6) await act(async () => { r6.unmount(); await flush(); });
+		storeMap.delete(DISPLAY_KEY);
+		storeMap.delete('dsh.netease-lyrics.notice.v1');
+	}
+}
+
 // ---- cold-mount replay suppression (v0.4.3): refresh/hot-reload while media
 // plays with a standing notice must go STRAIGHT to the dot — no 4s insert
 // replay of an already-seen notice on every remount.
