@@ -100,12 +100,35 @@ assert.match(src, /dnl-now-trans" \+ \(currentLine && typeof currentLine\.trans 
 assert.match(CSS, /\.dnl-now-trans\{[^}]*grid-template-rows:1fr/, 'the translation row is a grid track');
 assert.match(CSS, /\.dnl-now-trans-empty\{[^}]*grid-template-rows:0fr/, 'empty translation rows collapse to zero height');
 assert.match(CSS, /\.dnl-now-trans\{[^}]*transition:grid-template-rows \.2s ease/, 'the row height change animates');
+// Only ONE declaration allowed: a later duplicate in the CSS array silently
+// overrides the real grid/collapse rule (shipped in v0.4.1..v0.4.9c — the
+// assertions above all stayed green with the stale rule present, because both
+// matched in the joined string). HANDOFF-lyrics-pending-fixes.md §4.
+{
+	const rules = CSS.match(/\.dnl-now-trans\{/g) || [];
+	assert.equal(rules.length, 1,
+		'.dnl-now-trans must be declared once (a later duplicate overrides the real rule)');
+}
 
 // 3. The cross-fade transition must still be present (the user reported the
 //    line-change transition looked removed; the width jump was what broke it).
 assert.match(src, /function LyricTransition\(props\)/, 'line cross-fade still exists');
 assert.match(CSS, /\.dnl-fade-in\{animation:dnl-lyric-in/, 'fade-in animation intact');
 assert.match(CSS, /\.dnl-fade-out\{[^}]*animation:dnl-lyric-out/, 'fade-out animation intact');
+
+// 3a-2. v0.4.10 (HANDOFF §9): the measured text must share collapsedText's
+// fallback — with no lyric line active the pill measures the TITLE (plus
+// artist), so no-lyric songs size to the song name instead of keeping the
+// previous line's width. The two WIDTH SOURCE markers must both exist, and
+// the hooks text must consume the same fallback expression.
+assert.match(src, /WIDTH SOURCE — keep in sync with collapsedText/, 'measure-text marker present');
+assert.match(src, /WIDTH SOURCE — keep in sync with lineTextForHooks/, 'display-text marker present');
+assert.match(src, /const fallbackLabelForHooks = \(String\(st\?\.title \|\| ""\)/,
+	'the measured text falls back to the song title');
+// The stale empty-text early return must be gone: empty/short text still
+// gets a width pass (the pill shrinks to the "…" instead of staying wide).
+assert.ok(!/if \(lineTextForHooks === ""\) return;/.test(src),
+	'the width effect no longer early-returns on empty text');
 
 // 3b. Entering through the left gutter must NOT expand the capsule, otherwise
 //     the hover expansion resizes the capsule and the drag handle under the

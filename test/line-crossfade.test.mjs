@@ -30,7 +30,7 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 	setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
 });
 
-const { nextTransitionFrame } = plugin.__test;
+const { nextTransitionFrame, CSS } = plugin.__test;
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 
 // --- mount: nothing to fade out yet ---
@@ -69,8 +69,17 @@ assert.match(src, /if \(derived !== frame\) setFrame\(derived\);/,
 	'the render-phase state update is guarded (converges immediately)');
 assert.match(src, /const \[frame, setFrame\] = useState\(\(\) => nextTransitionFrame\(null, props\.identity, props\.children\)\)/,
 	'the initial frame comes from the same helper');
-assert.match(src, /setTimeout\(\(\) => setFrame\(old => \(\{ \.\.\.old, previous: null \}\)\), 240\)/,
-	'the effect only CLEARS the outgoing layer');
+// v0.4.10 (HANDOFF §8): the clear timeout uses the shared CROSSFADE_CLEAR_MS
+// constant (animation duration + 60ms margin) instead of the hard-coded 240.
+assert.match(src, /setTimeout\(\(\) => setFrame\(old => \(\{ \.\.\.old, previous: null \}\)\), CROSSFADE_CLEAR_MS\)/,
+	'the effect only CLEARS the outgoing layer, after the shared clear constant');
+// The clear margin must exceed the animation duration (a dropped frame must
+// not truncate the fade-out).
+assert.match(src, /CROSSFADE_CLEAR_MS = CROSSFADE_MS \+ 60/,
+	'the clear timer carries a 60ms margin over the animation');
+// The animation is at least 300ms (a sub-300ms displacement reads as a flash).
+assert.match(CSS, /dnl-lyric-out 340ms cubic-bezier\(\.4,0,\.2,1\)/,
+	'the fade-out runs 340ms on a both-ends-soft curve');
 // The old buggy shape: an effect that assigns `previous`.
 assert.ok(!/useEffect\(\(\) => \{\s*setFrame\(old => old\.identity === props\.identity \? old : \{/.test(src),
 	'no effect may create the outgoing layer (that paints one frame late)');

@@ -24,12 +24,29 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 	setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
 });
 
-const { currentLineIndex, stickyLineIndex, LINE_HYSTERESIS_SEC } = plugin.__test;
+const { currentLineIndex, stickyLineIndex, hysteresisFor } = plugin.__test;
 
 // Lines every 5s: A@0, B@5, C@10, D@15
 const lines = [
 	{ t: 0, text: 'A' }, { t: 5, text: 'B' }, { t: 10, text: 'C' }, { t: 15, text: 'D' },
 ];
+
+// v0.4.10 (HANDOFF-lyrics-pending-fixes.md §7): the hysteresis band is
+// ADAPTIVE — the median forward gap of the current track, clamped to
+// 0.08..0.35s. For a 5s-gap track that clamps to the 0.35s ceiling, so the
+// historic behaviour on normal songs is preserved exactly.
+const HYST = hysteresisFor(lines);
+assert.equal(HYST, 0.35, 'a 5s-gap track keeps the full 0.35s band');
+// A fast song (0.25s gaps) tightens to 0.08s — the fix for "fast songs lag".
+const fastLines = Array.from({ length: 8 }, (_, i) => ({ t: i * 0.25, text: 'F' + i }));
+assert.equal(hysteresisFor(fastLines), 0.08, 'a 0.25s-gap track tightens the band to 0.08s');
+// A mid song (0.5s gaps) → 0.5*0.25 = 0.125s.
+const midLines = Array.from({ length: 8 }, (_, i) => ({ t: i * 0.5, text: 'M' + i }));
+assert.equal(hysteresisFor(midLines), 0.125, 'a 0.5s-gap track scales the band proportionally');
+// One short line inside a slow song does NOT collapse the band (median, not min).
+const mixedLines = [{ t: 0, text: 'a' }, { t: 4, text: 'b' }, { t: 4.2, text: 'c' },
+	{ t: 8, text: 'd' }, { t: 12, text: 'e' }];
+assert.equal(hysteresisFor(mixedLines), 0.35, 'the median (not the min) protects slow songs');
 
 // --- baseline: the plain lookup still does its job ---
 assert.equal(currentLineIndex(lines, -1), -1, 'before the first line is -1');
@@ -56,9 +73,9 @@ const stickyFromB = jitter.map((p) => { shown = stickyLineIndex(lines, p, shown)
 assert.deepEqual(stickyFromB, [1, 1, 1, 1, 1, 1], 'dither never pulls the line back once it is shown');
 
 // --- genuine progress is not blocked ---
-assert.equal(stickyLineIndex(lines, 5 + LINE_HYSTERESIS_SEC + 0.01, 0), 1,
+assert.equal(stickyLineIndex(lines, 5 + HYST + 0.01, 0), 1,
 	'a real advance past the band still changes the line');
-assert.equal(stickyLineIndex(lines, 5 + LINE_HYSTERESIS_SEC - 0.01, 0), 0,
+assert.equal(stickyLineIndex(lines, 5 + HYST - 0.01, 0), 0,
 	'just inside the band still holds the old line');
 
 // --- a genuine seek (far jump) goes through immediately ---
@@ -67,7 +84,7 @@ assert.equal(stickyLineIndex(lines, 0.5, 3), 0, 'a backward seek lands immediate
 
 // --- retreat needs to clear the band, so dither cannot pull a line back ---
 assert.equal(stickyLineIndex(lines, 4.8, 1), 1, 'dither just below B keeps B');
-assert.equal(stickyLineIndex(lines, 5 - LINE_HYSTERESIS_SEC - 0.01, 1), 0,
+assert.equal(stickyLineIndex(lines, 5 - HYST - 0.01, 1), 0,
 	'clearly before B retreats to A');
 
 // --- edge cases stay safe ---
@@ -111,7 +128,7 @@ assert.equal(settleLineIndex(lines, 1.0, st2, t0 + BACKWARD_SETTLE_MS + 1), 0,
 
 // Forward changes are immediate (hysteresis already vetted them).
 const st3 = { shown: 0, pending: -1, pendingSince: 0 };
-assert.equal(settleLineIndex(lines, 5 + LINE_HYSTERESIS_SEC + 0.01, st3, t0), 1,
+assert.equal(settleLineIndex(lines, 5 + HYST + 0.01, st3, t0), 1,
 	'a clear forward advance is applied at once');
 
 // A transient that returns to the shown line clears the pending state.
