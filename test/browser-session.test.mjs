@@ -6,7 +6,7 @@ import fs from 'node:fs';
 // extension payload, freshness TTL, the bvid gate (browser AUMIDs only, override
 // wins), and the dedicated loopback listener's HTTP behaviour.
 import {
-	handleBrowserSessionReport, freshBrowserSession, computeEffectiveBvid,
+	handleBrowserSessionReport, freshBrowserSession, computeEffectiveBvid, browserTitlesAgree,
 	createBrowserSessionRequestHandler,
 } from '../lib/index.js';
 
@@ -100,15 +100,28 @@ assert.ok(freshBrowserSession(T0 + 9_999), 'fresh inside TTL');
 assert.ok(freshBrowserSession(T0 + 10_000), 'edge of TTL still fresh (strictly-greater expiry)');
 assert.equal(freshBrowserSession(T0 + 10_001), null, 'expired just past TTL');
 assert.equal(freshBrowserSession(T0 + 999_999), null, 'long expired');
-// 3. bvid gate: override wins, browser AUMIDs only, non-browser never attaches
-const fresh = { bvid: 'BV1GJ411x7h7', updatedAt: T0 };
-assert.equal(computeEffectiveBvid('Chrome', 'BV1Override00', fresh), 'BV1Override00', 'override wins');
-assert.equal(computeEffectiveBvid('Chrome', '', fresh), 'BV1GJ411x7h7', 'Chrome AUMID attaches');
-assert.equal(computeEffectiveBvid('Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!MicrosoftEdge', '', fresh), 'BV1GJ411x7h7', 'Edge store AUMID attaches');
-assert.equal(computeEffectiveBvid('Mozilla FireFox', '', fresh), 'BV1GJ411x7h7', 'Firefox AUMID attaches');
-assert.equal(computeEffectiveBvid('cloudmusic.exe', '', fresh), '', 'music client never attaches');
-assert.equal(computeEffectiveBvid('Chrome', '', null), '', 'no fresh report -> empty');
-assert.equal(computeEffectiveBvid('Chrome', '', { bvid: '' }), '', 'report without bvid -> empty');
+// 3. bvid gate: override wins, browser AUMIDs only, and the reported tab must
+// be the SAME page as the SMTC session (a background tab's video must never be
+// attached to another session's track — that used to run the slow subtitle
+// chain for the wrong media and stall the serialized resolve queue).
+const fresh = { bvid: 'BV1GJ411x7h7', title: '靛青宇宙【中文CC字幕】_哔哩哔哩_bilibili', updatedAt: T0 };
+const pageTitle = '靛青宇宙【中文CC字幕】';
+assert.equal(computeEffectiveBvid('Chrome', 'BV1Override00', fresh, pageTitle), 'BV1Override00', 'override wins');
+assert.equal(computeEffectiveBvid('Chrome', '', fresh, pageTitle), 'BV1GJ411x7h7', 'Chrome AUMID + matching title attaches');
+assert.equal(computeEffectiveBvid('Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!MicrosoftEdge', '', fresh, pageTitle), 'BV1GJ411x7h7', 'Edge store AUMID attaches');
+assert.equal(computeEffectiveBvid('Mozilla FireFox', '', fresh, pageTitle), 'BV1GJ411x7h7', 'Firefox AUMID attaches');
+assert.equal(computeEffectiveBvid('cloudmusic.exe', '', fresh, pageTitle), '', 'music client never attaches');
+assert.equal(computeEffectiveBvid('Chrome', '', null, pageTitle), '', 'no fresh report -> empty');
+assert.equal(computeEffectiveBvid('Chrome', '', { bvid: '' }, pageTitle), '', 'report without bvid -> empty');
+assert.equal(computeEffectiveBvid('Chrome', '', fresh, '完全不同的视频'), '', 'a different page title blocks the report');
+assert.equal(computeEffectiveBvid('Chrome', '', fresh, ''), '', 'an identity-less session gets no bvid');
+assert.equal(computeEffectiveBvid('Chrome', '', fresh, undefined), '', 'missing title -> blocked');
+// title agreement accepts the suffix and truncated SMTC forms
+assert.equal(browserTitlesAgree('靛青宇宙_哔哩哔哩_bilibili', '靛青宇宙'), true, 'suffix stripped on both sides');
+assert.equal(browserTitlesAgree('靛青宇宙', '靛青宇宙【中文CC字幕】_哔哩哔哩_bilibili'), true, 'containment counts');
+assert.equal(browserTitlesAgree('靛青宇宙', '别的视频'), false, 'unrelated titles do not agree');
+assert.equal(browserTitlesAgree('', 'x'), false, 'empty state title never agrees');
+assert.equal(browserTitlesAgree('   ', 'x'), false, 'blank state title never agrees');
 
 // 4. HTTP behaviour of the dedicated listener's handler
 const handler = createBrowserSessionRequestHandler();
@@ -202,6 +215,31 @@ await (async () => {
 	const payload = JSON.parse(res.body);
 	assert.equal(payload.positionSec, 3.5, 'music sessions keep the SMTC position');
 	assert.equal(payload.durationSec, 269, 'music sessions keep the SMTC duration');
+})();
+// 6. hardening from the live report (2026-11-09): a report whose tab title is
+// a DIFFERENT page must not feed the state, and an identity-less (stale)
+// session is published as inactive instead of a "未知曲目" capsule.
+bridgeProc.stdout.emit('data', JSON.stringify({
+	type: 'state', active: true, app: 'Chrome', title: '另一个视频_哔哩哔哩_bilibili', artist: '',
+	album: '', positionSec: 7.5, durationSec: 100,
+}) + '\n');
+await new Promise((resolve) => setTimeout(resolve, 150));
+await (async () => {
+	const res = makeRes();
+	registered.get('/dsh-netease-lyrics/state.json')(makeReq('GET'), res);
+	const payload = JSON.parse(res.body);
+	assert.equal(payload.positionSec, 7.5, 'a report for another page never overrides the position');
+	assert.equal(payload.durationSec, 100, 'and never overrides the duration');
+})();
+bridgeProc.stdout.emit('data', JSON.stringify({
+	type: 'state', active: true, app: 'Chrome', title: '', artist: '', album: '', positionSec: 0, durationSec: 0,
+}) + '\n');
+await new Promise((resolve) => setTimeout(resolve, 150));
+await (async () => {
+	const res = makeRes();
+	registered.get('/dsh-netease-lyrics/state.json')(makeReq('GET'), res);
+	const payload = JSON.parse(res.body);
+	assert.equal(payload.active, false, 'an identity-less session is published as inactive');
 })();
 globalThis.fetch = realFetch;
 

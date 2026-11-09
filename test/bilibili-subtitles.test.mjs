@@ -405,6 +405,25 @@ check('a 20-day-old cached match is dropped and refetched',
 	fetchTwenty.calls.length > 0, 'calls ' + fetchTwenty.calls.length);
 try { fs.unlinkSync(agedPath); } catch {}
 
+// 14. the whole signed chain runs under one budget: a hung/throttled upstream
+// must not hold the serialized resolve queue (live report 2026-11-09: a client
+// song's lyrics froze while a bilibili video was open).
+const hangPath = path.join(os.tmpdir(), 'dnl-bili-hang-' + process.pid + '.txt');
+fs.writeFileSync(hangPath, cookiesText.replace('sess-bili%2Cvalue', 'sess-hang'), 'utf8');
+const hangingFetch = async () => new Promise(() => {}); // never settles, ignores the signal
+const svcHang = createLyricService({
+	fetchImpl: hangingFetch, cacheFile: '',
+	bilibiliCookiePaths: [hangPath], bilibiliRequestGapMs: 0, bilibiliChainBudgetMs: 300,
+});
+const hangStartedAt = Date.now();
+const rHang = await svcHang.resolve({ title: '视频标题', artist: 'UP主', durationSec: 213, bvid: 'BV1GJ411x7h7' });
+const hangElapsed = Date.now() - hangStartedAt;
+check('a hung bilibili chain gives up on its budget instead of holding the queue',
+	hangElapsed < 3000 && rHang.status === 'error' && rHang.attempts[0].source === 'bilibili'
+		&& /budget exceeded/.test(rHang.attempts[0].reason),
+	hangElapsed + 'ms ' + JSON.stringify(rHang.attempts));
+try { fs.unlinkSync(hangPath); } catch {}
+
 // cleanup (part 2)
 try { fs.unlinkSync(cookieBad); } catch {}
 try { fs.unlinkSync(cookieGood); } catch {}
