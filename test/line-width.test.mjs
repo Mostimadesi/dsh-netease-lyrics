@@ -110,6 +110,34 @@ assert.match(CSS, /\.dnl-now-trans\{[^}]*transition:grid-template-rows \.2s ease
 		'.dnl-now-trans must be declared once (a later duplicate overrides the real rule)');
 }
 
+// v0.4.12d: before the first timed line (index < 0, e.g. a bilibili video whose
+// subtitles have not started) the expanded window used to collapse to zero rows
+// and the panel said "暂无歌词" while the pill showed the title. It now anchors
+// on the first line; nothing highlights until playback reaches it.
+{
+	const { lyricWindow: window_ } = plugin.__test;
+	const pre = window_(5, -1, 4, 4);
+	assert.equal(pre.length, 9, 'a pre-first-line window still spans the usual slot count');
+	assert.ok(pre.includes(0) && pre.includes(4), 'the window shows the upcoming lines');
+	assert.equal(pre.filter((i) => i === -1).length, 4, 'the leading slots are hidden spacers');
+	assert.equal(window_(0, -1, 4, 4).length, 0, 'no lines -> no window (the genuine empty state stays reachable)');
+	assert.ok(window_(3, 1, 4, 4).includes(1), 'an in-range active index behaves as before');
+}
+// The pill shows the SMTC title verbatim; bilibili appends "_哔哩哔哩_bilibili"
+// to document.title, which is noise (and extra probe width) in the capsule.
+{
+	const { displayTitle } = plugin.__test;
+	assert.equal(displayTitle('携带恋话_哔哩哔哩_bilibili'), '携带恋话', 'the bilibili tab suffix is stripped');
+	assert.equal(displayTitle('某某_哔哩哔哩'), '某某', 'the short suffix form is stripped too');
+	assert.equal(displayTitle('  晴天  '), '晴天', 'ordinary titles only get trimmed');
+}
+// The written width must be clamped to the same 48vw cap the CSS applies, or a
+// long title sizes the pill far beyond its own (ellipsised) text.
+assert.match(src, /Math\.min\(measured, Math\.ceil\(viewport \* 0\.48\)\)/,
+	'the measured width is clamped to the viewport cap');
+assert.match(CSS, /\.dnl-now-text\{[^}]*max-width:48vw/,
+	'the CSS cap the clamp mirrors is still 48vw');
+
 // 3. The cross-fade transition must still be present (the user reported the
 //    line-change transition looked removed; the width jump was what broke it).
 assert.match(src, /function LyricTransition\(props\)/, 'line cross-fade still exists');
@@ -123,8 +151,10 @@ assert.match(CSS, /\.dnl-fade-out\{[^}]*animation:dnl-lyric-out/, 'fade-out anim
 // the hooks text must consume the same fallback expression.
 assert.match(src, /WIDTH SOURCE — keep in sync with collapsedText/, 'measure-text marker present');
 assert.match(src, /WIDTH SOURCE — keep in sync with lineTextForHooks/, 'display-text marker present');
-assert.match(src, /const fallbackLabelForHooks = \(String\(st\?\.title \|\| ""\)/,
-	'the measured text falls back to the song title');
+assert.match(src, /const fallbackLabelForHooks = \(displayTitle\(st\?\.title\)/,
+	'the measured text falls back to the song title (bilibili suffix stripped)');
+assert.match(src, /const fallbackLabel = \(displayTitle\(title\)/,
+	'the rendered fallback uses the SAME stripped title (WIDTH SOURCE sync)');
 // The stale empty-text early return must be gone: empty/short text still
 // gets a width pass (the pill shrinks to the "…" instead of staying wide).
 assert.ok(!/if \(lineTextForHooks === ""\) return;/.test(src),

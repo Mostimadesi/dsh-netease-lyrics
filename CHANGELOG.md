@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.12d - 2026-11-09 (dev)
+
+**实机反馈：B站字幕生效后，"首句字幕开始前"的两个显示问题**（用户截图确认）：
+
+- **收起态药丸被超长视频标题撑得怪异**：宽度探针以 `max-width:none` 量出完整
+  自然宽度并写入 `.dnl-now-wrap`，而 `.dnl-now-text` 自身受 CSS `max-width:48vw`
+  约束 → 药丸远宽于它自己的文字（视频标题又极长），文字在词中间被截。
+  修：写入宽度钳到同一个 48vw 上限（`Math.min(measured, ceil(innerWidth*0.48))`，
+  源码与 CSS 两侧常量互相断言防漂移）；新增 `displayTitle()` 剥掉 B站页签后缀
+  `_哔哩哔哩_bilibili`（**只作用于显示**，匹配与指纹仍用原始标题；
+  两处 `WIDTH SOURCE` 仍为同一表达式，测试断言强制同步）。
+- **展开态在首句之前显示"暂无歌词"**：`lyricWindow(total, -1, …)` 直接返回空
+  → 行列表为 0 行 → 空态文案（此时歌词其实已匹配、只是还没到第一句）。
+  修：`index < 0`（字幕尚未开始/位置在首句前）时窗口锚定第一行——展示即将
+  到来的歌词、没有任何行高亮；真正的空歌词（无行）仍显示"暂无歌词"。
+- 测试：lyricWindow 三态（首句前/空/正常索引）、displayTitle 三种后缀形态、
+  宽度钳制与 48vw 契约、两处 WIDTH SOURCE 同步；负向验证 v0.4.12c 恰好死在
+  "a pre-first-line window still spans the usual slot count"。
+- 纯 client 改动（`lib/client.js`）→ **热换装生效，无需重启**。
+
 ## 0.4.12c - 2026-11-09 (dev)
 
 **实机第二轮两修**（用户实测 v0.4.12b）：
