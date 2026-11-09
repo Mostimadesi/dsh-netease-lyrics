@@ -262,5 +262,80 @@ check('bilibili entries persist across restarts (parsed lines, never the url)',
 try { fs.unlinkSync(cookiePath); } catch {}
 try { fs.unlinkSync(cachePath); } catch {}
 
+// 10. multiple cookie exports: a stale SESSDATA must not poison a fresher
+// file (verified live 2026-11-09: cookies.txt returned nav -101 while
+// cookies-bilibili.txt was still logged in).
+function makeMultiCookieFetch(goodSess) {
+	const calls = [];
+	const json = (payload) => ({ ok: true, json: async () => payload });
+	const fetchImpl = async (url, opts) => {
+		calls.push({ url: String(url), cookie: String(opts.headers.cookie || '') });
+		if (url.includes('api.bilibili.com/x/web-interface/view?')) return json({ code: 0, data: {
+			bvid: 'BV1GJ411x7h7', cid: 137649199, title: '视频标题', duration: 213, owner: { name: 'UP主' } } });
+		if (url.includes('api.bilibili.com/x/web-interface/nav')) {
+			if (opts.headers.cookie === 'SESSDATA=' + goodSess) return json({ code: 0, data: { isLogin: true, wbi_img: {
+				img_url: 'https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png',
+				sub_url: 'https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png' } } });
+			return json({ code: -101 });
+		}
+		if (url.includes('api.bilibili.com/x/player/wbi/v2?')) return json({ code: 0, data: { subtitle: {
+			subtitles: [{ lan: 'zh-CN', subtitle_url: '//aisubtitle.hdslb.com/mc.json' }] } } });
+		if (url.startsWith('https://aisubtitle.hdslb.com/mc.json')) return json({ body: [{ from: 1, to: 2, content: '字幕一句' }] });
+		if (url.includes('/api/search/get/web')) return json({ code: 200, result: { songs: [
+			{ id: 42, name: '晴天', artists: [{ name: '周杰伦' }], duration: 269000 }] } });
+		if (url.includes('/api/song/lyric')) return json({ code: 200, lrc: { lyric: '[00:01.00]故事的小黄花\n' }, tlyric: { lyric: '' } });
+		if (url.includes('/soso/fcgi-bin/client_search_cp')) return json({ code: 0, data: { song: { list: [] } } });
+		if (url.includes('songsearch.kugou.com')) return json({ status: 1, data: { lists: [] } });
+		if (url.includes('app.u.nf.migu.cn')) return json([]);
+		throw new Error('unexpected url ' + url);
+	};
+	fetchImpl.calls = calls;
+	return fetchImpl;
+}
+const cookieBad = path.join(os.tmpdir(), 'dnl-bili-stale-' + process.pid + '.txt');
+const cookieGood = path.join(os.tmpdir(), 'dnl-bili-good-' + process.pid + '.txt');
+fs.writeFileSync(cookieBad, cookiesText.replace('sess-bili%2Cvalue', 'sess-stale'), 'utf8');
+fs.writeFileSync(cookieGood, cookiesText.replace('sess-bili%2Cvalue', 'sess-good'), 'utf8');
+const factsMV = { title: '晴天', artist: '周杰伦', durationSec: 269, bvid: 'BV1GJ411x7h7' };
+const multiFetch = makeMultiCookieFetch('sess-good');
+const svcMulti = createLyricService({
+	fetchImpl: multiFetch, cacheFile: '',
+	bilibiliCookiePaths: [cookieBad, cookieGood], bilibiliRequestGapMs: 0,
+});
+const rMulti = await svcMulti.resolve(factsMV);
+check('a stale export falls through to the next cookie file and matches bilibili',
+	rMulti.status === 'matched' && rMulti.source === 'bilibili' && rMulti.lines[0].text === '字幕一句',
+	JSON.stringify(rMulti.attempts));
+const staleNavCalls = () => multiFetch.calls.filter((row) => row.cookie === 'SESSDATA=sess-stale'
+	&& row.url.includes('/x/web-interface/nav')).length;
+check('stale export tried exactly once (verdict cached per mtime)', staleNavCalls() === 1, String(staleNavCalls()));
+await svcMulti.resolve({ ...factsMV, bvid: 'BV1ZzZzZzZz9' });
+check('verdict cache survives the next track', staleNavCalls() === 1, String(staleNavCalls()));
+const allBadFetch = makeMultiCookieFetch('sess-never-used');
+const svcAllBad = createLyricService({
+	fetchImpl: allBadFetch, cacheFile: '',
+	bilibiliCookiePaths: [cookieBad, cookieGood], bilibiliRequestGapMs: 0,
+});
+const rAllBad = await svcAllBad.resolve(factsMV);
+check('all exports expired -> readable labelled reason, music chain survives',
+	rAllBad.status === 'matched' && rAllBad.source === 'netease'
+		&& rAllBad.attempts[0].source === 'bilibili' && rAllBad.attempts[0].status === 'error'
+		&& /expired or not logged in \(.+\.txt\)/.test(rAllBad.attempts[0].reason)
+		&& !String(rAllBad.attempts[0].reason).includes('sess-'), JSON.stringify(rAllBad.attempts));
+
+// candidate order: the dedicated bilibili export outranks a same-named
+// generic cookies.txt (runtime-conditional — the machine may not have both)
+const { bilibiliCookieCandidates } = await import('../lib/index.js');
+const candidateList = bilibiliCookieCandidates('');
+const bilibiliIdx = candidateList.findIndex((p) => path.basename(p) === 'cookies-bilibili.txt');
+const genericIdx = candidateList.findIndex((p) => path.basename(p) === 'cookies.txt');
+check('cookies-bilibili.txt outranks cookies.txt in candidate order',
+	bilibiliIdx === -1 || genericIdx === -1 || bilibiliIdx < genericIdx,
+	JSON.stringify(candidateList.map((p) => path.basename(p))));
+
+// cleanup (part 2)
+try { fs.unlinkSync(cookieBad); } catch {}
+try { fs.unlinkSync(cookieGood); } catch {}
+
 console.log(failed === 0 ? 'ALL PASS' : failed + ' FAILED');
 process.exit(failed === 0 ? 0 : 1);
