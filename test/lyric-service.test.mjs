@@ -1,4 +1,4 @@
-import { createLyricService, parseLrc, fingerprintOf } from '../lib/lyric-service.js';
+import { createLyricService, parseLrc, fingerprintOf, shouldOriginRematch } from '../lib/lyric-service.js';
 
 let failed = 0;
 const check = (name, cond, detail) => {
@@ -131,6 +131,20 @@ const svcNoRetry = createLyricService({ fetchImpl: emptyFetch, cacheFile: '' });
 const rNoRetry = await svcNoRetry.resolve({ title: '晴天', artist: '周杰伦', durationSec: 269, originSource: 'netease' });
 check('a confident origin miss is not retried',
 	emptyNeteaseCalls === 1 && rNoRetry.status === 'unmatched', JSON.stringify(rNoRetry.attempts));
+
+// 6. origin self-heal decision (the 406 throttle fingerprint)
+const throttledResult = { status: 'matched', source: 'kugou', attempts: [
+	{ source: 'netease', status: 'error', reason: 'API code 406' }, { source: 'kugou', status: 'matched' }] };
+check('shouldOriginRematch: throttled origin -> rematch',
+	shouldOriginRematch(throttledResult, 'netease') === true, '');
+check('shouldOriginRematch: origin matched -> no rematch',
+	shouldOriginRematch({ status: 'matched', source: 'netease', attempts: [] }, 'netease') === false, '');
+check('shouldOriginRematch: confident miss -> no rematch',
+	shouldOriginRematch({ status: 'matched', source: 'kugou', attempts: [
+		{ source: 'netease', status: 'unmatched', reason: 'no-confident-match' }] }, 'netease') === false, '');
+check('shouldOriginRematch: no origin or unmatched result -> no rematch',
+	shouldOriginRematch({ status: 'unmatched', source: null, attempts: [] }, '') === false
+		&& shouldOriginRematch(null, 'netease') === false, '');
 
 console.log(failed === 0 ? 'ALL PASS' : failed + ' FAILED');
 process.exit(failed === 0 ? 0 : 1);

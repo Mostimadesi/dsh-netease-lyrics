@@ -24,9 +24,34 @@ function makeFakeProc() {
 	proc.kill = () => {};
 	return proc;
 }
+// The apply-created lyric service captures globalThis.fetch at creation time:
+// stub it BEFORE apply so the end-to-end section below (bridge state line ->
+// resolve -> state.json read) never touches the real network.
+const realFetch = globalThis.fetch;
+const json = (payload) => ({ ok: true, json: async () => payload });
+const liveFetch = async (url) => {
+	const u = String(url);
+	if (u.includes('api.bilibili.com/x/web-interface/view?')) return json({ code: 0, data: {
+		bvid: 'BV1GJ411x7h7', cid: 137649199, title: '视频标题', duration: 213, owner: { name: 'UP主' } } });
+	if (u.includes('api.bilibili.com/x/web-interface/nav')) return json({ code: 0, data: { isLogin: true, wbi_img: {
+		img_url: 'https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png',
+		sub_url: 'https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png' } } });
+	if (u.includes('api.bilibili.com/x/player/wbi/v2?')) return json({ code: 0, data: { subtitle: {
+		subtitles: [{ lan: 'zh-CN', subtitle_url: '//aisubtitle.hdslb.com/live.json' }] } } });
+	if (u.startsWith('https://aisubtitle.hdslb.com/live.json')) return json({ body: [
+		{ from: 0.5, to: 3, content: '第一句' }, { from: 5, to: 8, content: '第二句' }] });
+	if (u.includes('/api/search/get/web')) return json({ code: 200, result: { songCount: 0 } });
+	if (u.includes('/soso/fcgi-bin/client_search_cp')) return json({ code: 0, data: { song: { list: [] } } });
+	if (u.includes('songsearch.kugou.com')) return json({ status: 1, data: { lists: [] } });
+	if (u.includes('app.u.nf.migu.cn')) return json([]);
+	throw new Error('unexpected url ' + u);
+};
+globalThis.fetch = liveFetch;
+let bridgeProc = null;
 const pluginModule = await import('../lib/index.js');
 pluginModule.__setSpawnForTests?.((cmd, args, options) => {
 	const proc = makeFakeProc();
+	bridgeProc = proc;
 	queueMicrotask(() => proc.stdout.emit('data', JSON.stringify({ type: 'ready', pollMs: 500 }) + '\n'));
 	return proc;
 });
@@ -138,6 +163,46 @@ await (async () => {
 	await handler(makeReq('POST', 'x'.repeat(5000)), res);
 	assert.equal(res.statusCode, 413, 'oversized body -> 413');
 })();
+
+// 5. end-to-end position feed: the extension report overrides the frozen SMTC
+// snapshot for browser sessions in state.json (bilibili's player does not
+// keep the SMTC timeline moving — verified live 2026-11-09), while music
+// sessions keep their own position even when a report is still fresh.
+const reportHandler = createBrowserSessionRequestHandler();
+await (async () => {
+	const res = makeRes();
+	await reportHandler(makeReq('POST', JSON.stringify({
+		bvid: 'BV1GJ411x7h7', title: '视频标题', positionSec: 12.345, durationSec: 213, playing: false,
+	})), res);
+	assert.equal(res.statusCode, 200, 'report accepted before the state line');
+})();
+bridgeProc.stdout.emit('data', JSON.stringify({
+	type: 'state', active: true, app: 'Chrome', title: '视频标题', artist: 'UP主',
+	album: '', positionSec: 0, durationSec: 0,
+}) + '\n');
+await new Promise((resolve) => setTimeout(resolve, 1800)); // bilibili chain (300ms request gaps)
+await (async () => {
+	const res = makeRes();
+	registered.get('/dsh-netease-lyrics/state.json')(makeReq('GET'), res);
+	const payload = JSON.parse(res.body);
+	assert.equal(payload.lyric.status, 'matched', 'bilibili resolved for the browser track');
+	assert.equal(payload.lyric.source, 'bilibili', 'source bilibili');
+	assert.equal(payload.positionSec, 12.345, 'extension position overrides the frozen SMTC snapshot');
+	assert.equal(payload.durationSec, 213, 'extension duration overrides the SMTC zero');
+})();
+bridgeProc.stdout.emit('data', JSON.stringify({
+	type: 'state', active: true, app: 'cloudmusic.exe', title: '晴天', artist: '周杰伦',
+	album: '', positionSec: 3.5, durationSec: 269,
+}) + '\n');
+await new Promise((resolve) => setTimeout(resolve, 120));
+await (async () => {
+	const res = makeRes();
+	registered.get('/dsh-netease-lyrics/state.json')(makeReq('GET'), res);
+	const payload = JSON.parse(res.body);
+	assert.equal(payload.positionSec, 3.5, 'music sessions keep the SMTC position');
+	assert.equal(payload.durationSec, 269, 'music sessions keep the SMTC duration');
+})();
+globalThis.fetch = realFetch;
 
 console.log('PASS: browser-session reports — payload validation/clamps, 10s TTL, bvid gate (override > browser AUMID > none), handler method/path/body contracts.');
 process.exit(0);
