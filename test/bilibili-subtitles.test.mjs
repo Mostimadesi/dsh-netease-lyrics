@@ -201,20 +201,31 @@ await svc.resolve({ ...bvidFacts, bvid: 'BV1AbCdEfGh5' });
 check('different bvid re-resolves (bvid is part of the cache key)',
 	svcFetch.calls.length > callsAfterBili, callsAfterBili + '->' + svcFetch.calls.length);
 
-// no subtitles -> silent fall-through to netease (facts must match netease so
-// the fall-through actually lands on a match, not just on "unmatched overall")
+// video without subtitles stays video-only: no silent music-source swap
+// (user decision 2026-11-09 — manual rematch is the only unlock)
 const svcFetchNoSub = makeServiceFetch([]);
 const svcNoSub = createLyricService({
 	fetchImpl: svcFetchNoSub, cacheFile: '',
 	bilibiliCookiePaths: [cookiePath], bilibiliRequestGapMs: 0,
 });
-const rNoSub = await svcNoSub.resolve({ ...bvidFacts, title: '晴天', artist: '周杰伦', durationSec: 269 });
-check('video without subtitles falls through to the music chain',
-	rNoSub.status === 'matched' && rNoSub.source === 'netease'
-		&& rNoSub.attempts[0].source === 'bilibili' && rNoSub.attempts[0].status === 'unmatched'
-		&& rNoSub.attempts[0].reason === 'no-subtitle-content', JSON.stringify(rNoSub.attempts));
+const videoFacts = { ...bvidFacts, title: '晴天', artist: '周杰伦', durationSec: 269 };
+const rNoSub = await svcNoSub.resolve(videoFacts);
+check('video without subtitles stays video-only (no silent music swap)',
+	rNoSub.status === 'unmatched' && rNoSub.source === null
+		&& rNoSub.attempts.length === 1 && rNoSub.attempts[0].source === 'bilibili'
+		&& rNoSub.attempts[0].reason === 'no-subtitle-content'
+		&& svcFetchNoSub.calls.every((url) => !url.includes('/api/search/get/web')),
+	JSON.stringify(rNoSub));
+svcNoSub.invalidate(fingerprintOf('晴天', '周杰伦')); // what the rematch button does
+const callsBeforeManual = svcFetchNoSub.calls.length;
+const rManual = await svcNoSub.resolve({ ...videoFacts, allowMusicFallback: true });
+check('manual rematch unlocks the music chain for the same video',
+	rManual.status === 'matched' && rManual.source === 'netease'
+		&& rManual.attempts[0].source === 'bilibili' && rManual.attempts[0].status === 'unmatched'
+		&& svcFetchNoSub.calls.slice(callsBeforeManual).some((url) => url.includes('/api/search/get/web')),
+	JSON.stringify(rManual.attempts));
 
-// cookie missing -> bilibili attempt errors, music chain still works
+// cookie missing -> bilibili attempt errors, video stays video-only
 fs.writeFileSync(cookiePath, '.example.com\tTRUE\t/\tTRUE\t1767225600\tSESSDATA\tdecoy', 'utf8');
 const svcFetchNoCookie = makeServiceFetch();
 const svcNoCookie = createLyricService({
@@ -222,11 +233,13 @@ const svcNoCookie = createLyricService({
 	bilibiliCookiePaths: [cookiePath], bilibiliRequestGapMs: 0,
 });
 const rNoCookie = await svcNoCookie.resolve({ ...bvidFacts, title: '晴天', artist: '周杰伦', durationSec: 269 });
-check('missing SESSDATA degrades to a bilibili attempt error, chain survives',
-	rNoCookie.status === 'matched' && rNoCookie.source === 'netease'
+check('missing SESSDATA keeps the video video-only with a readable error',
+	rNoCookie.status === 'error' && rNoCookie.source === null
 		&& rNoCookie.attempts[0].source === 'bilibili' && rNoCookie.attempts[0].status === 'error'
 		&& /cookie missing or expired/.test(rNoCookie.attempts[0].reason)
-		&& !String(rNoCookie.attempts[0].reason).includes('sess-'), JSON.stringify(rNoCookie.attempts));
+		&& !String(rNoCookie.attempts[0].reason).includes('sess-')
+		&& svcFetchNoCookie.calls.every((url) => !url.includes('/api/search/get/web')),
+	JSON.stringify(rNoCookie.attempts));
 
 // disabled source: bvid is ignored, no bilibili request at all
 const svcFetchDisabled = makeServiceFetch();
@@ -317,11 +330,13 @@ const svcAllBad = createLyricService({
 	bilibiliCookiePaths: [cookieBad, cookieGood], bilibiliRequestGapMs: 0,
 });
 const rAllBad = await svcAllBad.resolve(factsMV);
-check('all exports expired -> readable labelled reason, music chain survives',
-	rAllBad.status === 'matched' && rAllBad.source === 'netease'
+check('all exports expired -> readable labelled error, video stays video-only',
+	rAllBad.status === 'error' && rAllBad.source === null
 		&& rAllBad.attempts[0].source === 'bilibili' && rAllBad.attempts[0].status === 'error'
 		&& /expired or not logged in \(.+\.txt\)/.test(rAllBad.attempts[0].reason)
-		&& !String(rAllBad.attempts[0].reason).includes('sess-'), JSON.stringify(rAllBad.attempts));
+		&& !String(rAllBad.attempts[0].reason).includes('sess-')
+		&& allBadFetch.calls.every((row) => !row.url.includes('/api/search/get/web')),
+	JSON.stringify(rAllBad.attempts));
 
 // candidate order: the dedicated bilibili export outranks a same-named
 // generic cookies.txt (runtime-conditional — the machine may not have both)

@@ -48,8 +48,9 @@ function send(report, force) {
 
 // Playback events change the payload, so they bypass the dedup. Bound with
 // capture on document because bilibili's SPA replaces the <video> element on
-// navigation — delegation survives the swap.
-for (const type of ['play', 'pause', 'seeked']) {
+// navigation — delegation survives the swap. 'ended' matters: without it the
+// last report would keep claiming playing=true after the video finishes.
+for (const type of ['play', 'pause', 'seeked', 'ended']) {
 	document.addEventListener(type, () => send(collectReport(), true), true);
 }
 

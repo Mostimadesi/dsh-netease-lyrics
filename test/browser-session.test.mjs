@@ -67,12 +67,12 @@ assert.equal(clamped.title, '', 'missing title becomes empty');
 // long title is truncated to 300 chars
 handleBrowserSessionReport({ bvid: 'BV1GJ411x7h7', title: 'x'.repeat(500) }, T0);
 assert.equal(freshBrowserSession(T0).title.length, 300, 'title truncated');
-// 2. freshness TTL (15s)
+// 2. freshness TTL (default 10s = two missed heartbeats; config-clamped 5-60s)
 handleBrowserSessionReport({ bvid: 'BV1GJ411x7h7' }, T0);
 assert.ok(freshBrowserSession(T0), 'report is fresh at its timestamp');
-assert.ok(freshBrowserSession(T0 + 14_999), 'fresh inside TTL');
-assert.ok(freshBrowserSession(T0 + 15_000), 'edge of TTL still fresh (strictly-greater expiry)');
-assert.equal(freshBrowserSession(T0 + 15_001), null, 'expired just past TTL');
+assert.ok(freshBrowserSession(T0 + 9_999), 'fresh inside TTL');
+assert.ok(freshBrowserSession(T0 + 10_000), 'edge of TTL still fresh (strictly-greater expiry)');
+assert.equal(freshBrowserSession(T0 + 10_001), null, 'expired just past TTL');
 assert.equal(freshBrowserSession(T0 + 999_999), null, 'long expired');
 // 3. bvid gate: override wins, browser AUMIDs only, non-browser never attaches
 const fresh = { bvid: 'BV1GJ411x7h7', updatedAt: T0 };
@@ -139,5 +139,5 @@ await (async () => {
 	assert.equal(res.statusCode, 413, 'oversized body -> 413');
 })();
 
-console.log('PASS: browser-session reports — payload validation/clamps, 15s TTL, bvid gate (override > browser AUMID > none), handler method/path/body contracts.');
+console.log('PASS: browser-session reports — payload validation/clamps, 10s TTL, bvid gate (override > browser AUMID > none), handler method/path/body contracts.');
 process.exit(0);

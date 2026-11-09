@@ -82,5 +82,55 @@ const svcBad = createLyricService({ fetchImpl: async () => { throw new Error('bo
 const r5 = await svcBad.resolve({ title: '晴天', artist: '周杰伦', durationSec: 269 });
 check('fetch failure -> error status', r5.status === 'error' && r5.attempts.filter(row => row.reason === 'boom').length === 4, JSON.stringify(r5));
 
+// 5. origin-aware order + one retry for a transient origin failure
+//    (user decision 2026-11-09: the media's own provider goes first; the
+//    other providers are a safety net, not a source swap)
+let orderCalls = [];
+let failFirstNeteaseSearch = false;
+const orderedFetch = async (url) => {
+	orderCalls.push(url);
+	if (url.includes('/api/search/get/web')) {
+		if (failFirstNeteaseSearch) { failFirstNeteaseSearch = false; return { ok: false, status: 502 }; }
+		return { ok: true, json: async () => ({ code: 200, result: { songs: [{ id: 7, name: '晴天', artists: [{ name: '周杰伦' }], duration: 269000 }] } }) };
+	}
+	if (url.includes('/api/song/lyric')) return { ok: true, json: async () => ({ code: 200, lrc: { lyric: '[00:01.00]网易词\n' }, tlyric: { lyric: '' } }) };
+	if (url.includes('/soso/fcgi-bin/client_search_cp')) return { ok: true, json: async () => ({ code: 0, data: { song: { list: [{ songmid: 'q1', songname: '晴天', singer: [{ name: '周杰伦' }], interval: 269 }] } } }) };
+	if (url.includes('/lyric/fcgi-bin/fcg_query_lyric_new.fcg')) return { ok: true, json: async () => ({ code: 0, lyric: Buffer.from('[00:01.00]qq词\n').toString('base64'), trans: '' }) };
+	if (url.includes('songsearch.kugou.com')) return { ok: true, json: async () => ({ status: 1, data: { lists: [] } }) };
+	if (url.includes('app.u.nf.migu.cn')) return { ok: true, json: async () => [] };
+	throw new Error('unexpected url ' + url);
+};
+// origin qq: qq is searched first and wins
+const svcQQ = createLyricService({ fetchImpl: orderedFetch, cacheFile: '' });
+orderCalls = [];
+const rQQ = await svcQQ.resolve({ title: '晴天', artist: '周杰伦', durationSec: 269, originSource: 'qq' });
+check('origin source (qq) is searched first and wins',
+	rQQ.source === 'qq' && orderCalls[0].includes('/soso/fcgi-bin'),
+	JSON.stringify({ source: rQQ.source, first: orderCalls[0] }));
+// origin netease with a transient first-search failure: retried once, qq never consulted
+const svcRetry = createLyricService({ fetchImpl: orderedFetch, cacheFile: '' });
+orderCalls = []; failFirstNeteaseSearch = true;
+const rRetry = await svcRetry.resolve({ title: '晴天', artist: '周杰伦', durationSec: 269, originSource: 'netease' });
+check('transient origin failure is retried once before other sources',
+	rRetry.source === 'netease' && rRetry.attempts.length === 2
+		&& rRetry.attempts[0].source === 'netease' && rRetry.attempts[0].status === 'error'
+		&& rRetry.attempts[1].source === 'netease' && rRetry.attempts[1].status === 'matched'
+		&& orderCalls.every((u) => !u.includes('/soso/fcgi-bin')),
+	JSON.stringify({ source: rRetry.source, attempts: rRetry.attempts }));
+// a confident origin miss (no candidates) is NOT retried — the chain moves on
+let emptyNeteaseCalls = 0;
+const emptyFetch = async (url) => {
+	orderCalls.push(url);
+	if (url.includes('/api/search/get/web')) { emptyNeteaseCalls += 1; return { ok: true, json: async () => ({ code: 200, result: { songCount: 0 } }) }; }
+	if (url.includes('/soso/fcgi-bin/client_search_cp')) return { ok: true, json: async () => ({ code: 0, data: { song: { list: [{ songmid: 'q1', songname: '别的歌', singer: [{ name: '别人' }], interval: 100 }] } } }) };
+	if (url.includes('songsearch.kugou.com')) return { ok: true, json: async () => ({ status: 1, data: { lists: [] } }) };
+	if (url.includes('app.u.nf.migu.cn')) return { ok: true, json: async () => [] };
+	throw new Error('unexpected url ' + url);
+};
+const svcNoRetry = createLyricService({ fetchImpl: emptyFetch, cacheFile: '' });
+const rNoRetry = await svcNoRetry.resolve({ title: '晴天', artist: '周杰伦', durationSec: 269, originSource: 'netease' });
+check('a confident origin miss is not retried',
+	emptyNeteaseCalls === 1 && rNoRetry.status === 'unmatched', JSON.stringify(rNoRetry.attempts));
+
 console.log(failed === 0 ? 'ALL PASS' : failed + ' FAILED');
 process.exit(failed === 0 ? 0 : 1);
