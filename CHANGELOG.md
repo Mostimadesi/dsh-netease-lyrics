@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.4.11 - 2026-11-09 (dev)
+
+**bilibili 视频字幕作为歌词源**（HANDOFF-bilibili-subtitle-source.md 第 1、2 步；
+用户已拍板 bvid 方案 A+B 与 cookies.txt 读文件。本步不依赖浏览器扩展，默认配置下
+行为与 0.4.10 完全一致）：
+
+- 新模块 `lib/bilibili-subtitles.js`：Netscape cookies.txt 解析（只取
+  bilibili.com 域的 `SESSDATA`，其余站点行不进内存拼接）→ `view` 取 cid →
+  **Wbi 签名**（`wts` + 排序 + 过滤 `!'()*` + md5；64 位乱序表回归锚定
+  社区公知值 `ea1db1…`）→ `/x/player/wbi/v2` 取字幕轨 → 下载字幕 JSON。
+- **Wbi 签名必需**（实测推翻调研阶段的"先不加签名"建议）：无签名时接口返回
+  code:0 + 全部轨道但 `subtitle_url` 全为空——"成功形状的空"，会被误判成
+  "视频没字幕"。空 URL 视为签名被拒：刷新 wbi key 重试一次，仍空才报错。
+- 字幕 JSON `body[]{from,to,content}` 直接映射 `{t,text}`（`//` 开头的
+  `subtitle_url` 补 `https:`；临时 URL 绝不缓存，只缓存解析后的行）；轨优先
+  `zh-CN` → `ai-zh` → 第一条有 URL 的。
+- 接入 `lyric-service`：`bvid` 进 facts 与缓存键（换视频必换键；**bvid
+  大小写敏感**——BV+base58，任何大小写归一化都是错的，本轮测试咬出三处）。
+  有 `bvid` 时**先于** 4 源链直取字幕（不经搜索打分）；无字幕 / Cookie 失效 /
+  接口故障一律**静默回落** `netease → qq → kugou → migu → local`，bilibili
+  结果照常 7 天持久化。`describe()` 只输出计数/布尔，不含路径与凭证。
+- Cookie 安全：`SESSDATA` 仅存内存（按路径+mtime 失效重读），绝不写入
+  state.json / 歌词缓存 / 日志 / 错误信息；错误只说 "cookie 缺失或过期"。
+- 新配置三项：`bilibiliCookiePath`（显式路径；留空按 Downloads 下
+  `cookies.txt` → `cookies-bilibili.txt` 候选，含 shell 重定向后的 Downloads，
+  绝不扫盘）、`bilibiliBvidOverride`（手填 BV 号直取字幕——扩展接入前的唯一
+  bvid 来源，调试/尝鲜用）、`bilibiliEnabled`（默认 true，无 bvid 时完全不触网）。
+- 浏览器 SMTC 只有 App/标题/歌手/专辑，**没有 URL 或 BV 号**——扩展上报
+  （方案 A）与标题反查（方案 B）按交接单第 3、4 步另行接入；SMTC 浏览器
+  pattern 也留到那一步（直接加进默认 patterns 会让播放中的浏览器挤进
+  Select-Session 的 preferred 层，压过正在播放的音乐客户端，需要桥内分层）。
+- 验证：check（七文件）/ test（fail 0，新增 31 断言）/ test:bridge 全绿；
+  负向验证 v0.4.10a——旧 lib + 新模块时恰好 6 条集成契约失败；真实链路
+  （真 cookie + `BV1GJ411x7h7`）复现调研基准逐项吻合：6414 行 cookies、
+  12 轨 12 URL、zh-CN、47 行字幕、首行 t=0.12。宿主侧（index.js/lyric-service）
+  变更需重启 DSH 或插件管理器开关一次生效。
+
 ## 0.4.10a - 2026-11-09 (dev)
 
 - **方舟观测纵向呼吸**：`padding-block:12px`（仅该皮肤）。修正过程两次误读

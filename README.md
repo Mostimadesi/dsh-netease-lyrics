@@ -358,6 +358,43 @@ QQ Base64 歌词与 HTML 实体会先解码，译文按 100ms 容差合并。不
 命中结果照常走 7 天缓存。开关为 `localLyrics`（默认 `true`，设 `false` 完全不扫盘）。
 `.krc`、`.m4a` 的 `©lyr`、APE/WMA 标签暂不支持。
 
+## bilibili 视频字幕（v0.4.11）
+
+播放浏览器里的 bilibili 视频时，可按 BV 号直接取该视频的字幕当歌词用。
+字幕由"用户正在看的这个视频"钉死，不走歌名搜索、不打分，也不会因为
+"视频没字幕"而拖垮音乐歌词链——失败一律**静默回落**
+`netease → qq → kugou → migu → local`。
+
+链路与要点：
+
+1. `view?bvid`（公开）取 cid 与标题；
+2. `nav`（带 Cookie）取 wbi key；
+3. `/x/player/wbi/v2` **必须 Wbi 签名**——无签名时接口返回 code:0 + 全部
+   轨道但 `subtitle_url` 全为空，形似"没字幕"实为签名被拒（插件把
+   "有轨道、URL 全空"当签名失败处理：刷新 key 重试一次再报错）；
+4. 下载字幕 JSON（`//` 开头的地址补 `https:`；该地址是临时的，**只缓存
+   解析后的行**）；`{from,to,content}` 秒级浮点直接映射为歌词行。
+   字幕轨优先 `zh-CN`，其次 `ai-zh`，否则第一条有 URL 的。
+
+Cookie：用「Get cookies.txt LOCALLY」扩展导出 Netscape 格式的 cookies.txt。
+插件**只读 bilibili.com 域的 `SESSDATA`**（等同登录凭证：仅存内存、不落盘、
+不进日志与错误信息；文件按 mtime 变化重新读取）。候选路径按序取第一个
+存在的文件，**绝不扫描磁盘**：`bilibiliCookiePath` 显式配置 →
+`%USERPROFILE%\Downloads\` 下的 `cookies.txt` / `cookies-bilibili.txt` →
+shell 重定向后的 Downloads 同名文件。Cookie 失效（未登录）时该视频记一条
+error 并回落音乐链。
+
+| 配置 | 默认 | 说明 |
+| --- | --- | --- |
+| `bilibiliEnabled` | `true` | 总开关；关闭后即使有 bvid 也不访问 bilibili |
+| `bilibiliCookiePath` | `''` | 显式指定 cookies.txt 路径（≤260 字符） |
+| `bilibiliBvidOverride` | `''` | 手填 BV 号直取字幕；扩展接入前唯一的 bvid 来源 |
+
+已知边界：SMTC 只有 App/标题/歌手/专辑，**没有 URL 或 BV 号**——扩展上报
+（方案 A）与标题反查（方案 B）是后续步骤；接入前 `bilibiliBvidOverride`
+对**所有**播放中的媒体生效（不只浏览器），只建议临时填来尝鲜。
+`service.policy` 在启用时显示为 `bilibili-subtitle (bvid) > netease > …`。
+
 ## 歌词过渡（胶囊）
 
 收起态原文与译文作为一组进行约 220 毫秒交叉淡入淡出，伴随 3px 轻微位移；
@@ -386,6 +423,9 @@ QQ Base64 歌词与 HTML 实体会先解码，译文按 100ms 容差合并。不
     localLyrics: true      # 三家在线源都失败后，读歌曲旁 .lrc / 内嵌歌词
     localDirs:             # 本地歌词搜索目录（默认 Music 与 Downloads，最多 8 个）
       - 'D:\Music'
+    bilibiliEnabled: true          # bilibili 字幕源总开关（无 bvid 时不触网）
+    bilibiliCookiePath: ''         # cookies.txt 路径；留空按 Downloads 候选
+    bilibiliBvidOverride: ''       # 手填 BV 号直取字幕（调试/尝鲜）
 ```
 
 ### 首轮未匹配自动重试
@@ -423,6 +463,10 @@ QQ 音乐的 SMTC 会话可能先于在线曲库就绪，瞬时失败此前会�
 - 「跟随专辑封面」颜色模式依赖封面路由与浏览器 canvas；封面为单色块时取色即为该单色，
   观感可能偏淡。竖向正立时长句自动向左续列。
 - 悬浮歌词的编排参数（入场节奏、退场窗口）为固定值，仅幅度/距离/角度可调。
+- bilibili 字幕源（v0.4.11）依赖用户导出的 cookies.txt（SESSDATA 登录态），
+  Cookie 过期后该源静默回落音乐链；SMTC 不提供 BV 号，浏览器扩展上报
+  （方案 A）与标题反查（方案 B）接入前，`bilibiliBvidOverride` 是唯一的
+  bvid 来源。字幕接口为非官方接口，上游变更不在本地测试保证范围。
 
 ## 开发与测试
 
@@ -430,8 +474,8 @@ QQ 音乐的 SMTC 会话可能先于在线曲库就绪，瞬时失败此前会�
 
 ```powershell
 npm ci --ignore-scripts --legacy-peer-deps
-npm run check         # 六个生产 JS 文件语法检查
-npm test              # 真实 React 生命周期、共享轮询、宿主恢复、取消旧曲请求、解析/缓存/控件/编排/会话通知
+npm run check         # 七个生产 JS 文件语法检查
+npm test              # 真实 React 生命周期、共享轮询、宿主恢复、取消旧曲请求、解析/缓存/控件/编排/会话通知/bilibili 字幕链
 npm run test:bridge   # PowerShell 5.1：会话选择、时钟、封面清理和有限重试；不启动 WinRT 桥
 ```
 
