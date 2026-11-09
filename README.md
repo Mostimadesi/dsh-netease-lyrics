@@ -388,12 +388,31 @@ error 并回落音乐链。
 | --- | --- | --- |
 | `bilibiliEnabled` | `true` | 总开关；关闭后即使有 bvid 也不访问 bilibili |
 | `bilibiliCookiePath` | `''` | 显式指定 cookies.txt 路径（≤260 字符） |
-| `bilibiliBvidOverride` | `''` | 手填 BV 号直取字幕；扩展接入前唯一的 bvid 来源 |
+| `bilibiliBvidOverride` | `''` | 手填 BV 号直取字幕（调试用，优先级最高） |
+| `browserSessionPort` | `51789` | 扩展上报监听端口（仅绑定 127.0.0.1，1024–65535） |
 
-已知边界：SMTC 只有 App/标题/歌手/专辑，**没有 URL 或 BV 号**——扩展上报
-（方案 A）与标题反查（方案 B）是后续步骤；接入前 `bilibiliBvidOverride`
-对**所有**播放中的媒体生效（不只浏览器），只建议临时填来尝鲜。
-`service.policy` 在启用时显示为 `bilibili-subtitle (bvid) > netease > …`。
+### 浏览器扩展上报（v0.4.12，bvid 主路径）
+
+`browser-extension/` 是一个三文件 MV3 扩展，把「当前播放的 bilibili 视频」
+实时上报给插件，**胶囊自动跟随你在看的视频**显示其字幕：
+
+1. `chrome://extensions` 开启开发者模式 →「加载已解压的扩展程序」→
+   选择仓库里的 `browser-extension/` 目录；
+2. 保持 `bilibiliEnabled` 开启（默认开）。
+
+上报内容只有页面元数据 `{bvid, title, positionSec, durationSec, playing}`
+（不访问 bilibili 接口、不读 cookie），发往本机
+`127.0.0.1:51789/dsh-netease-lyrics/browser-session`；插件侧仅存内存、15s
+无心跳过期。扩展未装 / 上报过期时自动回落：override（若填）→ 原音乐链。
+
+bvid 生效闸门：**只有 SMTC 会话本身是浏览器**（Chrome/Edge/Firefox/Brave）
+且上报新鲜时才使用 bvid——音乐客户端播放中（优先级更高）不会吃浏览器字幕。
+桥的会话选择因此多了一层：`音乐播放中 > 浏览器播放中 > 其他播放中 > 音乐暂停`；
+往 `appPatterns` 显式加浏览器片段仍可把浏览器提到音乐同级（opt-in）。
+
+已知边界：番剧页（无 BV 号）暂不上报；上报进度已存储但字幕对轴仍以 SMTC
+时间线为准；SMTC 不提供 BV 号时（未装扩展、反查未实现前），override 是
+唯一 bvid 来源。`service.policy` 在启用时显示为 `bilibili-subtitle (bvid) > netease > …`。
 
 ## 歌词过渡（胶囊）
 

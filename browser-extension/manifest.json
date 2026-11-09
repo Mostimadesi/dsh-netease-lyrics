@@ -1,0 +1,20 @@
+{
+	"manifest_version": 3,
+	"name": "dsh-netease-lyrics bridge",
+	"version": "1.0.0",
+	"description": "Reports the currently playing bilibili video to the local dsh-netease-lyrics listener (localhost only, no credentials).",
+	"permissions": [],
+	"host_permissions": ["http://127.0.0.1/*"],
+	"background": { "service_worker": "background.js" },
+	"content_scripts": [
+		{
+			"matches": [
+				"https://www.bilibili.com/video/*",
+				"https://www.bilibili.com/bangumi/play/*"
+			],
+			"js": ["content.js"],
+			"run_at": "document_idle",
+			"all_frames": false
+		}
+	]
+}

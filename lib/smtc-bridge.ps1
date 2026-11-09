@@ -234,24 +234,35 @@ if ($null -eq $manager) {
   exit 1
 }
 
-# Prefer a playing supported player, then another playing source, and only
-# then a paused supported player. A paused NetEase session must not steal QQ.
+# Prefer a playing supported player, then a playing browser (the bilibili
+# subtitle source needs the browser session), then any other playing source,
+# and only then a paused supported player. A paused NetEase session must not
+# steal QQ; a paused browser must not steal a playing music client either.
+# Browser AUMIDs live inline so AST-extracted tests carry them.
 function Select-Session {
   param($Sessions)
   if ($null -eq $Sessions -or $Sessions.Count -eq 0) { return $null }
 
+  $browserFragments = @('chrome', 'microsoftedge', 'msedge', 'firefox', 'brave')
   $preferredPaused = $null
   $otherPlaying = $null
+  $browserPlaying = $null
   foreach ($s in $Sessions) {
     $low = ([string]$s.SourceAppUserModelId).ToLowerInvariant()
     $preferred = $false
     foreach ($p in $patterns) { if ($low.Contains($p)) { $preferred = $true; break } }
+    $isBrowser = $false
+    if (-not $preferred) {
+      foreach ($b in $browserFragments) { if ($low.Contains($b)) { $isBrowser = $true; break } }
+    }
     $playing = $false
     try { $playing = ([string]$s.GetPlaybackInfo().PlaybackStatus -eq 'Playing') } catch { }
     if ($preferred -and $playing) { return $s }
     if ($preferred -and $null -eq $preferredPaused) { $preferredPaused = $s }
+    if ($isBrowser -and $playing -and $null -eq $browserPlaying) { $browserPlaying = $s }
     if ($playing -and $null -eq $otherPlaying) { $otherPlaying = $s }
   }
+  if ($null -ne $browserPlaying) { return $browserPlaying }
   if ($null -ne $otherPlaying) { return $otherPlaying }
   if ($null -ne $preferredPaused) { return $preferredPaused }
   return $Sessions[0]

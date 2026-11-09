@@ -1,0 +1,63 @@
+// dsh-netease-lyrics bridge — content script.
+// Reports which bilibili video this tab is playing to the local lyrics
+// listener, via the background service worker (the background does the only
+// fetch, so no CORS preflight is needed on the page side).
+//
+// Scope discipline: NO bilibili API calls, NO cookie access, NO credentials.
+// The payload is page metadata only: {bvid, title, positionSec, durationSec,
+// playing}. Bangumi pages have no bvid and are therefore silent for now.
+
+const HEARTBEAT_MS = 5000;   // keep position fresh while playing
+const NAV_CHECK_MS = 1000;   // bilibili is an SPA: watch for bvid changes
+const BVID_RE = /\/video\/(BV[0-9A-Za-z]{10})/;
+
+let lastBvid = '';
+let lastPayloadJson = '';
+
+function currentBvid() {
+	const match = BVID_RE.exec(location.pathname);
+	return match ? match[1] : '';
+}
+
+function collectReport() {
+	const bvid = currentBvid();
+	if (!bvid) return null;
+	const video = document.querySelector('video');
+	const duration = video && Number.isFinite(video.duration) ? video.duration : 0;
+	return {
+		bvid,
+		title: String(document.title || '').slice(0, 300),
+		positionSec: video ? Math.round(video.currentTime * 100) / 100 : 0,
+		durationSec: Math.round(duration * 100) / 100,
+		playing: !!(video && !video.paused && !video.ended),
+	};
+}
+
+function send(report, force) {
+	if (!report) return;
+	const json = JSON.stringify(report);
+	if (!force && json === lastPayloadJson) return;
+	lastPayloadJson = json;
+	try {
+		const result = chrome.runtime.sendMessage({ type: 'bili-session', report });
+		if (result && typeof result.catch === 'function') result.catch(() => {});
+	} catch {
+		// Extension context invalidated (reloaded/updated) — stay silent.
+	}
+}
+
+// Playback events change the payload, so they bypass the dedup. Bound with
+// capture on document because bilibili's SPA replaces the <video> element on
+// navigation — delegation survives the swap.
+for (const type of ['play', 'pause', 'seeked']) {
+	document.addEventListener(type, () => send(collectReport(), true), true);
+}
+
+setInterval(() => send(collectReport(), false), HEARTBEAT_MS);
+setInterval(() => {
+	const bvid = currentBvid();
+	if (bvid !== lastBvid) {
+		lastBvid = bvid;
+		send(collectReport(), true);
+	}
+}, NAV_CHECK_MS);

@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.4.12 - 2026-11-09 (dev)
+
+**bilibili 字幕源第 3 步：浏览器扩展上报 bvid + 桥内浏览器会话分层**
+（HANDOFF-bilibili-subtitle-source.md；用户已拍板方案 A 主路径）：
+
+- 新交付物 `browser-extension/`（MV3，三文件）：content script 监听 bilibili
+  视频/番剧页的 `play`/`pause`/`seeked` 事件 + 5s 心跳 + SPA 切换检测（1s），
+  提取 BV 号与播放进度，经 background service worker POST 到本机专用监听。
+  **只上报页面元数据** `{bvid,title,positionSec,durationSec,playing}`——不触
+  bilibili 接口、不读 cookie、宿主不可达时静默失败。安装见
+  `browser-extension/README.md`（加载解压目录即可）。
+- 插件宿主新增**专用 loopback 监听**：默认 `127.0.0.1:51789`（`browserSessionPort`
+  可配 1024–65535）。不走 DSH webServer——它的端口随启动变化，扩展拿不到；
+  绑定失败（EADDRINUSE）只降级本功能，插件其余照常。上报经校验（bvid 格式、
+  标题截 300、数值钳位）后**仅存内存**，15s 无心跳过期；`server.unref()` 不钉
+  测试进程；trace 仅在 bvid 变化时打一行。
+- **bvid 闸门**（`computeEffectiveBvid`）：override（调试）> 浏览器 AUMID 命中
+  （chrome/microsoftedge/msedge/firefox/brave）且上报新鲜 > 空。bvid 并入观察
+  身份：切视频即重解析、上报过期（关标签 15s）自动回落音乐链。纯 client 不动。
+- **桥 `Select-Session` 分层**：音乐 preferred-playing > **playing-browser** >
+  other-playing > preferred-paused。浏览器 AUMID 片段内联在函数体（AST 提取
+  测试自动携带）；**不**加进默认 appPatterns——那会让播放中的浏览器压过播放中
+  的音乐客户端（既有 PS 用例也会挂）；用户显式往 appPatterns 加浏览器片段仍是
+  opt-in 提级通道。PS 测试 6 → 12 例。
+- 验证：check（七文件）/ test（fail 0，新增 browser-session 套件）/ bridge
+  全绿；负向验证 `8828011`——JS 侧缺新 export 直接失败，旧桥恰好死在
+  "playing browser should beat other playing" 新用例。宿主 + 桥改动 →
+  **重启 DSH 生效**（扩展侧在浏览器扩展页"重新加载"）。
+- 实机联调清单：装扩展 → 开 bilibili 视频播放 → 胶囊自动显示该视频字幕
+  （来源「B站字幕」）；切视频字幕跟换；音乐客户端开始播放时音乐优先；关标签
+  15s 后回落音乐链。
+
 ## 0.4.11 - 2026-11-09 (dev)
 
 **bilibili 视频字幕作为歌词源**（HANDOFF-bilibili-subtitle-source.md 第 1、2 步；
