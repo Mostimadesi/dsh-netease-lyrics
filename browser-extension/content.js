@@ -54,7 +54,18 @@ for (const type of ['play', 'pause', 'seeked', 'ended']) {
 	document.addEventListener(type, () => send(collectReport(), true), true);
 }
 
-setInterval(() => send(collectReport(), false), HEARTBEAT_MS);
+setInterval(() => {
+	const report = collectReport();
+	if (!report) return;
+	// The heartbeat BYPASSES the dedup on purpose (fixed 2026-11-09): a paused
+	// video's payload never changes, so a deduped heartbeat stopped reaching
+	// the host, the 10s freshness window lapsed, the bvid association was
+	// dropped mid-watch and the plugin fell back to the music search chain —
+	// the subtitles vanished on pause and only came back after resuming.
+	// The host only uses the report while an SMTC browser session is active,
+	// so an idle background tab costing one localhost POST per 5s is harmless.
+	send(report, true);
+}, HEARTBEAT_MS);
 setInterval(() => {
 	const bvid = currentBvid();
 	if (bvid !== lastBvid) {

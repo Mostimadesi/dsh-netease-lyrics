@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import fs from 'node:fs';
 
 // Host-half test for the browser-session reports (v0.4.12): validation of the
 // extension payload, freshness TTL, the bvid gate (browser AUMIDs only, override
@@ -204,5 +205,14 @@ await (async () => {
 })();
 globalThis.fetch = realFetch;
 
-console.log('PASS: browser-session reports — payload validation/clamps, 10s TTL, bvid gate (override > browser AUMID > none), handler method/path/body contracts.');
+// 6. the self-heal tuning is pinned (user 2026-11-09: 30s / 2 attempts) and the
+// positive lyric cache lives 15 days (user 2026-11-09), both source-level so an
+// accidental edit cannot silently change the agreed numbers.
+const indexSrc = fs.readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8');
+const serviceSrc = fs.readFileSync(new URL('../lib/lyric-service.js', import.meta.url), 'utf8');
+assert.match(indexSrc, /ORIGIN_REMATCH_DELAY_MS = 30000\b/, 'the origin rematch waits 30s');
+assert.match(indexSrc, /ORIGIN_REMATCH_MAX = 2\b/, 'at most two origin rematches per track');
+assert.match(serviceSrc, /SUCCESS_TTL_MS = 15 \* 24 \* 60 \* 60 \* 1000/, 'matched lyrics are cached 15 days');
+
+console.log('PASS: browser-session reports — payload validation/clamps, 10s TTL, bvid gate (override > browser AUMID > none), handler method/path/body contracts, self-heal tuning pins.');
 process.exit(0);

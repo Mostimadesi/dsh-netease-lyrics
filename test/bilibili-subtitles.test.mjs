@@ -379,6 +379,32 @@ check('cookies-bilibili.txt outranks cookies.txt in candidate order',
 	bilibiliIdx === -1 || genericIdx === -1 || bilibiliIdx < genericIdx,
 	JSON.stringify(candidateList.map((p) => path.basename(p))));
 
+// 13-day / 20-day positive TTL boundaries (user request 2026-11-09: 15 days):
+// a 13-day-old entry is still served, a 20-day-old one is dropped + refetched.
+const agedPath = path.join(os.tmpdir(), 'dnl-bilibili-test-aged-' + process.pid + '.json');
+const agedEntry = (days) => ({ ...bilibiliEntry, fetchedAt: Date.now() - days * 24 * 60 * 60 * 1000 });
+const agedFacts = { title: '缓存视频', artist: 'UP主', durationSec: 213, bvid: 'BV1GJ411x7h7' };
+fs.writeFileSync(agedPath, JSON.stringify({ version: 2, entries: [[cacheKey, agedEntry(13)]] }), 'utf8');
+const fetchThirteen = makeServiceFetch();
+const svcThirteen = createLyricService({
+	fetchImpl: fetchThirteen, cacheFile: agedPath,
+	bilibiliCookiePaths: [cookieGood], bilibiliRequestGapMs: 0,
+});
+const rThirteen = await svcThirteen.resolve(agedFacts);
+check('a 13-day-old cached match is still served (15d TTL)',
+	rThirteen.status === 'matched' && rThirteen.source === 'bilibili' && rThirteen.lines[0].text === '缓存字幕'
+		&& fetchThirteen.calls.length === 0, JSON.stringify(rThirteen).slice(0, 160));
+fs.writeFileSync(agedPath, JSON.stringify({ version: 2, entries: [[cacheKey, agedEntry(20)]] }), 'utf8');
+const fetchTwenty = makeServiceFetch();
+const svcTwenty = createLyricService({
+	fetchImpl: fetchTwenty, cacheFile: agedPath,
+	bilibiliCookiePaths: [cookieGood], bilibiliRequestGapMs: 0,
+});
+const rTwenty = await svcTwenty.resolve(agedFacts);
+check('a 20-day-old cached match is dropped and refetched',
+	fetchTwenty.calls.length > 0, 'calls ' + fetchTwenty.calls.length);
+try { fs.unlinkSync(agedPath); } catch {}
+
 // cleanup (part 2)
 try { fs.unlinkSync(cookieBad); } catch {}
 try { fs.unlinkSync(cookieGood); } catch {}
