@@ -8,7 +8,7 @@ import path from 'node:path';
 import { createLyricService, fingerprintOf } from '../lib/lyric-service.js';
 import {
 	mixinKeyEnc, parseNetscapeCookies, extractBilibiliSessdata, wbiKeysFromNav,
-	signWbiParams, pickSubtitleTrack, subtitlesToLines, fetchBilibiliSubtitles,
+	signWbiParams, pickSubtitleTrack, subtitlesToLines, splitSubtitleCue, fetchBilibiliSubtitles,
 } from '../lib/bilibili-subtitles.js';
 
 let failed = 0;
@@ -84,6 +84,37 @@ check('subtitlesToLines maps/filters/sorts',
 	lines.length === 2 && lines[0].t === 0.12 && lines[0].text === '第一句'
 		&& lines[1].t === 2.5 && lines[1].text === '第二句', JSON.stringify(lines));
 check('subtitlesToLines empty-safe', subtitlesToLines(null).length === 0 && subtitlesToLines({}).length === 0, '');
+
+// 6b. bilingual cues carry BOTH languages inside one entry, separated by a
+// line break (verified live 2026-11-09 on a dual-subtitle 2DMV) — they become
+// text + trans instead of being flattened onto one line. A same-script extra
+// line is the video wrapping a long sentence and is joined, never a trans.
+const bilingual = subtitlesToLines([
+	{ from: 1, to: 3, content: 'アイデンティティ それは嗜好の\n这就是嗜好的 Identity' },
+	{ from: 3, to: 5, content: '同じ言葉の繰り返し\n同一句话的重复' },
+	{ from: 5, to: 7, content: '很长的一句中文被字幕工具折成了\n两行显示' },
+	{ from: 7, to: 9, content: 'Wrap me across\ntwo english lines' },
+	{ from: 9, to: 11, content: '単行' },
+	{ from: 11, to: 13, content: '\n\n' },
+	{ from: 13, to: 15, content: 'English line\n中文翻译' },
+]);
+check('bilingual cue -> original + translation',
+	bilingual[0].text === 'アイデンティティ それは嗜好の' && bilingual[0].trans === '这就是嗜好的 Identity',
+	JSON.stringify(bilingual[0]));
+check('second bilingual cue stays a pair',
+	bilingual[1].text === '同じ言葉の繰り返し' && bilingual[1].trans === '同一句话的重复', JSON.stringify(bilingual[1]));
+check('same-script Chinese wrap is joined, never a translation',
+	bilingual[2].text === '很长的一句中文被字幕工具折成了 两行显示' && bilingual[2].trans === undefined,
+	JSON.stringify(bilingual[2]));
+check('same-script English wrap is joined too',
+	bilingual[3].text === 'Wrap me across two english lines' && bilingual[3].trans === undefined, JSON.stringify(bilingual[3]));
+check('single-line cue unchanged', bilingual[4].text === '単行' && bilingual[4].trans === undefined, JSON.stringify(bilingual[4]));
+check('latin + Han pair counts as bilingual',
+	bilingual[5].text === 'English line' && bilingual[5].trans === '中文翻译', JSON.stringify(bilingual[5]));
+check('blank cue dropped', bilingual.length === 6, JSON.stringify(bilingual.map((row) => row.text)));
+check('splitSubtitleCue empty-safe',
+	splitSubtitleCue('') === null && splitSubtitleCue(null) === null && splitSubtitleCue('   ') === null
+		&& splitSubtitleCue(' \n ') === null, '');
 
 // 7. full chain with a stubbed fetch: view -> nav -> signed player -> subtitle.
 function makeBilibiliFetch() {
