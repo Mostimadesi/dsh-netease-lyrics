@@ -256,6 +256,27 @@ check('manual rematch unlocks the music chain for the same video',
 		&& svcFetchNoSub.calls.slice(callsBeforeManual).some((url) => url.includes('/api/search/get/web')),
 	JSON.stringify(rManual.attempts));
 
+// A BROWSER session with no bvid (the extension report went stale — its
+// heartbeat stopped reaching us) must stay video-only too: falling into the
+// music chain produced the reported unmatched -> matched -> unmatched loop.
+const svcFetchStale = makeServiceFetch([]);
+const svcStale = createLyricService({
+	fetchImpl: svcFetchStale, cacheFile: '',
+	bilibiliCookiePaths: [cookiePath], bilibiliRequestGapMs: 0,
+});
+const rStale = await svcStale.resolve({ title: '某个视频', artist: '', durationSec: 0, browserSession: true });
+check('a browser session without a bvid stays video-only and says why',
+	rStale.status === 'unmatched' && rStale.source === null
+		&& rStale.attempts.length === 1 && rStale.attempts[0].source === 'bilibili'
+		&& rStale.attempts[0].reason === 'no-bvid-report'
+		&& svcFetchStale.calls.length === 0, JSON.stringify(rStale));
+svcStale.invalidate(fingerprintOf('某个视频', ''));
+const rStaleManual = await svcStale.resolve({ title: '某个视频', artist: '', durationSec: 0, browserSession: true, allowMusicFallback: true });
+check('manual rematch still reaches the music chain for a bvid-less video',
+	rStaleManual.status === 'unmatched'
+		&& svcFetchStale.calls.some((url) => url.includes('/api/search/get/web')),
+	JSON.stringify(rStaleManual.attempts));
+
 // cookie missing -> bilibili attempt errors, video stays video-only
 fs.writeFileSync(cookiePath, '.example.com\tTRUE\t/\tTRUE\t1767225600\tSESSDATA\tdecoy', 'utf8');
 const svcFetchNoCookie = makeServiceFetch();
