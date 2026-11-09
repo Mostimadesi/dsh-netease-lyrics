@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.4.13b - 2026-11-10 (dev)
+
+**实机反馈：视频与音乐并存时浮窗直接消失（上一轮"未知曲目"的不可见版本）**。
+新增 `-DumpSessions` 诊断后现场实测确认 SMTC 会同时暴露多个会话，且其中可能有
+**无标题的残留会话**：
+
+```
+{"count":2,"type":"sessions"}
+{"app":"cloudmusic.exe","status":"Playing","title":"adrenaline!!! -TV Ver.",...}
+{"app":"Chrome","status":"Paused","title":"缺氧史前行星包01，拟芽与玉米杆",...}
+```
+
+- **桥：身份感知选择**（`Select-IdentifiedSession` + `New-IdentityProbe`）——
+  被选中的候选若**没有媒体标题**（`TryGetMediaPropertiesAsync` 的 Title 为空）
+  就丢弃它并重算偏好；全部候选都无标题时才回退到原偏好。丢弃按**对象引用**
+  （两个 Chrome 会话共享 appId，按 id 过滤会一次删掉两个）。**状态发射与播放
+  控制两条路径都改**——否则播放/暂停/跳转会打到幽灵会话上（静默失效）。
+  胜出候选的属性读取被复用，不额外增加 WinRT 调用。
+- **宿主：屏蔽精度**——只把**无标题的浏览器会话**发布为 inactive（Chrome 残留
+  会话）；**真实播放器**缺元数据时保持可见（显示"未知曲目"，而不是浮窗消失）。
+- 测试：PS 12 + 5 例（身份感知选择的四种情形 + 回退 + 空列表）；JS 端到端两例
+  （无标题浏览器会话 → inactive；无标题音乐会话 → 仍 active）。负向验证
+  v0.4.13a：旧桥缺 `Select-IdentifiedSession`；旧 index.js 把音乐会话也屏蔽掉。
+- **桥 + 宿主改动 → 重启 DSH 生效。** 桥文件必须保持**纯 ASCII**（封面套件会
+  检查；本轮踩到一次，见 HANDOFF）。
+- 新增诊断命令：
+  `powershell -NoProfile -ExecutionPolicy Bypass -File lib/smtc-bridge.ps1 -DumpSessions`
+  打印当前每个 SMTC 会话的 app / 播放状态 / 标题 / 有无标题。
+
 ## 0.4.13a - 2026-11-09 (dev)
 
 **实机反馈：B站视频与客户端歌曲并存时歌曲歌词卡住；两者都停后浮窗显示

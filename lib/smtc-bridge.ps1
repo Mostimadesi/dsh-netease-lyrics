@@ -49,6 +49,10 @@ param(
   [string]$AppPattern = 'cloudmusic,netease,com.netease,qqmusic,kugou',
   # Emit a single state line and exit. Used by the host for one-shot probes.
   [switch]$Once,
+  # Print every SMTC session (app / playback status / title / artist) and exit.
+  # Diagnostic for "the capsule picked the wrong session": a lingering session
+  # with no media properties must be visible in a dump.
+  [switch]$DumpSessions,
   # Define the helper functions and return without emitting a ready line,
   # starting the stdin reader runspace, or entering the poll loop. Lets
   # dev/test-cover.ps1 dot-source this file and unit-test Get-CoverBase64
@@ -234,6 +238,29 @@ if ($null -eq $manager) {
   exit 1
 }
 
+# ------------------------------------------------------- session dump (diag) --
+# "The capsule picked the wrong session" is otherwise invisible: this prints
+# every session SMTC currently exposes, with its playback status and whether it
+# carries any media identity. Run:
+#   powershell -NoProfile -ExecutionPolicy Bypass -File lib/smtc-bridge.ps1 -DumpSessions
+if ($DumpSessions) {
+  $dump = @()
+  try { $dump = @($manager.GetSessions()) } catch { }
+  Write-Line @{ type = 'sessions'; count = $dump.Count }
+  foreach ($s in $dump) {
+    $sApp = ''; $sStatus = ''; $sTitle = ''; $sArtist = ''
+    try { $sApp = [string]$s.SourceAppUserModelId } catch { }
+    try { $sStatus = [string]$s.GetPlaybackInfo().PlaybackStatus } catch { }
+    try {
+      $sProps = Await ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
+      if ($null -ne $sProps) { $sTitle = [string]$sProps.Title; $sArtist = [string]$sProps.Artist }
+    } catch { }
+    Write-Line @{ type = 'session'; app = $sApp; status = $sStatus; title = $sTitle; artist = $sArtist; hasTitle = ($sTitle -ne '') }
+  }
+  try { [Console]::Out.Flush() } catch { }
+  [Environment]::Exit(0)
+}
+
 # Prefer a playing supported player, then a playing browser (the bilibili
 # subtitle source needs the browser session), then any other playing source,
 # and only then a paused supported player. A paused NetEase session must not
@@ -266,6 +293,56 @@ function Select-Session {
   if ($null -ne $otherPlaying) { return $otherPlaying }
   if ($null -ne $preferredPaused) { return $preferredPaused }
   return $Sessions[0]
+}
+
+# Pick the best session that actually CARRIES media identity. A lingering
+# session with no title (Chrome keeps one alive after a video is gone, and SMTC
+# orders by recency) used to be selected over a real playing player: the capsule
+# then showed the "unknown track" placeholder, and once identity-less states were
+# masked as inactive it simply vanished. `Probe` returns a candidate's title
+# ('' when it has none); identity-less candidates are dropped and the preference
+# is recomputed. When EVERY candidate is identity-less the plain selection still
+# wins, so a genuinely title-less player keeps working.
+function Select-IdentifiedSession {
+  param($Sessions, $Probe, [int]$MaxSkips = 3)
+  if ($null -eq $Sessions -or $Sessions.Count -eq 0) { return $null }
+  $remaining = @($Sessions)
+  $fallback = $null
+  for ($i = 0; $i -lt $MaxSkips; $i++) {
+    $candidate = Select-Session $remaining
+    if ($null -eq $candidate) { break }
+    if ($null -eq $fallback) { $fallback = $candidate }
+    $title = ''
+    try { $title = [string](& $Probe $candidate) } catch { $title = '' }
+    if ($title -ne '') { return $candidate }
+    # Drop exactly this candidate (reference identity: two Chrome sessions share
+    # an app id, so filtering by id would drop both) and prefer again.
+    $next = @()
+    $dropped = $false
+    foreach ($item in $remaining) {
+      if (-not $dropped -and [object]::ReferenceEquals($item, $candidate)) { $dropped = $true; continue }
+      $next += $item
+    }
+    if (-not $dropped -or $next.Count -eq $remaining.Count) { break }
+    $remaining = $next
+  }
+  return $fallback
+}
+
+# Probe factory for Select-IdentifiedSession. The prober's media properties are
+# parked in script scope so a caller can reuse the winner's read instead of
+# asking WinRT twice per poll.
+function New-IdentityProbe {
+  return {
+    param($candidate)
+    $script:probedSession = $candidate
+    $script:probedProps = $null
+    try {
+      $script:probedProps = Await ($candidate.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
+    } catch { $script:probedProps = $null }
+    if ($null -eq $script:probedProps) { return '' }
+    try { return [string]$script:probedProps.Title } catch { return '' }
+  }
 }
 
 # ----------------------------------------------------------------- cover art --
@@ -384,7 +461,12 @@ function Add-Note {
 function Get-State {
   $sessions = @()
   try { $sessions = @($manager.GetSessions()) } catch { $sessions = @() }
-  $session = Select-Session $sessions
+  # Identity-aware preference: a session with no media title must not shadow a
+  # real playing player (see Select-IdentifiedSession). The winner's properties
+  # are parked by the probe and reused below.
+  $script:probedSession = $null
+  $script:probedProps = $null
+  $session = Select-IdentifiedSession $sessions (New-IdentityProbe)
 
   if ($null -eq $session) {
     $coverAction = Get-CoverAction $script:coverState $null ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
@@ -451,7 +533,12 @@ function Get-State {
   $title = ''; $artist = ''; $album = ''
   $thumbnail = $null
   try {
-    $props = Await ($session.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
+    # Reuse the properties the identity probe already read for THIS session.
+    $props = if ($null -ne $script:probedProps -and [object]::ReferenceEquals($script:probedSession, $session)) {
+      $script:probedProps
+    } else {
+      Await ($session.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
+    }
     if ($null -ne $props) {
       $title = [string]$props.Title
       $artist = [string]$props.Artist
@@ -545,7 +632,9 @@ function Invoke-Control {
 
   $sessions = @()
   try { $sessions = @($manager.GetSessions()) } catch { $sessions = @() }
-  $session = Select-Session $sessions
+  # Control the SAME session the capsule shows: an identity-less phantom must
+  # not swallow play/pause/seek (the command would silently go nowhere).
+  $session = Select-IdentifiedSession $sessions (New-IdentityProbe)
   if ($null -eq $session) {
     $miss = @{ type = 'ack'; cmd = $Command; ok = $false; reason = 'no-session' }
     if ($RequestId) { $miss.id = $RequestId }

@@ -239,7 +239,19 @@ await (async () => {
 	const res = makeRes();
 	registered.get('/dsh-netease-lyrics/state.json')(makeReq('GET'), res);
 	const payload = JSON.parse(res.body);
-	assert.equal(payload.active, false, 'an identity-less session is published as inactive');
+	assert.equal(payload.active, false, 'an identity-less browser session is published as inactive');
+})();
+// ...but a real (music) player with missing metadata keeps its capsule: the
+// capsule must never disappear just because a player has no title for a beat.
+bridgeProc.stdout.emit('data', JSON.stringify({
+	type: 'state', active: true, app: 'cloudmusic.exe', title: '', artist: '', album: '', positionSec: 1, durationSec: 200,
+}) + '\n');
+await new Promise((resolve) => setTimeout(resolve, 150));
+await (async () => {
+	const res = makeRes();
+	registered.get('/dsh-netease-lyrics/state.json')(makeReq('GET'), res);
+	const payload = JSON.parse(res.body);
+	assert.equal(payload.active, true, 'an identity-less music session stays visible (未知曲目, not a vanished capsule)');
 })();
 globalThis.fetch = realFetch;
 

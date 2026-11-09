@@ -5,6 +5,8 @@ $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptFile, [r
 if ($errors.Count) { throw $errors[0] }
 $select = $ast.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Select-Session' }, $true)
 . ([scriptblock]::Create($select.Extent.Text))
+$identified = $ast.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Select-IdentifiedSession' }, $true)
+. ([scriptblock]::Create($identified.Extent.Text))
 $patterns = @('cloudmusic','netease','com.netease','qqmusic')
 function New-Media($id, $status) {
   $session = [pscustomobject]@{ SourceAppUserModelId=$id; TestStatus=$status }
@@ -41,3 +43,37 @@ $patterns = @('cloudmusic','netease','com.netease','qqmusic','msedge')
 if ((Select-Session @($other,$web)).SourceAppUserModelId -ne 'msedge.exe') { throw 'User browser pattern not preferred' }
 $patterns = @('cloudmusic','netease','com.netease','qqmusic')
 Write-Output 'PASS: 12 Select-Session cases: music > playing browser > other playing > paused music; Chrome/Edge-store AUMIDs; explicit pattern opt-in.'
+
+# ------------------------------------------------------------------------ #
+# Select-IdentifiedSession: a session without media identity must never
+# shadow one that has it (live 2026-11-09: a lingering Chrome/phantom session
+# with an empty title was picked over a playing player, so the capsule showed
+# "未知曲目" and - once identity-less states were masked - vanished).
+$ghost = New-Media 'Chrome' 'Playing'                 # playing, but no title
+$player = New-Media 'cloudmusic.exe' 'Paused'         # the real (paused) player
+$video = New-Media 'msedge.exe' 'Playing'             # a real video session
+$probeFor = {
+  param($s)
+  switch ($s.SourceAppUserModelId) {
+    'Chrome' { '' }                       # identity-less phantom
+    'cloudmusic.exe' { '海蛍' }
+    'msedge.exe' { '某个视频_哔哩哔哩_bilibili' }
+    default { '' }
+  }
+}
+if ((Select-IdentifiedSession @($ghost, $player) $probeFor).SourceAppUserModelId -ne 'cloudmusic.exe') {
+  throw 'An identity-less playing session shadowed a titled player'
+}
+if ((Select-IdentifiedSession @($ghost, $video) $probeFor).SourceAppUserModelId -ne 'msedge.exe') {
+  throw 'An identity-less session shadowed a titled playing browser'
+}
+# all candidates identity-less -> plain preference still answers (never null)
+if ((Select-IdentifiedSession @($ghost) $probeFor).SourceAppUserModelId -ne 'Chrome') {
+  throw 'An identity-less-only list must still fall back to the plain selection'
+}
+# a titled top candidate wins immediately, in preference order
+if ((Select-IdentifiedSession @($player, $video) $probeFor).SourceAppUserModelId -ne 'msedge.exe') {
+  throw 'Preference order must hold among titled sessions'
+}
+if ($null -ne (Select-IdentifiedSession @() $probeFor)) { throw 'Empty session list must return null' }
+Write-Output 'PASS: 5 Select-IdentifiedSession cases: identity-less sessions never shadow a titled player; identity-less-only lists fall back; empty list is null.'
