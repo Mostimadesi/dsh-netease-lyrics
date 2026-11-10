@@ -1,11 +1,12 @@
-// Style + render contracts for the v0.4.19 雨后玻璃 (rainv2) preset.
+// Style + render contracts for the 雨后玻璃 (rainv2) preset.
 // The preset is a SELF-CONTAINED block: the v0.4.17 .dnl-decor-rain rules must
 // stay byte-identical so flipping the select back restores the old look exactly.
 // Visual model (raindrops.js + RaindropFX + the WE scene presets in the user's
 // library): droplets on dark glass are dark refracted bodies with a narrow
 // specular arc; most beads HANG (condensation) while a few big ones depart late
-// and slide the WHOLE pane, paying water into a stepped remnant plus two
-// daughter beads (the engines' 0.2–0.5 trailScale).
+// and slide the WHOLE pane — exiting through the bottom rim, not fading
+// mid-pane — paying water into a stepped remnant plus two daughter beads (the
+// engines' 0.2–0.5 trailScale). Rain silk is a short falling segment.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -56,30 +57,48 @@ const beadBody = v2.slice(beadStart, v2.indexOf('}', v2.indexOf('100%{', beadSta
 const beadTravels = [...beadBody.matchAll(/translate3d\([^)]*?(-?[\d.]+)px/g)].map((m) => Math.abs(Number(m[1])));
 assert.ok(beadTravels.every((y) => y <= 2), 'beads hang in place (max 2px wobble): ' + beadTravels.join(','));
 
-// sliders: hang first, then run the FULL pane (the m00364 request), only down.
+// sliders: hang first, then run the FULL pane and exit THROUGH the bottom rim
+// (m00882: "slide to the pane edge, then vanish" — no mid-pane fade). Travel is
+// `top` (pane-relative %): translateY % resolves against the bead's own ~9px
+// height and barely moves — that was the v0.4.19 "sliders never slide" bug.
 for (const name of ['dnl-rv2-slide', 'dnl-rv2-slide2', 'dnl-rv2-slide3', 'dnl-rv2-slide4']) {
 	const kStart = v2.indexOf('@keyframes ' + name + '{');
 	assert.ok(kStart >= 0, name + ' exists');
 	const body = v2.slice(kStart, v2.indexOf('}@', kStart) >= 0 ? v2.indexOf('}@', kStart) : v2.length);
-	const poses = [...body.matchAll(/(-?[\d.]+)%\{[^}]*?translate3d\([^,]+,\s*(-?[\d.]+)(%|px)/g)]
-		.map((m) => ({ at: Number(m[1]), y: Number(m[2]), unit: m[3] }));
-	// hanging poses are the px-wobble ones; big beads (slide3) depart earlier,
-	// so the window is defined by unit, not by a fixed percentage
-	const hang = poses.filter((p) => p.unit === 'px');
-	assert.ok(hang.length >= 2 && hang.every((p) => p.y <= 2),
-		name + ' hangs (≤2px) before departing: ' + JSON.stringify(hang));
-	const travel = poses.filter((p) => p.unit === '%' && p.y > 2);
+	const frames = [...body.matchAll(/(-?[\d.]+)%\{top:(-?[\d.]+)%;opacity:([\d.]+)[^}]*?scale\((-?[\d.]+)/g)]
+		.map((m) => ({ at: Number(m[1]), top: Number(m[2]), op: Number(m[3]), scale: Number(m[4]) }));
+	assert.ok(frames.length >= 6, name + ' is keyframed via top (pane-relative), not element-relative translateY %');
+	const startTop = frames[0].top;
+	const hang = frames.filter((f) => f.top === startTop);
+	assert.ok(hang.length >= 3, name + ' hangs in place first: ' + JSON.stringify(hang.map((f) => f.at)));
+	const travel = frames.filter((f) => f.top > startTop + 2);
 	assert.ok(travel.length >= 3, name + ' has intermediate slide poses');
 	assert.ok(travel[0].at > hang[hang.length - 1].at, name + ' departs only after the hang phase');
-	const maxY = Math.max(...travel.filter((p) => p.unit === '%').map((p) => p.y));
-	assert.ok(maxY >= 70, name + ' slides the WHOLE pane (reaches ' + maxY + '%), not a short hop');
-	const ys = travel.filter((p) => p.unit === '%').map((p) => p.y);
-	assert.ok(ys.every((y, i) => i === 0 || y >= ys[i - 1]), name + ' only moves DOWN');
-	// evaporation: the mother shrinks as she pays for the remnant
-	const scales = [...body.matchAll(/translate3d\([^)]*?\) scale\((-?[\d.]+)/g)].map((m) => Number(m[1]));
-	assert.ok(Math.max(...poses.map((p) => p.at)) >= 90 && scales[scales.length - 1] < Math.max(...scales),
-		name + ' shrinks away by the end (evaporation)');
+	const maxTop = Math.max(...travel.map((f) => f.top));
+	assert.ok(maxTop >= 108, name + ' exits THROUGH the bottom rim (top ' + maxTop + '%), not a mid-pane stop');
+	assert.ok(travel.every((f, i) => i === 0 || f.top >= travel[i - 1].top), name + ' only moves DOWN');
+	// no mid-pane fade: every in-pane travel pose stays ≥ .8 opacity; the fade is
+	// reserved for the last stretch across the rim (overflow clips the rest)
+	const inPane = travel.filter((f) => f.top <= 100);
+	assert.ok(inPane.every((f) => f.op >= 0.8),
+		name + ' stays ≥.8 opacity inside the pane: ' + JSON.stringify(inPane.map((f) => f.op)));
+	assert.ok(frames[frames.length - 1].op === 0 && frames[frames.length - 1].top > 100,
+		name + ' is fully transparent only past the rim');
+	// the mother shrinks as she pays water for the remnant (no scale wobble)
+	assert.ok(frames[frames.length - 1].scale < Math.max(...frames.map((f) => f.scale)),
+		name + ' shrinks by the end (evaporation)');
 }
+
+// rain silk: a SHORT falling segment, not a full-height static column (m00882)
+assert.match(v2, /\.dnl-decor-rainv2 \.dnl-decor-streak\{[^}]*height:52px/,
+	'streaks are short segments (px height)');
+assert.doesNotMatch(v2, /\.dnl-decor-rainv2 \.dnl-decor-streak\{[^}]*height:100%/,
+	'streak height is never 100% (that read as a static wire across the pane)');
+const fallStart = v2.indexOf('@keyframes dnl-rainv2-fall{');
+assert.ok(fallStart >= 0, 'streak fall keyframes exist');
+const fallBody = v2.slice(fallStart, fallStart + 400);
+assert.match(fallBody, /0%\{top:-[\d.]+%/, 'streak enters from above the pane');
+assert.match(fallBody, /100%\{top:1\d\d%/, 'streak exits below the pane');
 
 // ---- 4. stepped remnant trail + pane-positioned daughter beads -------------
 assert.match(v2, /@keyframes dnl-rv2-trail\{[\s\S]*?38%\{height:6px[\s\S]*?50%\{height:6px/,
@@ -97,6 +116,11 @@ for (const [cls, delay] of [['ra1', '2.6s'], ['rb1', '9.1s'], ['rc1', '5.8s'], [
 	assert.match(v2, new RegExp('\\.' + cls + '\\{[^}]*animation-delay:' + delay),
 		cls + ' shares its slider cycle delay ' + delay);
 }
+// daughters sit on their mother's real path (mid-pane), retimed to the top-based
+// slide profile — never beyond the pane, never in the top hang band
+const daughterTops = [...v2.matchAll(/\.r[abcd][12]\{left:[\d.]+%;top:([\d.]+)%/g)].map((m) => Number(m[1]));
+assert.ok(daughterTops.length === 8 && daughterTops.every((t) => t >= 20 && t <= 70),
+	'daughter beads sit mid-pane on the mothers’ paths: ' + daughterTops.join(','));
 
 // ---- 5. twelve bead slots spread over the whole pane ------------------------
 const beadSlots = [...v2.matchAll(/\.dnl-decor-rainv2 \.b(\d+)\{left:([\d.]+)%;top:([\d.]+)%/g)]

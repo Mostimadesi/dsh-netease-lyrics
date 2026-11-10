@@ -34,8 +34,9 @@ body{margin:0;background:linear-gradient(140deg,#1a2438 0%,#0b1120 55%,#131c30 1
 --dsw-alias-label-primary:#e8eefc;--dsw-alias-label-secondary:#aebdd8;--dsw-alias-label-tertiary:#7f92b5;
 --dsw-alias-brand-primary:#4f8cff;padding:40px;display:flex;justify-content:center}
 ${CSS}
-/* phase freeze: beads mid-hang; sl1 mid-run with its remnant + ra1 shed;
- * sl3 late-run with both rc remnants visible; streaks mid-flicker */
+/* phase freeze (v0.4.19 top-based profile): beads mid-hang; sl1 at 70% (top 50%,
+ * ra1 shed, long remnant); sl3 at 84% (top 85%, both rc remnants visible);
+ * streaks mid-fall */
 .b1{animation-delay:-4.4s !important;animation-play-state:paused !important}
 .b2{animation-delay:-6s !important;animation-play-state:paused !important}
 .b3{animation-delay:-12.9s !important;animation-play-state:paused !important}
@@ -43,9 +44,9 @@ ${CSS}
 .b5{animation-delay:-11.55s !important;animation-play-state:paused !important}
 .b7{animation-delay:-5s !important;animation-play-state:paused !important}
 .b9{animation-delay:-13.36s !important;animation-play-state:paused !important}
-.sl1,.sl1::after,.ra1,.ra2{animation-delay:-12.4s !important;animation-play-state:paused !important}
+.sl1,.sl1::after,.ra1,.ra2{animation-delay:-9.8s !important;animation-play-state:paused !important}
 .sl2,.sl2::after,.rb1,.rb2{animation-delay:-2s !important;animation-play-state:paused !important}
-.sl3,.sl3::after,.rc1,.rc2{animation-delay:-18.4s !important;animation-play-state:paused !important}
+.sl3,.sl3::after,.rc1,.rc2{animation-delay:-12.6s !important;animation-play-state:paused !important}
 .sl4,.sl4::after,.rd1,.rd2{animation-delay:-1s !important;animation-play-state:paused !important}
 .s1{animation-delay:-.9s !important;animation-play-state:paused !important}
 .s2{animation-delay:-1.7s !important;animation-play-state:paused !important}
