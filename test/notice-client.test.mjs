@@ -846,8 +846,10 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 	assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'cold-mount block leaves no timers');
 }
 
-// ---- v0.4.18: the 雨后玻璃 (rainv2) preset renders its own span set on the
-// glass skins (3 rain-silk streaks + 5 hanging beads + 2 short sliders).
+// ---- v0.4.19: the 雨后玻璃 (rainv2) preset renders its own span set on the
+// glass skins (3 rain-silk streaks + density beads + 4 full-pane sliders + 8
+// daughter remnants), the knob variables live on the decor element itself, and
+// the density knob changes the rendered bead count.
 {
 	const PREFS_KEY = 'dsh.netease-lyrics.notice.v1';
 	let r9;
@@ -859,10 +861,32 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 			'the rainv2 decor layer renders on the default glass skin');
 		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-streak')).length === 3,
 			'three rain-silk streaks render');
-		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 7,
-			'five condensation beads + two short sliders render');
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 11,
+			'default density: seven hanging beads + four sliders render');
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-remnant')).length === 8,
+			'eight daughter remnant beads render (two per slider)');
+		// The knob variables must ride the decor element: the .dnl-decor-rainv2
+		// rule's own defaults would beat anything inherited from the host.
+		const decorEl = r9.root.find((n) => String(n.props.className || '').includes('dnl-decor-rainv2'));
+		assert.ok(decorEl.props.style, 'the rainv2 decor element carries a style object');
+		assert.equal(decorEl.props.style['--dnl-rv2-pace'], '1', 'pace knob defaults to 1 on the decor element');
+		assert.equal(decorEl.props.style['--dnl-rv2-hi'], '0.7', 'highlight knob defaults to 0.7');
+		assert.equal(decorEl.props.style['--dnl-rv2-trail'], '0.34', 'trail knob defaults to the 0.34 baseline');
 	} finally {
 		if (r9) await act(async () => { r9.unmount(); await flush(); });
+		storeMap.delete(PREFS_KEY);
+	}
+	let r9b;
+	try {
+		storeMap.set(PREFS_KEY, JSON.stringify({ decor: 'rainv2', rv2Density: 4, rv2Pace: 150 }));
+		act(() => { r9b = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ ...trackBase, notice: undefined });
+		assert.ok(r9b.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 8,
+			'density 4 renders four beads + four sliders');
+		const el2 = r9b.root.find((n) => String(n.props.className || '').includes('dnl-decor-rainv2'));
+		assert.equal(el2.props.style['--dnl-rv2-pace'], '1.5', 'the pace knob reaches the decor element');
+	} finally {
+		if (r9b) await act(async () => { r9b.unmount(); await flush(); });
 		storeMap.delete(PREFS_KEY);
 	}
 }
