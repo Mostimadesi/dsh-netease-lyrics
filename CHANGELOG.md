@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.4.15 - 2026-11-10 (dev)
+
+**雨痕改用纹理素材**（用户明确否定 CSS 合成方案："光靠自己合成很难达到这样的
+效果"，并给了参考图）：
+
+- 新增 `tools/make-rain-textures.py`（Pillow，纯程序化、可复现）生成两张**可无缝
+  平铺**的雨玻璃 PNG：
+  - `decor-rain-beads.png`：贴附水滴场 —— **尺寸三级层次**（360 颗细雾 / 120 颗
+    中等 / 26 颗肥厚欲坠）、每滴含**深色折射环 + 内部偏上左的折射亮斑 + 硬高光点**，
+    这三层正是 CSS 渐变做不出来的；
+  - `decor-rain-runs.png`：竖向流痕（头部水珠 + 向上渐细拖尾）。
+  - 第一版失败教训（已记在脚本注释里）：只画亮点的 alpha 会读成**星空**——水滴
+    必须有暗边和明暗反差才像水。
+- **接入方式**：两张图 base64 **内联**进 `lib/client.js`（`tools/inline-rain-textures.mjs`
+  幂等注入），插件保持**零外部依赖**（无 fetch / 无 CORS / 无安装步骤）。
+  `.dnl-decor-rain::before` 铺静止水滴场（`repeat` + `mix-blend-mode:screen`），
+  `::after` 铺流痕并 `dnl-rain-scroll` 循环下移；原 4 颗 CSS 水滴保留（负责
+  "真的会滑下去"的那颗），每帧仍只有 4 个合成层。
+- reduced-motion：流痕停止滚动、水滴场降到 42% 仍可见（静态雨玻璃，不消失）。
+- 测试：纹理层断言（data-URI 长度、`repeat`、`screen` 混合、滚动动画、reduced-motion），
+  连同原有「水滴只能向下」的位移单调性断言一起守住。
+- 纯 client 改动 → **热换装生效**；改纹理的流程：跑 `python tools/make-rain-textures.py lib`
+  再 `npm run build:rain`。
+
 ## 0.4.14 - 2026-11-10 (dev)
 
 **样式打磨三项**（用户实机反馈）：
