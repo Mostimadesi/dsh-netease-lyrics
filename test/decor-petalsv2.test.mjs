@@ -126,6 +126,7 @@ assert.match(pv2, /clip-path:polygon\(50% 14%/, 'notched sakura silhouette (the 
 assert.match(pv2, /#fff3f8,var\(--dsw-alias-brand-primary\) calc\(var\(--dnl-pv2-tint\) \* \.35\)/, 'light side mixes 0.35x tint');
 assert.match(pv2, /#ffd9e8,var\(--dsw-alias-brand-primary\) var\(--dnl-pv2-tint\)/, 'shadow side mixes full tint');
 assert.match(pv2, /\.acc\{background:linear-gradient\(115deg/, 'accent petals mix harder');
+assert.doesNotMatch(pv2, /box-shadow|filter:/, 'no glow/brightness — decor stays subordinate (m01510)');
 
 // ---- 9. reduced motion -------------------------------------------------------
 const rmAt = CSS.indexOf('@media(prefers-reduced-motion:reduce){.dnl-decor span{animation:none}');
