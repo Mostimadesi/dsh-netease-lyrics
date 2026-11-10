@@ -116,6 +116,30 @@ const rainReduced = reducedBlockFor('dnl-decor-rain::after');
 assert.match(rainReduced, /animation:none/, 'reduced motion stops the runnel scroll');
 assert.match(rainReduced, /dnl-decor-rain::before\{opacity/, 'the bead field stays visible');
 
+// ---- 1c. the rain is TUNABLE (user request 2026-11-10: density / drop size /
+// strength / whole-layer opacity must be adjustable from the settings panel).
+// They ride CSS variables so a slider never re-bakes the texture.
+assert.match(CSS, /\.dnl-decor\{[^}]*opacity:var\(--dnl-decor-alpha,1\)/,
+	'the whole decor layer is gated by an opacity variable');
+assert.match(CSS, /\.dnl-decor-rain::before\{[^}]*background-size:var\(--dnl-decor-scale/,
+	'density/size drive the tile size');
+assert.match(CSS, /\.dnl-decor-rain::before\{[^}]*opacity:calc\(var\(--dnl-decor-water/,
+	'strength drives the water opacity');
+assert.match(src, /const decorKnobs = \{/, 'the knobs are derived in one place');
+assert.match(src, /--dnl-decor-alpha/, 'the layer opacity variable is applied');
+assert.match(src, /decorOpacity/, 'a whole-layer opacity preference exists');
+assert.match(src, /rainDensity/, 'a density preference exists');
+assert.match(src, /rainSize/, 'a drop-size preference exists');
+assert.match(src, /rainStrength/, 'a strength preference exists');
+// the prefs are validated and clamped like every other preference
+assert.match(src, /for \(const key of \["decorOpacity", "rainDensity", "rainSize", "rainStrength"\]\)/,
+	'all four knobs are clamped on read');
+// and exposed in the settings panel
+assert.match(src, /"aria-label": "雨的密度"/, 'the panel exposes density');
+assert.match(src, /"aria-label": "雨滴大小"/, 'the panel exposes drop size');
+assert.match(src, /"aria-label": "雨的浓淡"/, 'the panel exposes strength');
+assert.match(src, /"aria-label": "装饰层不透明度"/, 'the panel exposes layer opacity');
+
 // ---- 2. corner brackets breathe ---------------------------------------
 assert.match(CSS, /@keyframes dnl-ak-bracket-breathe\{/, 'the bracket breathing keyframes exist');
 assert.match(CSS, /\.dnl-style-arknights::before\{[^}]*animation:dnl-ak-bracket-breathe/, 'the brackets consume it');
