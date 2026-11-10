@@ -47,7 +47,7 @@ assert.match(src, /decor === "rainv2" \? rainv2DecorChildren\(noticePrefs\)/, 't
 assert.match(src, /function rainv2DecorChildren\(np\)/, 'the rainv2 children builder exists');
 assert.match(src, /function rainv2StyleVars\(np\)/, 'the rainv2 style-vars builder exists');
 // knobs ride the decor element (its own rule's defaults beat host inheritance)
-assert.match(src, /decor === "rainv2" \? \{ style: rainv2StyleVars\(noticePrefs\) \} : null/, 'knob variables are set on the decor element itself');
+assert.match(src, /decor === "rainv2" \? \{ style: rainv2StyleVars\(noticePrefs\) \}/, 'knob variables are set on the decor element itself');
 
 // ---- 3. droplet lifecycle contracts ---------------------------------------
 // stationary beads: never travel more than 2px (condensation, not a run)
