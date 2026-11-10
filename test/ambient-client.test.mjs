@@ -640,7 +640,16 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 
 	// Edge cases must not throw or invent rows.
 	assert.equal(JSON.stringify(W(0, 0, 4, 4)), '[]', 'no lines -> no rows');
-	assert.equal(JSON.stringify(W(10, -1, 4, 4)), '[]', 'no active line -> no rows');
+	// v0.4.12d: before the first timed line (a video whose subtitles have not
+	// started) the window anchors on the FIRST line instead of collapsing - the
+	// expanded panel used to claim there were no lyrics while they were merely
+	// yet to begin. Nothing highlights until playback reaches that line.
+	{
+		const pre = W(10, -1, 4, 4);
+		assert.equal(pre.length, 9, 'a pre-first-line window still fills 9 slots');
+		assert.equal(pre.includes(0), true, 'it shows the upcoming first lines');
+		assert.equal(pre.filter(i => i === -1).length, 4, 'leading slots are pads');
+	}
 
 	// A translated lyric makes every row two text lines tall, so the spacer rows
 	// must reserve the same height - otherwise the pads are shorter than the rows

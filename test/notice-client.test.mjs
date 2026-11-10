@@ -778,7 +778,9 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 		await act(async () => { await flush(); });
 		const arkDecors = r7.root.findAll((n) => String(n.props.className || '').includes('dnl-decor'));
 		const arkIsland = r7.root.findAll((n) => String(n.props.className || '').startsWith('dnl-island'))[0];
-		assert.ok(arkDecors.length === 8 && String(arkIsland.props.className).includes('dnl-style-arknights'),
+		// 9 = 4 rain streaks + 4 droplets + the layer itself (v0.4.14 added a
+		// fourth droplet for a less mechanical cadence).
+		assert.ok(arkDecors.length === 9 && String(arkIsland.props.className).includes('dnl-style-arknights'),
 			'the decor layer is now ALLOWED on arknights (v0.4.9c) and rides the skin');
 	} finally {
 		if (r7) await act(async () => { r7.unmount(); await flush(); });

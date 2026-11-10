@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { createLyricRetry } from '../lib/lyric-retry.js';
-import { fingerprintOf } from '../lib/lyric-service.js';
+import { fingerprintOf, shouldOriginRematch } from '../lib/lyric-service.js';
 import { ackNotices, applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor } from '../lib/notice-aggregate.js';
 
 // Evaluate the host with inert IO and a Windows platform on every test machine.
@@ -12,8 +12,13 @@ import { ackNotices, applyNoticeEvent, basenameOf, createNoticeState, disposeSes
 const source = fs.readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8')
 	.replace(/^import .*;\r?$/gm, '')
 	.replace('fileURLToPath(import.meta.url)', JSON.stringify('/plugin/lib/index.js'))
-	.replace('export function __setSpawnForTests', 'function __setSpawnForTests')
-	.replace('export default {', 'globalThis.plugin = {');
+	// The host is evaluated as a plain script in this sandbox, so drop the ES
+	// module syntax generically: `export default {...}` becomes an assignment
+	// and every `export` keyword is stripped (naming individual exports here
+	// meant a NEW export silently broke this suite - v0.4.13c).
+	.replace(/^export default \{/m, 'globalThis.plugin = {')
+	.replace(/^export \{[^}]*\};\r?$/gm, '')
+	.replace(/^export /gm, '');
 
 const flush = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
 
@@ -47,9 +52,25 @@ function makeHarness() {
 	const context = vm.createContext({
 		fs: { appendFileSync() {}, statSync() { return { isDirectory: () => false, isFile: () => true }; } },
 		os: { homedir: () => '/home' }, path, spawn: fakeSpawn,
+		// The browser-session listener is an inert stub here: no port is bound
+		// and no request can arrive, matching the rest of this sandbox.
+		http: {
+			createServer(handler) {
+				const server = new EventEmitter();
+				server.handler = handler;
+				server.listen = () => {};
+				server.close = () => {};
+				server.unref = () => {};
+				return server;
+			},
+		},
 		process: { platform: 'win32', env: {}, pid: 42 },
 		console: { log() {}, warn() {} }, Buffer, URL,
 		setTimeout: schedule, clearTimeout: cancel, fingerprintOf, createLyricRetry,
+		// The host imports this from lyric-service; every injected dependency
+		// must be listed here or the sandbox sees `undefined` and the resolve
+		// handler throws (v0.4.13c).
+		shouldOriginRematch,
 		ackNotices, applyNoticeEvent, basenameOf, createNoticeState, disposeSessionNotices, noticesForWire, workspaceTitleFor,
 		createLyricService(options) {
 			const service = {
