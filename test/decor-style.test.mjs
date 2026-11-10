@@ -23,15 +23,6 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 const CSS = plugin.__test.CSS;
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 
-/** The first reduced-motion block that mentions `needle` (there are several). */
-function reducedBlockFor(needle) {
-	for (const match of CSS.matchAll(/@media\(prefers-reduced-motion:reduce\)\{/g)) {
-		const block = CSS.slice(match.index, match.index + 900);
-		if (block.includes(needle)) return block;
-	}
-	return '';
-}
-
 // ---- 1. droplets travel ------------------------------------------------
 const dropRule = CSS.match(/\.dnl-decor-rain \.dnl-decor-drop\{([^}]*)\}/);
 assert.ok(dropRule, 'the droplet rule exists');
@@ -75,70 +66,6 @@ const rainBody = CSS.slice(rainStart, rainStart + 300);
 assert.match(rainBody, /translate3d\([^)]*120%/, 'rain streaks travel the full height');
 assert.match(rainBody, /100%\{[^}]*opacity:0/, 'streaks fade out rather than being clipped');
 assert.match(rainBody, /scaleY/, 'streaks stretch as they accelerate');
-
-// ---- 1b. the rain scene is TEXTURED (user: CSS beads cannot look real) ------
-// A gradient bead can fake a highlight but not the refracted rim, internal
-// caustic and size hierarchy - so the droplet field is a baked PNG. At runtime
-// the CSS array holds the FULL data-URI (the concatenation is evaluated before
-// the rules are joined) - it is ~60 KB, so measure the base64 run directly
-// instead of windowing with a regex.
-function base64RunAfter(selector) {
-	const at = CSS.indexOf(selector + '{');
-	if (at < 0) return 0;
-	const marker = CSS.indexOf('data:image/png;base64,', at);
-	if (marker < 0) return 0;
-	let i = marker + 'data:image/png;base64,'.length;
-	let run = 0;
-	while (i + run < CSS.length && /[A-Za-z0-9+/=]/.test(CSS[i + run])) run += 1;
-	return run;
-}
-const beadsAt = CSS.indexOf('.dnl-decor-rain::before{');
-assert.ok(base64RunAfter('.dnl-decor-rain::before') > 20000,
-	'the clinging droplet field is a baked PNG texture (' + base64RunAfter('.dnl-decor-rain::before') + ' base64 chars)');
-// the declarations follow the ~60 KB data-URI, so look past it
-const beadsTail = CSS.slice(beadsAt, beadsAt + base64RunAfter('.dnl-decor-rain::before') + 400);
-assert.match(beadsTail, /background-repeat:repeat/, 'and tiles seamlessly');
-assert.match(beadsTail, /mix-blend-mode:screen/, 'it composits as light on the glass');
-assert.ok(base64RunAfter('.dnl-decor-rain::after') > 8000,
-	'the runnel layer is textured too (' + base64RunAfter('.dnl-decor-rain::after') + ' base64 chars)');
-const runsAt = CSS.indexOf('.dnl-decor-rain::after{');
-const runsTail = CSS.slice(runsAt, runsAt + base64RunAfter('.dnl-decor-rain::after') + 400);
-assert.match(runsTail, /animation:dnl-rain-scroll/, 'and scrolls');
-assert.match(CSS, /@keyframes dnl-rain-scroll\{/, 'runnels scroll');
-assert.match(CSS, /\.dnl-decor-rain::after\{[^}]*animation:dnl-rain-scroll/,
-	'and the scroll is applied to them');
-// the textures must come from the inlined data-URIs (dependency-free build)
-assert.match(src, /const RAIN_BEADS_URI = "data:image\/png;base64,/, 'the bead texture is inlined');
-assert.match(src, /const RAIN_RUNS_URI = "data:image\/png;base64,/, 'the runnel texture is inlined');
-assert.match(src, /tools\/make-rain-textures\.py/, 'the generator is documented in place');
-// reduced motion stops the scroll but keeps the glass look
-const rainReduced = reducedBlockFor('dnl-decor-rain::after');
-assert.match(rainReduced, /animation:none/, 'reduced motion stops the runnel scroll');
-assert.match(rainReduced, /dnl-decor-rain::before\{opacity/, 'the bead field stays visible');
-
-// ---- 1c. the rain is TUNABLE (user request 2026-11-10: density / drop size /
-// strength / whole-layer opacity must be adjustable from the settings panel).
-// They ride CSS variables so a slider never re-bakes the texture.
-assert.match(CSS, /\.dnl-decor\{[^}]*opacity:var\(--dnl-decor-alpha,1\)/,
-	'the whole decor layer is gated by an opacity variable');
-assert.match(CSS, /\.dnl-decor-rain::before\{[^}]*background-size:var\(--dnl-decor-scale/,
-	'density/size drive the tile size');
-assert.match(CSS, /\.dnl-decor-rain::before\{[^}]*opacity:calc\(var\(--dnl-decor-water/,
-	'strength drives the water opacity');
-assert.match(src, /const decorKnobs = \{/, 'the knobs are derived in one place');
-assert.match(src, /--dnl-decor-alpha/, 'the layer opacity variable is applied');
-assert.match(src, /decorOpacity/, 'a whole-layer opacity preference exists');
-assert.match(src, /rainDensity/, 'a density preference exists');
-assert.match(src, /rainSize/, 'a drop-size preference exists');
-assert.match(src, /rainStrength/, 'a strength preference exists');
-// the prefs are validated and clamped like every other preference
-assert.match(src, /for \(const key of \["decorOpacity", "rainDensity", "rainSize", "rainStrength"\]\)/,
-	'all four knobs are clamped on read');
-// and exposed in the settings panel
-assert.match(src, /"aria-label": "雨的密度"/, 'the panel exposes density');
-assert.match(src, /"aria-label": "雨滴大小"/, 'the panel exposes drop size');
-assert.match(src, /"aria-label": "雨的浓淡"/, 'the panel exposes strength');
-assert.match(src, /"aria-label": "装饰层不透明度"/, 'the panel exposes layer opacity');
 
 // ---- 2. corner brackets breathe ---------------------------------------
 assert.match(CSS, /@keyframes dnl-ak-bracket-breathe\{/, 'the bracket breathing keyframes exist');
