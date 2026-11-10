@@ -846,4 +846,25 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 	assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'cold-mount block leaves no timers');
 }
 
+// ---- v0.4.18: the 雨后玻璃 (rainv2) preset renders its own span set on the
+// glass skins (3 rain-silk streaks + 5 hanging beads + 2 short sliders).
+{
+	const PREFS_KEY = 'dsh.netease-lyrics.notice.v1';
+	let r9;
+	try {
+		storeMap.set(PREFS_KEY, JSON.stringify({ decor: 'rainv2' }));
+		act(() => { r9 = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ ...trackBase, notice: undefined });
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-rainv2')).length === 1,
+			'the rainv2 decor layer renders on the default glass skin');
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-streak')).length === 3,
+			'three rain-silk streaks render');
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 7,
+			'five condensation beads + two short sliders render');
+	} finally {
+		if (r9) await act(async () => { r9.unmount(); await flush(); });
+		storeMap.delete(PREFS_KEY);
+	}
+}
+
 console.log('PASS: workspace notices — idle pill shows the headline and fades after ack; active pill inserts the notice (4 s) then hands off to the quiet dot; lyric hover never acks, insert hover does; cold mounts skip the replay');
