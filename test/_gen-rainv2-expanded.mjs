@@ -1,8 +1,9 @@
 // Reproduce the "decor only covers the collapsed strip" report: render the REAL
 // island CSS + real DOM skeleton in the EXPANDED state, rainv2/petalsv2 on,
 // animations phase-frozen, on a dark desktop-ish backdrop. Screenshot tells the truth.
-// Usage: node _gen-rainv2-expanded.mjs <out.html> <mode> [preset]
-//   mode: (empty) | bright | zoom    preset: rainv2 (default) | petalsv2
+// Usage: node _gen-rainv2-expanded.mjs <out.html> <mode> [preset] [variant]
+//   mode: (empty) | bright | zoom    preset: rainv2 (default) | petalsv2 | motesv2
+//   variant: rainv2 → slide|evaporate · petalsv2 → v2|classic · motesv2 → dust|star|gentle|stargentle
 import fs from 'node:fs';
 import vm from 'node:vm';
 import React from 'react';
@@ -24,7 +25,10 @@ const preset = process.argv[4] || 'rainv2';
 
 const spans = preset === 'petalsv2'
 	? ['p6', 'p12', 'p3', 'p10', 'p8', 'p2', 'p11', 'p5'].map((k) =>
-		`<span class="dnl-decor-petal ${k}${['p12', 'p8', 'p5', 'p4'].includes(k) ? ' acc' : ''}"></span>`).join('')
+		`<span class="dnl-decor-petal ${k} ${{ p6: 'sh-a', p12: 'sh-b', p3: 'sh-c', p10: 'sh-a', p8: 'sh-b', p2: 'sh-c', p11: 'sh-a', p5: 'sh-b' }[k]}${['p12', 'p8', 'p5', 'p4'].includes(k) ? ' acc' : ''}"></span>`).join('')
+	: preset === 'motesv2'
+	? ['o7', 'o3', 'o12', 'o10', 'o1', 'o9', 'o4'].map((k) =>
+		`<span class="dnl-decor-mote2 ${k} ${{ o3: 'd-near', o7: 'd-near', o12: 'd-near', o11: 'd-near', o2: 'd-far', o5: 'd-far', o8: 'd-far' }[k] || 'd-mid'}"></span>`).join('')
 	: [
 		...['s1', 's2', 's3'].map((k) => `<span class="dnl-decor-streak ${k}"></span>`),
 		// default density 7 → the first seven slots of RV2_BEAD_ORDER
@@ -71,12 +75,12 @@ ${CSS}
 /* STRUCTURAL CHECK ONLY (not shipped): brighten every water element and outline
  * the layer so placement/coverage can be verified in a still. Aesthetic judgment
  * uses the un-brightened shot. */
-${process.argv[3] === 'bright' ? '.dnl-decor{outline:2px dashed magenta}.dnl-decor-drop,.dnl-decor-remnant,.dnl-decor-petal{filter:brightness(3)}.dnl-decor-streak{opacity:.6 !important}' : ''}
+${process.argv[3] === 'bright' ? '.dnl-decor{outline:2px dashed magenta}.dnl-decor-drop,.dnl-decor-remnant,.dnl-decor-petal,.dnl-decor-mote2{filter:brightness(3)}.dnl-decor-streak{opacity:.6 !important}' : ''}
 ${process.argv[3] === 'zoom' ? '.dnl-stage{zoom:2.4}' : ''}
 </style></head><body><div class="dnl-stage"><div class="dnl-host" style="position:static;transform:none">
 <div class="dnl-island dnl-expanded" style="border-radius:24px">
 	<button class="dnl-drag" style="position:absolute">⠿</button>
-	<div class="dnl-decor dnl-decor-${preset}${preset === 'rainv2' && process.argv[5] === 'evaporate' ? ' rv2-end-evaporate' : preset === 'rainv2' ? ' rv2-end-slide' : ''}" aria-hidden="true">${spans}</div>
+	<div class="dnl-decor dnl-decor-${preset}${preset === 'rainv2' && process.argv[5] === 'evaporate' ? ' rv2-end-evaporate' : preset === 'rainv2' ? ' rv2-end-slide' : preset === 'petalsv2' ? ' ' + (process.argv[5] === 'classic' ? 'pv2-mat-classic' : 'pv2-mat-v2') : preset === 'motesv2' ? ' mv2-mood-' + (/^star/.test(process.argv[5] || '') ? 'star' : 'dust') + ' mv2-motion-' + (/gentle$/.test(process.argv[5] || '') ? 'gentle' : 'wander') : ''}" aria-hidden="true">${spans}</div>
 	<div class="dnl-grow" aria-hidden="undefined"><div class="dnl-grow-inner"><div class="dnl-panel">
 		<div class="dnl-lines">
 			<div class="dnl-line"><span>夜空中最亮的星 是否聆听</span></div>

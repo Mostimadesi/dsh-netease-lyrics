@@ -907,4 +907,52 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 	}
 }
 
+// ---- v0.4.28: the 光点浮尘 v2 (motesv2) preset renders its own dot set on the
+// glass skins (density dots with depth classes), carries the mood + motion
+// variant classes, and the knobs ride the decor element itself.
+{
+	const PREFS_KEY = 'dsh.netease-lyrics.notice.v1';
+	let r10;
+	try {
+		storeMap.set(PREFS_KEY, JSON.stringify({ decor: 'motesv2' }));
+		act(() => { r10 = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ ...trackBase, notice: undefined });
+		const clsOf = (n) => String(n.props.className || '');
+		const decorEl = r10.root.find((n) => clsOf(n).includes('dnl-decor-motesv2'));
+		assert.ok(decorEl, 'the motesv2 decor layer renders on the default glass skin');
+		assert.ok(clsOf(decorEl).includes('mv2-mood-dust'), 'default mood class: dust');
+		assert.ok(clsOf(decorEl).includes('mv2-motion-wander'), 'default motion class: wander');
+		const dots = r10.root.findAll((n) => clsOf(n).includes('dnl-decor-mote2'));
+		assert.equal(dots.length, 7, 'collapsed: default density 7 dots all stay mounted');
+		const hidden = dots.filter((n) => clsOf(n).includes('dnl-decor-hide')).length;
+		assert.equal(hidden, 5, 'collapsed: 25% of 7 → 2 survivors, 5 dots carry the hide class');
+		assert.ok(decorEl.props.style, 'the motesv2 decor element carries a style object');
+		assert.equal(decorEl.props.style['--dnl-mv2-pace'], '1', 'pace knob defaults to 1 on the decor element');
+		assert.equal(decorEl.props.style['--dnl-mv2-glow'], '0.7', 'glow knob defaults to 0.7');
+		const island10 = r10.root.find((n) => String(n.props.className || '').split(' ').includes('dnl-island'));
+		await act(async () => { island10.props.onMouseEnter({}); await flush(); });
+		assert.equal(r10.root.findAll((n) => clsOf(n).includes('dnl-decor-mote2') && clsOf(n).includes('dnl-decor-hide')).length, 0,
+			'expanded: no dot carries the hide class');
+	} finally {
+		if (r10) await act(async () => { r10.unmount(); await flush(); });
+		storeMap.delete(PREFS_KEY);
+	}
+	let r10b;
+	try {
+		storeMap.set(PREFS_KEY, JSON.stringify({ decor: 'motesv2', mv2Density: 5, mv2Pace: 150, mv2Mood: 'star', mv2Motion: 'gentle' }));
+		act(() => { r10b = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ ...trackBase, notice: undefined });
+		const clsOf = (n) => String(n.props.className || '');
+		const decorEl = r10b.root.find((n) => clsOf(n).includes('dnl-decor-motesv2'));
+		assert.ok(clsOf(decorEl).includes('mv2-mood-star'), 'mood knob reaches the decor element class');
+		assert.ok(clsOf(decorEl).includes('mv2-motion-gentle'), 'motion knob reaches the decor element class');
+		assert.equal(decorEl.props.style['--dnl-mv2-pace'], '1.5', 'the pace knob reaches the decor element');
+		assert.equal(r10b.root.findAll((n) => clsOf(n).includes('dnl-decor-mote2')).length, 5,
+			'density 5 mounts five dots');
+	} finally {
+		if (r10b) await act(async () => { r10b.unmount(); await flush(); });
+		storeMap.delete(PREFS_KEY);
+	}
+}
+
 console.log('PASS: workspace notices — idle pill shows the headline and fades after ack; active pill inserts the notice (4 s) then hands off to the quiet dot; lyric hover never acks, insert hover does; cold mounts skip the replay');

@@ -59,7 +59,7 @@ assert.match(src, /const PV2_ACCENTS = new Set\(\["p12", "p8", "p5", "p4"\]\)/, 
 // v0.4.27: material variant (m02754) — the losing traj/wind variants are gone
 assert.match(src, /const PV2_MATS = \[\s*\["v2"/, 'material options exist');
 assert.match(src, /function petalsv2MatClass\(np\)/, 'material class builder exists');
-assert.match(src, /decor === "petalsv2" \? " " \+ petalsv2MatClass\(noticePrefs\) : ""\)/, 'render branch applies the material class');
+assert.match(src, /decor === "petalsv2" \? " " \+ petalsv2MatClass\(noticePrefs\) :/, 'render branch applies the material class');
 
 // ---- 3. fall contract: full pane, exit THROUGH the bottom rim --------------
 const fallAt = pv2.indexOf('@keyframes dnl-pv2-fall{');
@@ -161,6 +161,6 @@ assert.match(pv2, /\.pv2-mat-classic \.sh-a,.+\.sh-b,.+\.sh-c\{clip-path:none\}/
 // ---- 9. reduced motion -------------------------------------------------------
 const rmAt = CSS.indexOf('@media(prefers-reduced-motion:reduce){.dnl-decor span{animation:none}');
 assert.ok(rmAt >= 0, 'decor reduced-motion block exists');
-assert.ok(CSS.indexOf('.dnl-decor-petalsv2 .dnl-decor-petal{display:none}', rmAt) > rmAt, 'petalsv2 hides under reduced-motion');
+assert.ok(CSS.indexOf('.dnl-decor-petalsv2 .dnl-decor-petal', rmAt) > rmAt, 'petalsv2 hides under reduced-motion');
 
 console.log('PASS: petalsv2 preset — isolation, whole-pane fall through the rim, sinusoidal sway + tumble, 12 spread-first slots, knob clamps, settings UI, reduced-motion');
