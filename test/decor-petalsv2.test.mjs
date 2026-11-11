@@ -53,6 +53,12 @@ assert.match(src, /function petalsv2StyleVars\(np\)/, 'the petalsv2 style-vars b
 assert.match(src, /decor === "petalsv2" \? \{ style: petalsv2StyleVars\(noticePrefs\) \}/, 'knob variables are set on the decor element itself');
 assert.match(src, /const PV2_ORDER = \["p6", "p12", "p3", "p10"/, 'spread-first slot order');
 assert.match(src, /const PV2_ACCENTS = new Set\(\["p12", "p8", "p5", "p4"\]\)/, 'accent slots are pinned');
+// v0.4.23: trajectory + wind are selectable variants (m02233)
+assert.match(src, /const PV2_TRAJS = \[\s*\["varied"/, 'trajectory options exist');
+assert.match(src, /const PV2_WINDS = \[\s*\["gust"/, 'wind options exist');
+assert.match(src, /function petalsv2TrajClass\(np\)/, 'trajectory class builder exists');
+assert.match(src, /function petalsv2WindClass\(np\)/, 'wind class builder exists');
+assert.match(src, /dnl-decor-" \+ decor \+ \(decor === "petalsv2" \? " " \+ petalsv2TrajClass\(noticePrefs\) \+ " " \+ petalsv2WindClass\(noticePrefs\) : ""\)/, 'render branch applies the variant classes');
 
 // ---- 3. fall contract: full pane, exit THROUGH the bottom rim --------------
 const fallAt = pv2.indexOf('@keyframes dnl-pv2-fall{');
@@ -113,20 +119,47 @@ localStore.raw = JSON.stringify({ decor: 'petalsv2' });
 assert.equal(readNoticePrefs().decor, 'petalsv2', 'the whitelist accepts petalsv2');
 localStore.raw = JSON.stringify({ decor: 'petals' });
 assert.equal(readNoticePrefs().decor, 'petals', 'the old preset stays selectable until retired');
+// v0.4.23: trajectory + wind are whitelisted like every other select knob
+localStore.raw = JSON.stringify({ pv2Traj: 'uniform', pv2Wind: 'terminal' });
+const variant = readNoticePrefs();
+assert.equal(variant.pv2Traj, 'uniform', 'traj whitelist accepts uniform');
+assert.equal(variant.pv2Wind, 'terminal', 'wind whitelist accepts terminal');
+localStore.raw = JSON.stringify({ pv2Traj: 'bogus', pv2Wind: 'bogus' });
+const variantDflt = readNoticePrefs();
+assert.equal(variantDflt.pv2Traj, 'varied', 'unknown traj falls back to varied');
+assert.equal(variantDflt.pv2Wind, 'gust', 'unknown wind falls back to gust');
 localStore.raw = null;
 
 // ---- 7. settings UI --------------------------------------------------------
-for (const label of ['樱吹雪花瓣密度', '樱吹雪飘落速度', '樱吹雪摇摆幅度', '樱吹雪主色点缀']) {
-	assert.ok(src.includes('"' + label + '"'), 'settings slider: ' + label);
+for (const label of ['樱吹雪花瓣密度', '樱吹雪飘落速度', '樱吹雪摇摆幅度', '樱吹雪主色点缀', '樱吹雪飘落轨迹', '樱吹雪风场模拟']) {
+	assert.ok(src.includes('"' + label + '"'), 'settings control: ' + label);
 }
-assert.match(src, /pv2Density: 8, pv2Pace: 100, pv2Sway: 100, pv2Tint: 35 \}\) \}, "恢复樱吹雪默认参数"/, 'reset button restores the defaults');
+assert.match(src, /PV2_TRAJS\.map\(\(\[id, label\]\) => h\("option"/, 'traj select lists the variants');
+assert.match(src, /PV2_WINDS\.map\(\(\[id, label\]\) => h\("option"/, 'wind select lists the variants');
+assert.match(src, /pv2Density: 8, pv2Pace: 100, pv2Sway: 100, pv2Tint: 35, pv2Traj: "varied", pv2Wind: "gust" \}\) \}, "恢复樱吹雪默认参数"/, 'reset button restores all defaults');
 
-// ---- 8. shape + two-tone colour --------------------------------------------
-assert.match(pv2, /clip-path:polygon\(50% 14%/, 'notched sakura silhouette (the 50%/14% vertex is the notch)');
+// ---- 8. shape variants + two-tone colour -------------------------------------
+assert.match(pv2, /\.sh-a\{clip-path:polygon\(52% 10%/, 'notched sakura silhouette (offset notch, no heart read)');
+assert.match(pv2, /\.sh-b\{clip-path:ellipse/, 'round plum-petal variant');
+assert.match(pv2, /\.sh-c\{clip-path:polygon\(50% 0/, 'slim willow-leaf variant');
 assert.match(pv2, /#fff3f8,var\(--dsw-alias-brand-primary\) calc\(var\(--dnl-pv2-tint\) \* \.35\)/, 'light side mixes 0.35x tint');
 assert.match(pv2, /#ffd9e8,var\(--dsw-alias-brand-primary\) var\(--dnl-pv2-tint\)/, 'shadow side mixes full tint');
 assert.match(pv2, /\.acc\{background:linear-gradient\(115deg/, 'accent petals mix harder');
 assert.doesNotMatch(pv2, /box-shadow|filter:/, 'no glow/brightness — decor stays subordinate (m01510)');
+
+// ---- 8b. trajectory + wind variants (v0.4.22 CSS / v0.4.23 selectable, m02233) -
+for (const path of ['dnl-pv2-fall-a', 'dnl-pv2-fall-b', 'dnl-pv2-fall-c', 'dnl-pv2-fall-d']) {
+	assert.ok(pv2.includes('@keyframes ' + path), 'trajectory keyframes: ' + path);
+}
+const trajAssign = pv2.match(/\.p\d+\{left:\d+%;width:[^}]*animation:dnl-pv2-fall-[abcd]/g) || [];
+assert.equal(trajAssign.length, 12, 'every slot takes one of the four trajectories (varied default)');
+assert.match(pv2, /\.pv2-traj-uniform \.p1,.+\.p5,.+\.p9\{animation-name:dnl-pv2-fall,/, 'uniform collapses slots onto the shared fall');
+assert.match(pv2, /@keyframes dnl-pv2-gust\{/, 'wind gust keyframes');
+assert.match(pv2, /\.dnl-decor-petalsv2\.pv2-wind-gust\{animation:dnl-pv2-gust/, 'gust runs only under the gust variant');
+assert.match(pv2, /translateX\(calc\(9px \* var\(--dnl-pv2-sway\)\)\) rotate\(\.8deg\)/, 'gust peak nudge + tilt');
+const terminalSpeeds = pv2.match(/\.pv2-wind-terminal \.p\d+\{animation-duration:calc\([\d.]+s/g) || [];
+assert.ok(terminalSpeeds.length >= 5, 'terminal variant retunes fall speeds by size: ' + terminalSpeeds.length);
+assert.doesNotMatch(pv2, /\.pv2-wind-turb\{animation/, 'turb keeps the layer still (per-petal sway only)');
 
 // ---- 9. reduced motion -------------------------------------------------------
 const rmAt = CSS.indexOf('@media(prefers-reduced-motion:reduce){.dnl-decor span{animation:none}');
