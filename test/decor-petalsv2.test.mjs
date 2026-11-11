@@ -46,8 +46,10 @@ assert.match(CSS, /@keyframes dnl-petal-fall\{0%\{transform:translate3d\(0,-10px
 
 // ---- 2. the preset is selectable and structurally rendered -----------------
 assert.match(src, /\["petalsv2", "樱吹雪（可调参数）"\]/, 'petalsv2 is a decor option');
-assert.match(src, /decor === "petalsv2" \? petalsv2DecorChildren\(noticePrefs\)/, 'the render branch delegates to the petalsv2 builder');
-assert.match(src, /function petalsv2DecorChildren\(np\)/, 'the petalsv2 children builder exists');
+assert.match(src, /decor === "petalsv2" \? petalsv2DecorChildren\(noticePrefs, expanded\)/, 'the render branch delegates to the petalsv2 builder with the pane state');
+assert.match(src, /function petalsv2DecorChildren\(np, expanded\)/, 'the petalsv2 children builder takes the pane state');
+// m02306: the collapsed pill is the top slice - a quarter of the density
+assert.match(src, /Math\.max\(1, Math\.round\(density \/ 4\)\)/, 'collapsed pane shows a quarter of the density');
 assert.match(src, /function petalsv2StyleVars\(np\)/, 'the petalsv2 style-vars builder exists');
 // knobs ride the decor element (its own rule's defaults beat host inheritance)
 assert.match(src, /decor === "petalsv2" \? \{ style: petalsv2StyleVars\(noticePrefs\) \}/, 'knob variables are set on the decor element itself');

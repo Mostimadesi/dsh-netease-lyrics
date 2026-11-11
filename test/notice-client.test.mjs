@@ -859,12 +859,23 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 		await resolve({ ...trackBase, notice: undefined });
 		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-rainv2')).length === 1,
 			'the rainv2 decor layer renders on the default glass skin');
+		// v0.4.24 (m02306): the collapsed pill is the top slice of the pane - a
+		// quarter of the density, one streak, one slider, no remnants. The full
+		// field only appears once expanded.
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-streak')).length === 1,
+			'collapsed: one rain-silk streak renders');
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 3,
+			'collapsed: round(7/4)=2 top-hanging beads + one slider render');
+		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-remnant')).length === 0,
+			'collapsed: no daughter remnants render');
+		const island9 = r9.root.find((n) => String(n.props.className || '').split(' ').includes('dnl-island'));
+		await act(async () => { island9.props.onMouseEnter({}); await flush(); });
 		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-streak')).length === 3,
-			'three rain-silk streaks render');
+			'expanded: three rain-silk streaks render');
 		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 11,
-			'default density: seven hanging beads + four sliders render');
+			'expanded: default density renders seven hanging beads + four sliders');
 		assert.ok(r9.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-remnant')).length === 8,
-			'eight daughter remnant beads render (two per slider)');
+			'expanded: eight daughter remnant beads render (two per slider)');
 		// The knob variables must ride the decor element: the .dnl-decor-rainv2
 		// rule's own defaults would beat anything inherited from the host.
 		const decorEl = r9.root.find((n) => String(n.props.className || '').includes('dnl-decor-rainv2'));
@@ -881,8 +892,12 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 		storeMap.set(PREFS_KEY, JSON.stringify({ decor: 'rainv2', rv2Density: 4, rv2Pace: 150 }));
 		act(() => { r9b = TestRenderer.create(React.createElement(Island)); });
 		await resolve({ ...trackBase, notice: undefined });
+		assert.ok(r9b.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 2,
+			'collapsed: density 4 shows one top-hanging bead + one slider');
+		const island9b = r9b.root.find((n) => String(n.props.className || '').split(' ').includes('dnl-island'));
+		await act(async () => { island9b.props.onMouseEnter({}); await flush(); });
 		assert.ok(r9b.root.findAll((n) => String(n.props.className || '').includes('dnl-decor-drop')).length === 8,
-			'density 4 renders four beads + four sliders');
+			'expanded: density 4 renders four beads + four sliders');
 		const el2 = r9b.root.find((n) => String(n.props.className || '').includes('dnl-decor-rainv2'));
 		assert.equal(el2.props.style['--dnl-rv2-pace'], '1.5', 'the pace knob reaches the decor element');
 	} finally {

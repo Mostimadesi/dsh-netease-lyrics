@@ -43,8 +43,11 @@ assert.match(CSS, /\.dnl-decor-rain \.dnl-decor-drop\{[^}]*animation:dnl-drop-sl
 
 // ---- 2. the preset is selectable and structurally rendered -----------------
 assert.match(src, /\["rainv2", "雨后玻璃（可调参数）"\]/, 'rainv2 is a decor option');
-assert.match(src, /decor === "rainv2" \? rainv2DecorChildren\(noticePrefs\)/, 'the render branch delegates to the rainv2 builder');
-assert.match(src, /function rainv2DecorChildren\(np\)/, 'the rainv2 children builder exists');
+assert.match(src, /decor === "rainv2" \? rainv2DecorChildren\(noticePrefs, expanded\)/, 'the render branch delegates to the rainv2 builder with the pane state');
+assert.match(src, /function rainv2DecorChildren\(np, expanded\)/, 'the rainv2 children builder takes the pane state');
+// m02306: the collapsed pill is the top slice - a quarter of the density
+assert.match(src, /const RV2_COLLAPSED_ORDER = \["b2", "b1"/, 'collapsed order puts the top-hanging beads first');
+assert.match(src, /Math\.max\(1, Math\.round\(density \/ 4\)\)/, 'collapsed pane shows a quarter of the density');
 assert.match(src, /function rainv2StyleVars\(np\)/, 'the rainv2 style-vars builder exists');
 // knobs ride the decor element (its own rule's defaults beat host inheritance)
 assert.match(src, /decor === "rainv2" \? \{ style: rainv2StyleVars\(noticePrefs\) \}/, 'knob variables are set on the decor element itself');
