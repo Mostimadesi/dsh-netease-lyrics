@@ -29,11 +29,11 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 const CSS = plugin.__test.CSS;
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 
-// The v2 block: everything between the preset banner and the petals section.
+// The v2 block: everything between the preset banner and the petalsv2 section.
 const v2Start = CSS.indexOf('.dnl-decor-rainv2{--dnl-rv2-pace');
 assert.ok(v2Start >= 0, 'the rainv2 preset block exists');
-const petalsAt = CSS.indexOf('.dnl-decor-petals .dnl-decor-petal{');
-assert.ok(petalsAt > v2Start, 'petals section follows the v2 block');
+const petalsAt = CSS.indexOf('.dnl-decor-petalsv2{');
+assert.ok(petalsAt > v2Start, 'petalsv2 section follows the v2 block');
 const v2 = CSS.slice(v2Start, petalsAt);
 
 // ---- 1. isolation: v2 must never touch the original rain rules ------------

@@ -19,7 +19,7 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 });
 const CSS = plugin.__test.CSS;
 const v2Start = CSS.indexOf('.dnl-decor-rainv2{--dnl-rv2-pace');
-const v2 = CSS.slice(v2Start, CSS.indexOf('.dnl-decor-petals .dnl-decor-petal{'));
+const v2 = CSS.slice(v2Start, CSS.indexOf('.dnl-decor-petalsv2{'));
 
 const spans = ['s1', 's2', 's3', 'b1', 'b2', 'b3', 'b4', 'b5', 'sl1', 'sl2']
 	.map((k) => `<span class="dnl-decor-streak ${k}"></span>`).join('')

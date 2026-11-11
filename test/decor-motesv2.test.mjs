@@ -1,5 +1,5 @@
 // Style + render contracts for the 光点浮尘 v2 (motesv2) preset (v0.4.28).
-// Separate preset: the original 光点浮尘 (.dnl-decor-motes) block stays
+// Separate preset: the legacy 光点浮尘 (.dnl-decor-motes) block was removed in v0.4.29
 // byte-identical until the user retires it. Reference models (user asked
 // for night/star wallpaper grounding, m02945): WE fireflies.json
 // (1919422512) — oscillatealpha breathing, turbulence wander, low-frequency
@@ -36,17 +36,17 @@ const rmRowAt = CSS.indexOf('@media(prefers-reduced-motion:reduce){.dnl-decor sp
 assert.ok(rmRowAt > mv2Start, 'the motesv2 block precedes the decor reduced-motion row');
 const mv2 = CSS.slice(mv2Start, rmRowAt);
 const oldAt = CSS.indexOf('.dnl-decor-motes .dnl-decor-mote{');
-assert.ok(oldAt >= 0 && oldAt < mv2Start, 'the original motes block precedes motesv2');
+assert.equal(oldAt, -1, 'the legacy motes block is removed (v0.4.29, m03462)');
 
-// ---- 1. isolation: v2 must never touch the original motes rules ------------
-assert.doesNotMatch(mv2, /\.dnl-decor-motes\s/, 'v2 selectors stay out of the .dnl-decor-motes scope');
+// ---- 1. the legacy motes preset is gone; v2 owns the motes namespace -------
+assert.doesNotMatch(mv2, /\.dnl-decor-motes\s/, 'v2 selectors stay out of the old motes scope');
 assert.doesNotMatch(mv2, /dnl-mote-drift/, 'v2 defines its own keyframes, no v1 reuse');
-assert.match(CSS, /@keyframes dnl-mote-drift\{from\{transform:translate3d\(0,0,0\)/, 'v1 mote keyframes are intact');
-assert.match(CSS, /\.dnl-decor-motes \.m6\{left:44%;top:78%/, 'v1 slot rules are intact');
+assert.doesNotMatch(CSS, /@keyframes dnl-mote-drift\{/, 'legacy mote keyframes are removed');
+assert.doesNotMatch(CSS, /\.dnl-decor-motes \.m[1-6]\{/, 'legacy mote slot rules are removed');
 
 // ---- 2. the preset is selectable and structurally rendered -----------------
 assert.match(src, /\["motesv2", "光点浮尘（可调参数）"\]/, 'motesv2 is a decor option');
-assert.match(src, /decor === "motesv2" \? motesv2DecorChildren\(noticePrefs, expanded\)/, 'the render branch delegates to the motesv2 builder with the pane state');
+assert.match(src, /: motesv2DecorChildren\(noticePrefs, expanded\)\)/, 'the render branch delegates to the motesv2 builder as the terminal branch');
 assert.match(src, /function motesv2DecorChildren\(np, expanded\)/, 'the motesv2 children builder takes the pane state');
 // collapsed pill keeps the full set mounted; non-survivors fade (m02306/m02406)
 assert.match(src, /const MV2_COLLAPSED_ORDER = \["o7", "o1", "o13"/, 'collapsed survivor order is top-first');
@@ -145,7 +145,7 @@ assert.equal(bogus.mv2Motion, 'wander', 'unknown motion falls back to wander');
 localStore.raw = JSON.stringify({ decor: 'motesv2' });
 assert.equal(readNoticePrefs().decor, 'motesv2', 'the decor whitelist accepts motesv2');
 localStore.raw = JSON.stringify({ decor: 'motes' });
-assert.equal(readNoticePrefs().decor, 'motes', 'the old preset stays selectable until retired');
+assert.equal(readNoticePrefs().decor, 'motesv2', 'legacy motes migrates to motesv2 (v0.4.29 removal)');
 localStore.raw = null;
 
 // ---- 8. settings UI ------------------------------------------------------------

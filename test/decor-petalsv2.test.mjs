@@ -1,5 +1,5 @@
 // Style + render contracts for the 樱吹雪 (petalsv2) preset (v0.4.21).
-// Separate preset: the original 花瓣飘落 (.dnl-decor-petals) block stays
+// Separate preset: the legacy 花瓣飘落 (.dnl-decor-petals) block was removed in v0.4.29
 // byte-identical until the user retires it. Motion model from WE scene
 // 2518584539 leaves5.json: constant fall speed (no gravity), sinusoidal
 // sway, tumbling, fade in early / fade out only while crossing the rim.
@@ -29,20 +29,20 @@ const CSS = plugin.__test.CSS;
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 const readNoticePrefs = plugin.__test.readNoticePrefs;
 
-// The v2 block: everything between the preset banner and the motes section.
+// The v2 block: everything between the preset banner and the motesv2 section.
 const pv2Start = CSS.indexOf('.dnl-decor-petalsv2{--dnl-pv2-pace');
 assert.ok(pv2Start >= 0, 'the petalsv2 preset block exists');
-const motesAt = CSS.indexOf('.dnl-decor-motes .dnl-decor-mote{');
-assert.ok(motesAt > pv2Start, 'motes section follows the petalsv2 block');
+const motesAt = CSS.indexOf('.dnl-decor-motesv2{');
+assert.ok(motesAt > pv2Start, 'motesv2 section follows the petalsv2 block');
 const pv2 = CSS.slice(pv2Start, motesAt);
-const oldAt = CSS.indexOf('.dnl-decor-petals .dnl-decor-petal{');
-assert.ok(oldAt >= 0 && oldAt < pv2Start, 'the original petals block precedes petalsv2');
 
-// ---- 1. isolation: v2 must never touch the original petals rules ----------
-assert.doesNotMatch(pv2, /\.dnl-decor-petals\s/, 'v2 selectors stay out of the .dnl-decor-petals scope');
+// ---- 1. the legacy petals preset is gone (v0.4.29 removal, m03462) ---------
+assert.equal(CSS.indexOf('.dnl-decor-petals .dnl-decor-petal{'), -1, 'legacy petals block is removed');
+assert.doesNotMatch(CSS, /@keyframes dnl-petal-fall\{/, 'legacy petal keyframes are removed');
+assert.doesNotMatch(CSS, /\.dnl-decor-petals\s/, 'no stray .dnl-decor-petals selectors remain');
+assert.doesNotMatch(pv2, /\.dnl-decor-petals\s/, 'v2 selectors stay out of the old petals scope');
 assert.doesNotMatch(pv2, /dnl-petal-fall/, 'v2 defines its own keyframes, no v1 reuse');
-assert.match(CSS, /border-radius:80% 10% 80% 10%/, 'v1 petal shape rule is intact');
-assert.match(CSS, /@keyframes dnl-petal-fall\{0%\{transform:translate3d\(0,-10px,0\) rotate\(0deg\)/, 'v1 petal keyframes are intact');
+assert.match(pv2, /\.pv2-mat-classic [^{]*\{[^}]*border-radius:80% 10% 80% 10%/, 'the classic material keeps the diagonal-leaf radius');
 
 // ---- 2. the preset is selectable and structurally rendered -----------------
 assert.match(src, /\["petalsv2", "樱吹雪（可调参数）"\]/, 'petalsv2 is a decor option');
@@ -119,7 +119,7 @@ assert.deepEqual(
 localStore.raw = JSON.stringify({ decor: 'petalsv2' });
 assert.equal(readNoticePrefs().decor, 'petalsv2', 'the whitelist accepts petalsv2');
 localStore.raw = JSON.stringify({ decor: 'petals' });
-assert.equal(readNoticePrefs().decor, 'petals', 'the old preset stays selectable until retired');
+assert.equal(readNoticePrefs().decor, 'petalsv2', 'legacy petals migrates to petalsv2 (v0.4.29 removal)');
 // v0.4.27: material is whitelisted like every other select knob
 localStore.raw = JSON.stringify({ pv2Mat: 'classic' });
 assert.equal(readNoticePrefs().pv2Mat, 'classic', 'material whitelist accepts classic');
