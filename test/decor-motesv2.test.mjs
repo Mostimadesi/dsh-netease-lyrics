@@ -49,15 +49,17 @@ assert.match(src, /\["motesv2", "光点浮尘（可调参数）"\]/, 'motesv2 is
 assert.match(src, /decor === "motesv2" \? motesv2DecorChildren\(noticePrefs, expanded\)/, 'the render branch delegates to the motesv2 builder with the pane state');
 assert.match(src, /function motesv2DecorChildren\(np, expanded\)/, 'the motesv2 children builder takes the pane state');
 // collapsed pill keeps the full set mounted; non-survivors fade (m02306/m02406)
-assert.match(src, /const MV2_COLLAPSED_ORDER = \["o6", "o3", "o10"/, 'collapsed survivor order is top-first');
+assert.match(src, /const MV2_COLLAPSED_ORDER = \["o7", "o1", "o13"/, 'collapsed survivor order is top-first');
 assert.match(src, /dnl-decor-hide/, 'collapsed non-survivors fade out instead of unmounting');
 assert.match(src, /function motesv2StyleVars\(np\)/, 'the style-vars builder exists');
 // knobs ride the decor element (its own rule's defaults beat host inheritance)
 assert.match(src, /decor === "motesv2" \? \{ style: motesv2StyleVars\(noticePrefs\) \}/, 'knob variables are set on the decor element itself');
 assert.match(src, /decor === "motesv2" \? " " \+ motesv2MoodClass\(noticePrefs\) \+ " " \+ motesv2MotionClass\(noticePrefs\)/, 'render branch applies mood + motion classes');
 assert.match(src, /const MV2_MOODS = \[\s*\["dust"/, 'mood variants exist (dust + star, m02941)');
+assert.match(src, /\["mix", "混合（微尘 \+ 星尘）"\]/, 'mix mood variant exists (m03170)');
+assert.match(src, /mood === "mix" \? "mv2-mood-mix"/, 'mood class maps mix');
 assert.match(src, /const MV2_MOTIONS = \[\s*\["wander"/, 'motion variants exist (wander + gentle, m02941)');
-assert.match(src, /const MV2_ORDER = \["o7", "o3", "o12", "o10"/, 'spread-first slot order');
+assert.match(src, /const MV2_ORDER = \["o7", "o3", "o13", "o12"/, 'spread-first slot order');
 assert.match(src, /MV2_DEPTHS = new Map\(\[/, 'depth layers are pinned per slot');
 
 // ---- 3. wander: multi-waypoint closed loops, three variants -----------------
@@ -92,13 +94,18 @@ assert.match(mv2, /\.d-far\{width:2\.5px;height:2\.5px/, 'far dots are smaller')
 assert.match(mv2, /\.d-far\{[^}]*brand-primary\) 75%,#ffffff 20%/, 'far dots are dimmer');
 assert.match(mv2, /\.mv2-mood-star \.dnl-decor-mote2\{width:2px;height:2px/, 'star mood shrinks the base dot');
 assert.match(mv2, /\.mv2-mood-star \.d-far\{width:1\.5px;height:1\.5px\}/, 'star far dots are tiny glints');
+// mix mood: odd slots become star glints (white core + deeper per-slot twinkle),
+// even slots keep the dust look from the container default
+assert.match(mv2, /\.mv2-mood-mix \.o1,/, 'mix mood restyles the odd slots');
+assert.match(mv2, /\.mv2-mood-mix \.o19\{[^}]*#ffffff 0%[^}]*--dnl-mv2-dim:\.12\}/, 'mix star slots get the star gradient + deep twinkle');
+assert.doesNotMatch(mv2, /\.mv2-mood-mix \{[^}]*--dnl-mv2-dim/, 'mix keeps the dust dim on the container (per-slot override instead)');
 
-// ---- 6. twelve slots span the pane at any density -----------------------------
+// ---- 6. twenty slots span the pane at any density (cap raised 12 → 20, m03170) --
 const slotPos = {};
 for (const m of mv2.matchAll(/\.o(\d+)\{left:([\d.]+)%;top:([\d.]+)%/g)) slotPos['o' + m[1]] = [Number(m[2]), Number(m[3])];
-assert.equal(Object.keys(slotPos).length, 12, 'twelve slots: ' + Object.keys(slotPos).join(','));
-const order = ['o7', 'o3', 'o12', 'o10', 'o1', 'o9', 'o4', 'o6', 'o2', 'o11', 'o5', 'o8'];
-for (const d of [3, 7, 12]) {
+assert.equal(Object.keys(slotPos).length, 20, 'twenty slots: ' + Object.keys(slotPos).join(','));
+const order = ['o7', 'o3', 'o13', 'o12', 'o10', 'o16', 'o1', 'o9', 'o19', 'o4', 'o6', 'o2', 'o15', 'o11', 'o5', 'o8', 'o14', 'o17', 'o20', 'o18'];
+for (const d of [3, 7, 20]) {
 	const xs = order.slice(0, d).map((s) => slotPos[s][0]);
 	assert.ok(Math.max(...xs) - Math.min(...xs) >= 50, 'density ' + d + ' still spans the width: ' + xs.join(','));
 	const ys = order.slice(0, d).map((s) => slotPos[s][1]);
@@ -106,15 +113,15 @@ for (const d of [3, 7, 12]) {
 }
 // every slot carries two staggered negative delays (pane is alive at load)
 const delayLines = mv2.match(/animation-delay:-[\d.]+s,-[\d.]+s/g) || [];
-assert.equal(delayLines.length, 12, 'twelve staggered negative delay pairs');
+assert.equal(delayLines.length, 20, 'twenty staggered negative delay pairs');
 // every slot has dual durations (wander + twinkle) scaled by pace
 const durLines = mv2.match(/animation-duration:calc\([\d.]+s \/ var\(--dnl-mv2-pace\)\),calc\([\d.]+s \/ var\(--dnl-mv2-pace\)\)/g) || [];
-assert.equal(durLines.length, 12, 'twelve dual-duration rules scaled by the pace knob');
+assert.equal(durLines.length, 20, 'twenty dual-duration rules scaled by the pace knob');
 
 // ---- 7. knobs: prefs clamps + whitelists -------------------------------------
 localStore.raw = JSON.stringify({ mv2Density: 99, mv2Pace: 999, mv2Glow: -5 });
 const clamped = readNoticePrefs();
-assert.equal(clamped.mv2Density, 12, 'density clamps to 12');
+assert.equal(clamped.mv2Density, 20, 'density clamps to 20');
 assert.equal(clamped.mv2Pace, 200, 'pace clamps to 200');
 assert.equal(clamped.mv2Glow, 0, 'glow clamps to 0');
 localStore.raw = JSON.stringify({ mv2Density: 0 });
@@ -128,6 +135,8 @@ assert.deepEqual(
 localStore.raw = JSON.stringify({ mv2Mood: 'star', mv2Motion: 'gentle' });
 const variants = readNoticePrefs();
 assert.equal(variants.mv2Mood, 'star', 'mood whitelist accepts star');
+localStore.raw = JSON.stringify({ mv2Mood: 'mix' });
+assert.equal(readNoticePrefs().mv2Mood, 'mix', 'mood whitelist accepts mix');
 assert.equal(variants.mv2Motion, 'gentle', 'motion whitelist accepts gentle');
 localStore.raw = JSON.stringify({ mv2Mood: 'bogus', mv2Motion: 'bogus' });
 const bogus = readNoticePrefs();
@@ -151,4 +160,4 @@ assert.match(src, /notice\.decor === "petalsv2" \|\| notice\.decor === "motesv2"
 // ---- 9. reduced motion ------------------------------------------------------------
 assert.ok(CSS.indexOf('.dnl-decor-motesv2 .dnl-decor-mote2{display:none}', rmRowAt) > rmRowAt, 'motesv2 hides under reduced-motion');
 
-console.log('PASS: motesv2 preset — isolation, wander/twinkle/gentle contracts, depth layers, 12 spread-first slots, knob clamps, settings UI, reduced-motion');
+console.log('PASS: motesv2 preset — isolation, wander/twinkle/gentle contracts, depth layers, 20 spread-first slots, mix mood, knob clamps, settings UI, reduced-motion');
