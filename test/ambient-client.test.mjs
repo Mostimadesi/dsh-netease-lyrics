@@ -979,6 +979,12 @@ assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTra
 		'expanded backing is the theme token scaled by the preference');
 	assert(!/\.dnl-expanded\{[^}]*linear-gradient\(var\(--dsw-alias-bg-overlay\)/.test(css),
 		'the old double-paint (denser than theme) is gone');
+	// m03702: collapsed capsule must honour the same knob — before this the
+	// collapsed .dnl-island painted bg-overlay fully opaque regardless of the
+	// panel-opacity preference, which read as a grey "veil" over the capsule
+	// when the expanded panel was translucent.
+	assert(/\.dnl-island\{[^}]*background-color:color-mix\(in srgb,var\(--dsw-alias-bg-overlay\) calc\(var\(--dnl-panel-alpha,1\) \* 100%\),transparent\)/.test(css),
+		'collapsed capsule backing follows the panel-opacity preference too');
 }
 
 // 18. Rules of Hooks: no hook may appear after a component-level early return.
