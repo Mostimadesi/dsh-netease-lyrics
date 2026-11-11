@@ -76,7 +76,7 @@ ${process.argv[3] === 'zoom' ? '.dnl-stage{zoom:2.4}' : ''}
 </style></head><body><div class="dnl-stage"><div class="dnl-host" style="position:static;transform:none">
 <div class="dnl-island dnl-expanded" style="border-radius:24px">
 	<button class="dnl-drag" style="position:absolute">⠿</button>
-	<div class="dnl-decor dnl-decor-${preset}" aria-hidden="true">${spans}</div>
+	<div class="dnl-decor dnl-decor-${preset}${preset === 'rainv2' && process.argv[5] === 'evaporate' ? ' rv2-end-evaporate' : preset === 'rainv2' ? ' rv2-end-slide' : ''}" aria-hidden="true">${spans}</div>
 	<div class="dnl-grow" aria-hidden="undefined"><div class="dnl-grow-inner"><div class="dnl-panel">
 		<div class="dnl-lines">
 			<div class="dnl-line"><span>夜空中最亮的星 是否聆听</span></div>

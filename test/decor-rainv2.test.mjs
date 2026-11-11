@@ -58,9 +58,27 @@ assert.match(src, /function rainv2StyleVars\(np\)/, 'the rainv2 style-vars build
 assert.match(src, /decor === "rainv2" \? \{ style: rainv2StyleVars\(noticePrefs\) \}/, 'knob variables are set on the decor element itself');
 
 // ---- 3. droplet lifecycle contracts ---------------------------------------
-// hanging beads (m02406): condense, hang at their anchor until ~54%, then
-// DETACH and slide down the pane, exiting THROUGH the bottom rim — never an
-// in-place evaporation fade. The slide rides the per-slot --dnl-rv2-anchor.
+// hanging beads: the EXIT is a settings variant (v0.4.26, m02613).
+// - slide (default): condense, hang at the anchor until ~54%, then DETACH and
+//   slide down the pane, exiting THROUGH the bottom rim — never in-place fade.
+// - evaporate: hang at the anchor, then SHRINK dry in place (the engines'
+//   autoShrink) — never slides, never bare-fades while still full-size.
+assert.match(src, /\["slide", "滑落到边缘消失（默认）"\]/, 'RV2_ENDS offers the slide exit');
+assert.match(src, /\["evaporate", "原地蒸发（悬挂后缩小干涸）"\]/, 'RV2_ENDS offers the evaporate exit');
+assert.match(src, /function rainv2EndClass\(np\)/, 'the rainv2 end-class helper exists');
+assert.match(src, /rv2End: "slide"/, 'the bead exit defaults to slide');
+assert.match(src, /decor === "rainv2" \? " " \+ rainv2EndClass\(noticePrefs\)/, 'the render branch tags the decor element with the exit variant');
+// the variant class must own the keyframes name — the slot rules carry only
+// geometry + timing, or switching the select could never swap the animation
+// (same lesson as the petalsv2 gust scope).
+const slotRules = [...v2.matchAll(/\.dnl-decor-rainv2 \.(b\d+)\{([^}]*)\}/g)];
+assert.strictEqual(slotRules.length, 12, 'twelve bead slots');
+assert.match(v2, /\.dnl-decor-rainv2\.rv2-end-slide \.dnl-decor-drop\{animation-name:dnl-rv2-bead\}/,
+	'the slide variant assigns the slide keyframes to every droplet');
+assert.match(v2, /\.rv2-end-evaporate \.b1[^{]*\.b12\{animation-name:dnl-rv2-bead-evap\}/,
+	'the evaporate variant assigns the shrink keyframes to the bead slots');
+assert.doesNotMatch(v2, /animation:dnl-rv2-bead /,
+	'no bead slot hard-pins the keyframes name (it must come from the variant)');
 const beadStart = v2.indexOf('@keyframes dnl-rv2-bead{');
 assert.ok(beadStart >= 0, 'bead keyframes exist');
 const beadLast = v2.indexOf('100%{top:112%;opacity:0', beadStart);
@@ -72,13 +90,24 @@ assert.match(beadBody, /112% - var\(--dnl-rv2-anchor\)/, 'beads descend as fract
 const beadOps = [...beadBody.matchAll(/(\d+)%\{top:[^;]+;opacity:([\d.]+)/g)].map((m) => ({ at: Number(m[1]), op: Number(m[2]) }));
 const inPaneBeads = beadOps.filter((f) => f.at >= 8 && f.at <= 97);
 assert.ok(inPaneBeads.every((f) => f.op >= 0.85), 'beads stay ≥.85 opacity inside the pane: ' + JSON.stringify(inPaneBeads.map((f) => f.op)));
+// evaporate variant: top NEVER leaves the anchor; the bead shrinks to ~.12
+// and only then goes transparent — a dry-out, not a fade-out.
+const evapStart = v2.indexOf('@keyframes dnl-rv2-bead-evap{');
+assert.ok(evapStart >= 0, 'the evaporate keyframes exist');
+const evapLast = v2.indexOf('100%{top:var(--dnl-rv2-anchor);opacity:0', evapStart);
+assert.ok(evapLast > evapStart, 'the evaporate exit ends transparent at the anchor');
+const evapBody = v2.slice(evapStart, v2.indexOf('}', evapLast) + 1);
+const evapTops = [...evapBody.matchAll(/(\d+)%\{top:([^;]+);/g)];
+assert.ok(evapTops.length >= 8 && evapTops.every((m) => m[2].includes('--dnl-rv2-anchor') && !m[2].includes('112%')),
+	'evaporating beads never leave their anchor (no slide): ' + JSON.stringify(evapTops.map((m) => m[2])));
+const evapScales = [...evapBody.matchAll(/scale\(([\d.]+)(?:,([\d.]+))?\)/g)].map((m) => Number(m[1]));
+assert.ok(Math.min(...evapScales) <= 0.2, 'the evaporate exit physically shrinks the bead to ≤20% before vanishing');
 // every slot pins its anchor and carries a NEGATIVE delay (phase-staggered, so
 // a collapse/expand remount shows the bead mid-cycle instead of a dead wait)
-const slotRules = [...v2.matchAll(/\.dnl-decor-rainv2 \.(b\d+)\{([^}]*)\}/g)];
-assert.strictEqual(slotRules.length, 12, 'twelve bead slots');
 for (const [, slot, rule] of slotRules) {
 	assert.match(rule, /--dnl-rv2-anchor:\d+%/, slot + ' pins --dnl-rv2-anchor');
 	assert.match(rule, /animation-delay:calc\(-[\d.]+s/, slot + ' uses a negative animation-delay');
+	assert.match(rule, /animation-duration:calc\([\d.]+s/, slot + ' carries its own duration (name comes from the variant)');
 }
 // sliders/remnants went negative-delay too (same remount-flash fix)
 const slDelays = [...v2.matchAll(/\.dnl-decor-rainv2 \.(sl\d|r[abcd]\d)(::after)?\{[^}]*animation-delay:calc\((-?[\d.]+)s/g)];
@@ -167,18 +196,18 @@ const readNoticePrefs = plugin.__test.readNoticePrefs;
 assert.ok(readNoticePrefs, 'readNoticePrefs is exported for tests');
 const defaults = readNoticePrefs();
 assert.deepEqual(
-	{ d: defaults.rv2Density, p: defaults.rv2Pace, t: defaults.rv2Trail, h: defaults.rv2Hi },
-	{ d: 7, p: 100, t: 100, h: 70 }, 'knob defaults are 7 beads / 100% pace / 100% trail / 70% highlight');
-localStore.raw = JSON.stringify({ rv2Density: 99, rv2Pace: 10, rv2Trail: 500, rv2Hi: -5 });
+	{ d: defaults.rv2Density, p: defaults.rv2Pace, t: defaults.rv2Trail, h: defaults.rv2Hi, e: defaults.rv2End },
+	{ d: 7, p: 100, t: 100, h: 70, e: 'slide' }, 'knob defaults are 7 beads / 100% pace / 100% trail / 70% highlight / slide exit');
+localStore.raw = JSON.stringify({ rv2Density: 99, rv2Pace: 10, rv2Trail: 500, rv2Hi: -5, rv2End: 'evaporate' });
 const clamped = readNoticePrefs();
 assert.deepEqual(
-	{ d: clamped.rv2Density, p: clamped.rv2Pace, t: clamped.rv2Trail, h: clamped.rv2Hi },
-	{ d: 12, p: 50, t: 200, h: 0 }, 'knobs clamp to density 4–12, pace 50–200, trail 0–200, hi 0–100');
-localStore.raw = JSON.stringify({ rv2Density: 6.6, rv2Pace: 'fast', rv2Trail: null, rv2Hi: 40.4 });
+	{ d: clamped.rv2Density, p: clamped.rv2Pace, t: clamped.rv2Trail, h: clamped.rv2Hi, e: clamped.rv2End },
+	{ d: 12, p: 50, t: 200, h: 0, e: 'evaporate' }, 'knobs clamp to density 4–12, pace 50–200, trail 0–200, hi 0–100; the exit accepts a whitelisted variant');
+localStore.raw = JSON.stringify({ rv2Density: 6.6, rv2Pace: 'fast', rv2Trail: null, rv2Hi: 40.4, rv2End: 'explode' });
 const mixed = readNoticePrefs();
 assert.deepEqual(
-	{ d: mixed.rv2Density, p: mixed.rv2Pace, t: mixed.rv2Trail, h: mixed.rv2Hi },
-	{ d: 7, p: 100, t: 0, h: 40 }, 'non-numeric knobs fall back, numeric ones round (null is 0, matching the glass knobs)');
+	{ d: mixed.rv2Density, p: mixed.rv2Pace, t: mixed.rv2Trail, h: mixed.rv2Hi, e: mixed.rv2End },
+	{ d: 7, p: 100, t: 0, h: 40, e: 'slide' }, 'non-numeric knobs fall back, numeric ones round (null is 0); an unknown exit falls back to slide');
 
 // ---- 8. reduced motion covers the preset -----------------------------------
 // the decor media query (the first prefers-reduced-motion hit is arknights')

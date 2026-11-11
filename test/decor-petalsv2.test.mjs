@@ -61,7 +61,7 @@ assert.match(src, /const PV2_TRAJS = \[\s*\["varied"/, 'trajectory options exist
 assert.match(src, /const PV2_WINDS = \[\s*\["gust"/, 'wind options exist');
 assert.match(src, /function petalsv2TrajClass\(np\)/, 'trajectory class builder exists');
 assert.match(src, /function petalsv2WindClass\(np\)/, 'wind class builder exists');
-assert.match(src, /dnl-decor-" \+ decor \+ \(decor === "petalsv2" \? " " \+ petalsv2TrajClass\(noticePrefs\) \+ " " \+ petalsv2WindClass\(noticePrefs\) : ""\)/, 'render branch applies the variant classes');
+assert.match(src, /decor === "petalsv2" \? " " \+ petalsv2TrajClass\(noticePrefs\) \+ " " \+ petalsv2WindClass\(noticePrefs\) : ""\)/, 'render branch applies the variant classes');
 
 // ---- 3. fall contract: full pane, exit THROUGH the bottom rim --------------
 const fallAt = pv2.indexOf('@keyframes dnl-pv2-fall{');
