@@ -45,20 +45,44 @@ assert.match(CSS, /\.dnl-decor-rain \.dnl-decor-drop\{[^}]*animation:dnl-drop-sl
 assert.match(src, /\["rainv2", "雨后玻璃（可调参数）"\]/, 'rainv2 is a decor option');
 assert.match(src, /decor === "rainv2" \? rainv2DecorChildren\(noticePrefs, expanded\)/, 'the render branch delegates to the rainv2 builder with the pane state');
 assert.match(src, /function rainv2DecorChildren\(np, expanded\)/, 'the rainv2 children builder takes the pane state');
-// m02306: the collapsed pill is the top slice - a quarter of the density
-assert.match(src, /const RV2_COLLAPSED_ORDER = \["b2", "b1"/, 'collapsed order puts the top-hanging beads first');
-assert.match(src, /Math\.max\(1, Math\.round\(density \/ 4\)\)/, 'collapsed pane shows a quarter of the density');
+// m02306/m02406: collapsed pill fades (never unmounts) non-survivors via the
+// decorCollapse knob (0-100% of the density, default 25)
+assert.match(src, /function collapseCount\(np, density\)/, 'the collapse-count helper exists');
+assert.match(src, /decorCollapse: 25/, 'decorCollapse defaults to 25');
+assert.match(src, /pct <= 0\) return 0/, 'collapse 0 hides the decor entirely');
+assert.match(src, /dnl-decor-hide/, 'non-survivors get the hide class');
+assert.match(CSS, /\.dnl-decor \.dnl-decor-hide\{opacity:0 !important\}/, 'the hide rule beats running animations');
+assert.match(CSS, /transition:opacity \.22s ease/, 'the hide fade is a transition');
 assert.match(src, /function rainv2StyleVars\(np\)/, 'the rainv2 style-vars builder exists');
 // knobs ride the decor element (its own rule's defaults beat host inheritance)
 assert.match(src, /decor === "rainv2" \? \{ style: rainv2StyleVars\(noticePrefs\) \}/, 'knob variables are set on the decor element itself');
 
 // ---- 3. droplet lifecycle contracts ---------------------------------------
-// stationary beads: never travel more than 2px (condensation, not a run)
+// hanging beads (m02406): condense, hang at their anchor until ~54%, then
+// DETACH and slide down the pane, exiting THROUGH the bottom rim — never an
+// in-place evaporation fade. The slide rides the per-slot --dnl-rv2-anchor.
 const beadStart = v2.indexOf('@keyframes dnl-rv2-bead{');
 assert.ok(beadStart >= 0, 'bead keyframes exist');
-const beadBody = v2.slice(beadStart, v2.indexOf('}', v2.indexOf('100%{', beadStart)));
-const beadTravels = [...beadBody.matchAll(/translate3d\([^)]*?(-?[\d.]+)px/g)].map((m) => Math.abs(Number(m[1])));
-assert.ok(beadTravels.every((y) => y <= 2), 'beads hang in place (max 2px wobble): ' + beadTravels.join(','));
+const beadLast = v2.indexOf('100%{top:112%;opacity:0', beadStart);
+assert.ok(beadLast > beadStart, 'beads exit THROUGH the bottom rim');
+const beadBody = v2.slice(beadStart, v2.indexOf('}', beadLast) + 1);
+assert.match(beadBody, /0%\{top:var\(--dnl-rv2-anchor\);opacity:0/, 'beads condense at their anchor');
+assert.match(beadBody, /54%\{top:var\(--dnl-rv2-anchor\)/, 'beads hang until 54%');
+assert.match(beadBody, /112% - var\(--dnl-rv2-anchor\)/, 'beads descend as fractions of the remaining way');
+const beadOps = [...beadBody.matchAll(/(\d+)%\{top:[^;]+;opacity:([\d.]+)/g)].map((m) => ({ at: Number(m[1]), op: Number(m[2]) }));
+const inPaneBeads = beadOps.filter((f) => f.at >= 8 && f.at <= 97);
+assert.ok(inPaneBeads.every((f) => f.op >= 0.85), 'beads stay ≥.85 opacity inside the pane: ' + JSON.stringify(inPaneBeads.map((f) => f.op)));
+// every slot pins its anchor and carries a NEGATIVE delay (phase-staggered, so
+// a collapse/expand remount shows the bead mid-cycle instead of a dead wait)
+const slotRules = [...v2.matchAll(/\.dnl-decor-rainv2 \.(b\d+)\{([^}]*)\}/g)];
+assert.strictEqual(slotRules.length, 12, 'twelve bead slots');
+for (const [, slot, rule] of slotRules) {
+	assert.match(rule, /--dnl-rv2-anchor:\d+%/, slot + ' pins --dnl-rv2-anchor');
+	assert.match(rule, /animation-delay:calc\(-[\d.]+s/, slot + ' uses a negative animation-delay');
+}
+// sliders/remnants went negative-delay too (same remount-flash fix)
+const slDelays = [...v2.matchAll(/\.dnl-decor-rainv2 \.(sl\d|r[abcd]\d)(::after)?\{[^}]*animation-delay:calc\((-?[\d.]+)s/g)];
+assert.ok(slDelays.length >= 16 && slDelays.every((m) => Number(m[3]) < 0), 'sliders/trails/remnants all use negative delays');
 
 // sliders: hang first, then run the FULL pane and exit THROUGH the bottom rim
 // (m00882: "slide to the pane edge, then vanish" — no mid-pane fade). Travel is
@@ -114,9 +138,9 @@ assert.match(v2, /\.dnl-decor-rainv2 \.ra1\{left:[\d.]+%;top:[\d.]+%/, 'daughter
 assert.doesNotMatch(v2, /\.sl\d \.[a-z]/, 'no remnant rule is nested under a slider (it would ride along)');
 assert.match(v2, /@keyframes dnl-rv2-remnant-a\{/, 'mid-run remnant keyframes exist');
 assert.match(v2, /@keyframes dnl-rv2-remnant-b\{/, 'late-shed remnant keyframes exist');
-// each remnant inherits its slider's exact delay so it appears as the mother passes
-for (const [cls, delay] of [['ra1', '2.6s'], ['rb1', '9.1s'], ['rc1', '5.8s'], ['rd1', '12.6s']]) {
-	assert.match(v2, new RegExp('\\.' + cls + '\\{[^}]*animation-delay:' + delay),
+// each remnant inherits its slider's exact (negative, phase-staggered) delay
+for (const [cls, delay] of [['ra1', '-11.4s'], ['rb1', '-6.9s'], ['rc1', '-9.2s'], ['rd1', '-4.4s']]) {
+	assert.match(v2, new RegExp('\\.' + cls + '\\{[^}]*animation-delay:calc\\(' + delay.replace('-', '\\-') + ' / var\\(--dnl-rv2-pace\\)\\)'),
 		cls + ' shares its slider cycle delay ' + delay);
 }
 // daughters sit on their mother's real path (mid-pane), retimed to the top-based
