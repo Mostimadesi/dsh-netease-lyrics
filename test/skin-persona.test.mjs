@@ -59,6 +59,12 @@ assert.match(base[1], /radial-gradient\(circle at calc\(100% - 21px\) 50%,transp
 assert.match(base[1], /linear-gradient\(180deg,transparent calc\(100% - 1px\),color-mix\(in srgb,#59c3ff/,
 	'the 1px cyan horizon line runs along the bottom edge');
 assert.match(base[1], /border:1px solid color-mix\(in srgb,#7fb8ff/, 'cyan hairline border');
+// collapsed-only widening: the moon owns the right 31px, so the pill must
+// clear it — lyrics text ends 40px from the right edge; expanded keeps stock.
+assert.match(CSS, /\.dnl-style-persona:not\(\.dnl-expanded\)\{padding-right:(\d+)px\}/,
+	'collapsed persona pill widens rightward so lyrics clear the moon');
+const padRight = Number(CSS.match(/\.dnl-style-persona:not\(\.dnl-expanded\)\{padding-right:(\d+)px\}/)[1]);
+assert.ok(padRight >= 34, 'padding clears the 31px moon zone (11px offset + 20px disc) with margin: ' + padRight + 'px');
 // star motes kept but dimmed; drift still reduced-motion safe
 assert.match(CSS, /\.dnl-style-persona::after\{[^}]*animation:dnl-persona-drift/, 'the drifting motes survive');
 assert.match(CSS, /@media\(prefers-reduced-motion:reduce\)\{\.dnl-style-persona::after\{animation:none\}\}/,
