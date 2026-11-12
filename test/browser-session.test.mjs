@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 // Host-half test for the browser-session reports (v0.4.12): validation of the
 // extension payload, freshness TTL, the bvid gate (browser AUMIDs only, override
@@ -56,8 +58,25 @@ pluginModule.__setSpawnForTests?.((cmd, args, options) => {
 	queueMicrotask(() => proc.stdout.emit('data', JSON.stringify({ type: 'ready', pollMs: 500 }) + '\n'));
 	return proc;
 });
+// The bilibili chain refuses to run without a cookie file on disk. On dev
+// machines a real cookies-bilibili.txt happens to sit in Downloads, but a CI
+// runner has none — the e2e resolve below then fails with 'bilibili cookie
+// missing or expired' (status 'error' instead of 'matched'; seen live on
+// GitHub windows-latest 2026-11-12). Give the apply-time cookie-candidate
+// resolution an explicit, self-contained cookie file in os.tmpdir() so the
+// chain runs everywhere, machine state included.
+const cookieDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dnl-bs-cookies-'));
+const cookieFile = path.join(cookieDir, 'cookies-bilibili.txt');
+fs.writeFileSync(cookieFile, [
+	'# Netscape HTTP Cookie File',
+	'.bilibili.com\tTRUE\t/\tTRUE\t2000000000\tSESSDATA\ttest-sessdata-token',
+	'',
+].join('\n'), 'utf8');
+process.on('exit', () => { try { fs.rmSync(cookieDir, { recursive: true, force: true }); } catch { /* best effort */ } });
 const fakeRoot = {
-	config: { browserSessionPort: 51799 }, // keep the apply-time listener off the default port
+	// Point the cookie candidates at the temp export above; this also stops
+	// the resolution from probing the developer's real Downloads folder.
+	config: { browserSessionPort: 51799, bilibiliCookiePath: cookieFile },
 	inject(services, cb) { cb({ webServer: fakeWebServer }); },
 	get(name) { return name === 'webServer' ? fakeWebServer : undefined; },
 	webServer: fakeWebServer,
