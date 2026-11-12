@@ -281,8 +281,10 @@ assert.match(src, /playNoticeSound\(noticePrefs\.soundStyle, noticePrefs\.soundR
 	'the arrival effect plays the configured sound');
 assert.match(src, /glowMode === "notice" \? noticeRowShown : !noticeMode/,
 	'notice glow lights only while a notice row shows');
-assert.match(src, /\.dnl-halo-burst\{transform:scale\(1\.45\)/,
-	'the burst halo is enlarged');
+assert.doesNotMatch(src, /\.dnl-halo-burst\{transform:scale/,
+	'the burst halo no longer magnifies (it read as a detached glow ring)');
+assert.match(src, /\.dnl-halo-burst\{opacity:1\}/,
+	'the burst halo still shows at full strength');
 assert.match(src, /"notice", "仅通知到达时"/, 'the glow select offers the notice mode');
 assert.match(src, /\.dnl-style-frosted,\.dnl-style-frosted\.dnl-expanded\{/, 'the frosted skin exists');
 // v0.4.7/v0.4.8: the frosted skin IS the gradient glass — three signals the
