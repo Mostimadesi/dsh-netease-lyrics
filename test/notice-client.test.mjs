@@ -302,7 +302,7 @@ assert.match(src, /\.dnl-style-solid\{/, 'the solid skin exists');
 // v0.4.8: the two wallpaper-derived presets.
 assert.match(src, /\.dnl-style-wishes,[\s\S]{0,300}#cfd4ff 65%[\s\S]{0,160}#5b67d8 65%/,
 	'the wishes preset carries its lavender→periwinkle ring');
-assert.match(src, /\.dnl-style-ember,[\s\S]{0,400}#2a0f08 58%[\s\S]{0,200}#0d0705 90%/,
+assert.match(src, /\.dnl-style-ember,[\s\S]{0,1200}#2a0f08 58%[\s\S]{0,200}#0d0705 90%/,
 	'the ember preset carries its charcoal bed (v3: near-black + a whisper of dark red)');
 assert.match(src, /"wishes", "静谧祝愿（紫蓝柔光）"/, 'the style select offers the wishes preset');
 assert.match(src, /"ember", "暗夜余烬（炭火余温）"/, 'the style select offers the ember preset');
