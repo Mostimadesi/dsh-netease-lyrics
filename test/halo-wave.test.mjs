@@ -76,8 +76,12 @@ assert.match(CSS, /@keyframes dnl-wave-orbit\{to\{stroke-dashoffset:-100\}\}/,
 	'the orbit keyframes walk the dashes along the path (never rotate the element)');
 
 // ---- 5. hold / burst / scope / reduced-motion -------------------------------------
-assert.match(CSS, /\.dnl-halo-hold\.dnl-halo-wave>\.w1,\.dnl-halo-hold\.dnl-halo-wave>\.w2,\.dnl-halo-hold\.dnl-halo-wave rect\{animation-play-state:paused\}/,
-	'paused playback stills the rings AND their dash orbit');
+// Specificity must beat the per-style shorthand animations
+// (.dnl-wave-dots>.w1>svg>rect = 0,2,2; the shorthand resets play-state):
+assert.match(CSS, /\.dnl-halo\.dnl-halo-hold\.dnl-halo-wave>\.w1,\.dnl-halo\.dnl-halo-hold\.dnl-halo-wave>\.w2,\.dnl-halo\.dnl-halo-hold\.dnl-halo-wave rect\{animation-play-state:paused\}/,
+	'paused playback stills the rings AND their dash orbit (hold rule out-specifies the shorthand)');
+assert.match(CSS, /\.dnl-halo\.dnl-halo-hold>span\{animation:none\}/,
+	'the legacy hold rule also out-specifies the h1-h4 shorthand animations (.dnl-halo>.hN = 0,2,0)');
 assert.match(CSS, /\.dnl-halo-burst>\.w1,\.dnl-halo-burst>\.w2\{display:none\}/,
 	'the notice burst hides the ambient rings');
 assert.match(CSS, /\.dnl-shell-expanded \.dnl-halo-wave:not\(\.dnl-wave-both\)>\.w1[^}]*display:none/,
