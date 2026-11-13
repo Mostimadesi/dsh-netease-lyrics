@@ -82,13 +82,13 @@ assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.22 \+ min\(var\(--dnl-b
 assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
 	'the two-orbit pair stays gone (user m07563: 合成一条宽带)');
 // The geometric contract that fixes the 6:1 squash:
-assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;inset:calc\(-1 \* var\(--off,0px\)\);offset-path:inset\(0 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
-	'the grain element FILLS the band and carries the path; offset-path resolves against the element\'s own border box, so a dot-sized element collapsed the whole ring onto one point (v0.4.43 bug; probe found 60/60 grains within 0.01px, 42px outside the pill)');
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;inset:0;offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
+	'the grain element FILLS the band and carries the path, and its own --off lives INSIDE the path expression — a dot-sized element collapsed the whole ring onto one point (v0.4.43), and growing the box instead left the path byte-identical because inset() resolves against the containing block (v0.4.46, user m11872 #1)');
 assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{content:'';position:absolute;left:50%;top:50%;width:var\(--sz,3px\);height:var\(--sz,3px\);translate:-50% -50%;border-radius:50%;mix-blend-mode:plus-lighter;/,
 	'the visible dot is a centred ::after, so it lands exactly on the path anchor and overlaps accumulate light');
 assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-9px\}/,
 	'the plain-outset hug mode survives as the fallback and is now visibly wider than wrap (m11591 #4)');
-assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(0 round 999px\)\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) round 999px\)\}/,
 	'fallback mode drops the end pinch and rides the band edge');
 assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{[^}]*background:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
 	'a feathered radial core (bright centre → transparent rim) instead of a hard-edged solid disc');
