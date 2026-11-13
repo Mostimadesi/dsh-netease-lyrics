@@ -118,7 +118,8 @@ const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'
 	assert.match(src, /requestAnimationFrame === "function"\) raf = requestAnimationFrame\(tick\);\n\s+else timer = setTimeout\(tick, 50\)/, 'rAF with a timer fallback for harnesses');
 	assert.match(src, /ref: haloRef,\n\s+style: \{ "--dnl-glow-dur"/, 'the halo span carries the ref');
 	assert.match(src, /"--dnl-beat-gain": String\(\(Number\.isFinite\(prefs\.glowBeatGain\) \? prefs\.glowBeatGain : 100\) \/ 100\)/, 'the gain ships as an inline CSS var');
-	assert.ok(src.includes('[beatSource, beatKey, st?.playing]'), 'the effect re-arms on song/source/playback changes (self-contained beat key)');
+	assert.match(src, /\[beatSource, beatKey, st\?\.playing, prefs\.glowWaveStyle, prefs\.glowDustDensity, prefs\.glow\]/,
+		'the effect re-arms on song/source/playback + wave-style/dust-density/glow-mode changes');
 }
 {
 	// CSS consumption: the wave svg scales and brightens with the beat.

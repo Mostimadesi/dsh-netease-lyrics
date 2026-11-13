@@ -63,15 +63,13 @@ assert.match(CSS, /\.dnl-wave-dots>\.w2\{inset:-21px;opacity:calc\(\.42 \* var\(
 assert.match(CSS, /\.dnl-wave-dots>\.w2 \.r1\{[^}]*linear infinite reverse\}/,
 	'dots w2: primary dots counter-orbit');
 
-// ---- 3. stardust style (v0.4.40 宇宙尘埃 dust field) -------------------------------
-assert.match(CSS, /\.dnl-wave-stardust>\.w1\{inset:-13px;opacity:calc\(\.88 \* var\(--dnl-wave-hi\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\)/,
-	'w1 keeps the twinkle breathing box on the inner orbit');
-assert.match(CSS, /\.dnl-wave-stardust>\.w1 \.dg\{animation:dnl-wave-orbit-g calc\(var\(--dnl-glow-dur,5\.6s\) \* 5\) linear infinite\}/,
-	'w1 grain group orbits 5 cycles per breath');
-assert.match(CSS, /\.dnl-wave-stardust>\.w2\{inset:-22px;opacity:calc\(\.55 \* var\(--dnl-wave-hi\)\)[^}]*animation-delay:calc\(var\(--dnl-glow-dur,5\.6s\) \* -\.5\)\}/,
-	'w2 is the fainter outer orbit, half a breath out of phase');
-assert.match(CSS, /\.dnl-wave-stardust>\.w2 \.dg\{animation:dnl-wave-orbit-g calc\(var\(--dnl-glow-dur,5\.6s\) \* 8\) linear infinite reverse\}/,
-	'outer orbit counter-rotates slower');
+// ---- 3. stardust style (v0.4.41 宇宙尘埃 random-walk field) --------------------------
+assert.match(CSS, /\.dnl-wave-stardust>\.w1\{inset:-22px;opacity:calc\(\.88 \* var\(--dnl-wave-hi\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\)/,
+	'ONE wide band: w1 sits -22px out (grains land ~10-30px outside the capsule), twinkle kept');
+assert.match(CSS, /\.dnl-wave-stardust>\.w1 \.dg\{animation:dnl-wave-orbit-g calc\(var\(--dnl-glow-dur,5\.6s\) \* 6\) linear infinite\}/,
+	'the grain group swirls slowly (6 cycles per breath)');
+assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
+	'the two-orbit pair is gone (user m07563: 合成一条宽带)');
 assert.match(CSS, /\.dnl-halo-wave\.dnl-wave-stardust circle\.dp\{fill:color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 35%,#ffffff\);stroke:none;transform-box:fill-box;transform-origin:center\}/,
 	'grains fill white-forward (official 宇宙尘埃 alpha-white), scale around their own centre');
 assert.match(CSS, /\.dnl-halo-wave\.dnl-wave-stardust svg\{transform:none;/,
@@ -109,20 +107,17 @@ assert.match(CSS, /\.dnl-halo>\.w1,\.dnl-halo>\.w2\{display:none\}/,
 assert.doesNotMatch(src, /className: "w3"/, 'the v0.4.39 spec bar tier is removed');
 assert.doesNotMatch(CSS, /dnl-wave-spec/, 'no spec CSS survives');
 
-// ---- 5a. dust render wiring (stardust = 宇宙尘埃 field) -----------------------------
-assert.match(src, /const DUST_BAND_MIX = \(count\) =>/, 'band-pair interpolation helper exists');
+// ---- 5a. dust render wiring (v0.4.41 random-walk field) ------------------------------
+assert.match(src, /const DUST_BAND_MIX = \(count\) =>/, 'band-pair interpolation helper exists (driver-side now)');
 assert.match(src, /i \* 137\.508 - 90/, 'golden-angle (sunflower) spread keeps the field organic');
-assert.match(src, /const dustGrains = \(count, sizeBase, sizeStep, radiusBase, radiusStep, opBase, opGain, phase\) =>/, 'grain factory takes size/opacity/phase knobs');
-assert.match(src, /prefs\.glowWaveStyle === "stardust"/, 'the stardust branch exists');
-assert.match(src, /dustGrains\(16, 1\.3, 0\.3, 46, 1, "\.3", "\.55", 0\)/,
-	'w1: 16 mixed-size grains on the inner orbit');
-assert.match(src, /dustGrains\(12, 0\.95, 0\.24, 47\.5, 2, "\.26", "\.5", 2\)/,
-	'w2: 12 finer grains on the outer orbit, phase-staggered, dimmer');
-assert.match(src, /transform: "scale\(calc\(0\.65 \+ " \+ bandExpr \+ " \* 1\.6\)\)"/,
-	'each grain scales linearly with its band pair (0.65 + band × 1.6: quiet visible, hot pops ×2 — stackoverflow linear recipe)');
-assert.match(src, /opacity: "calc\(" \+ opBase \+ " \+ " \+ bandExpr \+ " \* " \+ opGain \+ "\)"/,
-	'each grain brightens with its own band pair on top of its resting alpha');
-assert.doesNotMatch(src, /SPEC_SEGMENT_COUNT/, 'the SPEC constants are gone');
+assert.match(src, /const dustGrains = \(count\) =>/, 'grain factory is anchor-only (no inline band styles)');
+assert.match(src, /i % 5 === 4/, 'the 80/20 size split marker (every 5th grain is a bright anchor)');
+assert.match(src, /1\.5 \+ \(\(i \* 3\) % 10\) \/ 10/, 'bright anchors: 1.5-2.5');
+assert.match(src, /0\.5 \+ \(\(i \* 7\) % 7\) \/ 10/, 'fine dust: 0.5-1.2');
+assert.match(src, /dustGrains\(prefs\.glowDustDensity === "dense" \? 300 : 150\)/,
+	'two density tiers ship together (user m07563: 1和2都实现, 实机取舍)');
+assert.doesNotMatch(src, /className: "dg dg2"/, 'the second orbit group is gone');
+assert.doesNotMatch(src, /SPEC_SEGMENT_COUNT/, 'the SPEC constants stay gone');
 
 // ---- 5b. band driver (shared --dnl-b0..9 data layer, kept from v0.4.39) -------------
 assert.match(src, /Math\.pow\(bandRaw\[i\], 1\.5\)/,
@@ -135,6 +130,17 @@ assert.match(src, /for \(let i = 0; i < 10; i\+\+\) haloRef\.current\.style\.set
 	'lane off/empty zeroes every band variable (no stale grains after a source switch)');
 assert.match(src, /const bandTarget = beatSource === "audio" \? \(bandAudio \? Math\.pow\(bandRaw\[i\], 1\.5\) : 0\) : cur;/,
 	'lyric lane drives all ten bands uniformly from the grid (cur) like NCM dust on a vocal line');
+// v0.4.41 random walk: position IS the pulse (user m07556: 律动是位置不是大小)
+assert.match(src, /querySelectorAll\("circle\.dp"\)/, 'the driver caches the live grain nodes');
+assert.match(src, /DUST_BAND_MIX\(dustNodes\.length\)/, 'grain band pairs come from the same interpolation table');
+assert.match(src, /!dustNodes\[0\]\.isConnected/, 'a stale cache (style/density switch re-rendered the grains) is detected and rebuilt');
+assert.match(src, /gs\.vx \+= \(Math\.random\(\) - 0\.5\) \* 14 \* dt/, 'velocity is jittered every frame (true random walk, not a keyframe)');
+assert.match(src, /const sp = 0\.6 \+ band \* 9;/, 'drift speed = quiet 0.6 u/s base + band × 9 (频段决定漂移速度)');
+assert.match(src, /gs\.x -= gs\.x \* Math\.min\(1, dt \* 0\.35\)/, 'a soft spring pulls grains home so the cloud never disperses');
+assert.match(src, /setAttribute\("transform", "translate\("/, 'position is written as a translate (viewBox units)');
+assert.match(src, /setAttribute\("opacity", \(0\.3 \+ band \* 0\.6\)\.toFixed\(2\)\)/, 'opacity still follows the grain\'s band (bright loud, dim quiet)');
+assert.match(src, /st\?\.playing, prefs\.glowWaveStyle, prefs\.glowDustDensity, prefs\.glow\]/,
+	'the driver effect restarts on style/density/glow changes so the walk state always matches the rendered field');
 
 // ---- 6. render wiring --------------------------------------------------------------
 assert.match(src, /glowMode !== "notice" && prefs\.glowWaveStyle \? " dnl-halo-wave dnl-wave-" \+ prefs\.glowWaveStyle : ""/,
@@ -156,6 +162,11 @@ assert.match(src, /\["dots", "点阵环"\]/, 'dots offered');
 assert.match(src, /\["stardust", "星尘环（音频律动）"\]/, 'stardust offered as the audio-reactive default face');
 assert.match(src, /\["wave", "波形描边"\]/, 'wave offered');
 assert.doesNotMatch(src, /\["spec", /, 'the spec bar option is removed');
+assert.match(src, /"aria-label": "尘埃密度"/, 'the dust density select exists (stardust-only)');
+assert.match(src, /\["normal", "标准（150 颗，默认）"\]/, 'normal tier = 150 grains');
+assert.match(src, /\["dense", "极密（300 颗）"\]/, 'dense tier = 300 grains');
+assert.match(src, /glowDustDensity: event\.target\.value === "normal" \? undefined : event\.target\.value/,
+	'normal is the unpersisted default');
 assert.match(src, /"aria-label": "音波环范围"/, 'the scope select exists');
 assert.match(src, /\["both", "收起 \+ 展开"\]/, 'the both scope offered');
 assert.match(src, /"aria-label": "音波环亮度"/, 'the brightness select exists');
@@ -169,20 +180,24 @@ assert.match(src, /raw\?\.glowWaveScope === "both"\) out\.glowWaveScope = raw\.g
 	'glowWaveScope is whitelisted to both');
 assert.match(src, /raw\?\.glowWaveBright === "vivid"\) out\.glowWaveBright = raw\.glowWaveBright;/,
 	'glowWaveBright is whitelisted to vivid (subtle is the unpersisted default)');
+assert.match(src, /raw\?\.glowDustDensity === "dense"\) out\.glowDustDensity = raw\.glowDustDensity;/,
+	'glowDustDensity is whitelisted to dense (normal is the unpersisted default)');
 
 // ---- 9. functional round-trip through readDisplay --------------------------------------
-localStore.raw = JSON.stringify({ glowWaveStyle: 'stardust', glowWaveScope: 'both', glowWaveBright: 'vivid' });
+localStore.raw = JSON.stringify({ glowWaveStyle: 'stardust', glowWaveScope: 'both', glowWaveBright: 'vivid', glowDustDensity: 'dense' });
 let disp = plugin.__test.readDisplay();
 assert.equal(disp.glowWaveStyle, 'stardust', 'stardust round-trips');
 assert.equal(disp.glowWaveScope, 'both', 'both scope round-trips');
 assert.equal(disp.glowWaveBright, 'vivid', 'vivid brightness round-trips');
-localStore.raw = JSON.stringify({ glowWaveStyle: 'spec', glowWaveScope: 'wide', glowWaveBright: 'blinding' });
+assert.equal(disp.glowDustDensity, 'dense', 'dense tier round-trips');
+localStore.raw = JSON.stringify({ glowWaveStyle: 'spec', glowWaveScope: 'wide', glowWaveBright: 'blinding', glowDustDensity: 'ultra' });
 disp = plugin.__test.readDisplay();
 assert.equal(disp.glowWaveStyle, undefined, 'the retired spec value is dropped');
 assert.equal(disp.glowWaveScope, undefined, 'unknown scope values are dropped');
 assert.equal(disp.glowWaveBright, undefined, 'unknown brightness values are dropped');
+assert.equal(disp.glowDustDensity, undefined, 'unknown density values are dropped');
 localStore.raw = null;
 disp = plugin.__test.readDisplay();
 assert.equal(disp.glowWaveBright, undefined, 'absent brightness falls through to subtle');
 
-console.log('halo-wave contract: PASS (dots/wave rect rings, v0.4.40 stardust 宇宙尘埃 dust field: fftrandom per-grain FFT bands + orbit-g rotation + twinkle, spec bars removed, band driver --dnl-b0..9 shared, scope/burst/hold/reduced-motion, settings + sanitizer)');
+console.log('halo-wave contract: PASS (dots/wave rect rings, v0.4.41 stardust 宇宙尘埃 random-walk field: 150/300-grain single wide band, per-grain FFT band decides drift SPEED + opacity, spring home, spec bars removed, band driver --dnl-b0..9 shared, scope/burst/hold/reduced-motion, settings + sanitizer)');
