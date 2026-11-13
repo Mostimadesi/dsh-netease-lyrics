@@ -111,10 +111,10 @@ const { createBeatGrid, readDisplay } = plugin.__test;
 // ---- wiring contracts (source) -------------------------------------------------
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 {
-	assert.match(src, /const haloRef = useRef\(null\);\n\s+const beatSource = prefs\.glowBeatSource === "off" \? "off" : "lyric";/, 'the driver reads the persisted source');
+	assert.match(src, /const haloRef = useRef\(null\);\n\s+const beatSource = prefs\.glowBeatSource === "audio" \? "audio" : \(prefs\.glowBeatSource === "off" \? "off" : "lyric"\);/, 'the driver reads the persisted source (audio lane included)');
 	assert.match(src, /createBeatGrid\(lyricForHooks\.lines\)/, 'the driver builds the grid from the RAW lines (the words timeline must survive)');
 	assert.match(src, /grid\.beatAt\(clock\.read\(now\)\)/, 'sampling uses the raw playback position (song time, aligned with the audio)');
-	assert.match(src, /const playing = st !== null && st\.playing === true;\n\s+const target = playing \? grid\.beatAt/, 'paused playback targets 0 (decays instead of freezing)');
+	assert.match(src, /const playing = st !== null && st\.playing === true;\n\s+let target = playing \? grid\.beatAt/, 'paused playback targets 0 (decays instead of freezing)');
 	assert.match(src, /requestAnimationFrame === "function"\) raf = requestAnimationFrame\(tick\);\n\s+else timer = setTimeout\(tick, 50\)/, 'rAF with a timer fallback for harnesses');
 	assert.match(src, /ref: haloRef,\n\s+style: \{ "--dnl-glow-dur"/, 'the halo span carries the ref');
 	assert.match(src, /"--dnl-beat-gain": String\(\(Number\.isFinite\(prefs\.glowBeatGain\) \? prefs\.glowBeatGain : 100\) \/ 100\)/, 'the gain ships as an inline CSS var');
@@ -130,7 +130,7 @@ const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'
 {
 	// Settings surface.
 	assert.match(src, /"aria-label": "律动源"/, 'the source select exists');
-	assert.match(src, /\[\["lyric", "歌词拍格（默认）"\], \["off", "关闭"\]\]/, 'the source select offers lyric (default) and off');
+	assert.match(src, /\[\["lyric", "歌词拍格（默认）"\], \["audio", "音频 FFT（实验）"\], \["off", "关闭"\]\]/, 'the source select offers lyric (default), audio (experimental) and off');
 	assert.match(src, /"aria-label": "律动强度"/, 'the gain slider exists');
 	assert.match(src, /type: "range", min: 0, max: 200, step: 5, "aria-label": "律动强度"/, 'the gain slider spans 0-200');
 	assert.match(src, /createBeatGrid,/, 'createBeatGrid is exported via __test');
