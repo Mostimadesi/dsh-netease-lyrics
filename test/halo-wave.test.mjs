@@ -73,21 +73,27 @@ assert.match(CSS, /@keyframes dnl-wave-orbit\{to\{stroke-dashoffset:-100\}\}/,
 	'the orbit keyframes walk the dashes along the path (never rotate the element)');
 
 // ---- 3. stardust: DOM offset-path particles (v0.4.43 方案 D) -------------------
-assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:-22px;isolation:isolate;opacity:calc\(\.9 \* var\(--dnl-wave-hi\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\) ease-in-out infinite\}/,
-	'ONE wide band (-22px out); isolation:isolate keeps plus-lighter blending inside this subtree');
+assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:-4px;isolation:isolate;opacity:calc\(\.86 \* var\(--dnl-wave-hi\)\);filter:brightness\(calc\(1 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.6\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\) ease-in-out infinite\}/,
+	'ONE tight band (-4px out); the whole ring brightness itself breathes with the beat (m08390 #2)');
 assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
 	'the two-orbit pair stays gone (user m07563: 合成一条宽带)');
 // The geometric contract that fixes the 6:1 squash:
-assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;left:0;top:0;width:var\(--sz,3px\);height:var\(--sz,3px\);border-radius:50%;offset-path:rect\(0 100% 100% 0 round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;mix-blend-mode:plus-lighter;/,
-	'particles are SQUARE boxes on a capsule offset-path (round clamping to half the box height = exact concentric capsule), so a grain can never be stretched into a bar');
-assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*background:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;inset:0;offset-path:inset\(0 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
+	'the grain element FILLS the band and carries the path; offset-path resolves against the element\'s own border box, so a dot-sized element collapsed the whole ring onto one point (v0.4.43 bug; probe found 60/60 grains within 0.01px, 42px outside the pill)');
+assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{content:'';position:absolute;left:50%;top:50%;width:var\(--sz,3px\);height:var\(--sz,3px\);translate:-50% -50%;border-radius:50%;mix-blend-mode:plus-lighter;/,
+	'the visible dot is a centred ::after, so it lands exactly on the path anchor and overlaps accumulate light');
+assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-3px\}/,
+	'the plain-outset hug mode survives as the user-requested fallback (m08390: 先做略微外扩作为一种设置选项供用户回退)');
+assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(0 round 999px\)\}/,
+	'fallback mode drops the end pinch and rides the band edge');
+assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{[^}]*background:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
 	'a feathered radial core (bright centre → transparent rim) instead of a hard-edged solid disc');
 assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
 	'every grain runs its own lifecycle; --dur/--del are baked per grain so density stays constant');
-assert.match(CSS, /@keyframes dnl-dust-life\{0%\{translate:0 0;opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\)\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\) \* \.55\)\}100%\{translate:var\(--dx,6px\) var\(--dy,6px\);opacity:0\}\}/,
-	'born on the band → drift OUTWARD via the independent translate property → fade → respawn (m07693 #1)');
-assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.34 \* var\(--dnl-wave-hi\)\)\}50%\{opacity:calc\(\.9 \* var\(--dnl-wave-hi\)\)\}\}/,
-	'the twinkle is whole-band brightness breathing');
+assert.match(CSS, /@keyframes dnl-dust-life\{0%\{translate:0 0;opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\)\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\) \* \.55\)\}100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat,0\) \* var\(--dnl-beat-gain,0\)\)\) calc\(var\(--dy,6px\) \* \(1 \+ var\(--dnl-beat,0\) \* var\(--dnl-beat-gain,0\)\)\);opacity:0\}\}/,
+	'born on the band → drift OUTWARD → fade → respawn, and the outward distance itself swells with the beat (m08390 #2)');
+assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 \* var\(--dnl-wave-hi\)\)\}50%\{opacity:calc\(\.92 \* var\(--dnl-wave-hi\)\)\}\}/,
+	'the twinkle survives only as weak background noise (m08390 #4: 保留但压弱), so the beat pulse reads as the main motion');
 assert.doesNotMatch(CSS, /dnl-wave-orbit-g|\.dnl-wave \.dg|class="dp"/,
 	'grains never orbit and are no longer svg circles');
 assert.doesNotMatch(CSS, /dnl-wave-wave>|dnl-wave\.dnl-wave-wave/,
