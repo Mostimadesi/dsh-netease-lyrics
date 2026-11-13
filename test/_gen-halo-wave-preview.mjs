@@ -39,11 +39,11 @@ const expandedBody = `
 		<div class="dnl-line dnl-line-sub dnl-line-active">${sub}</div>
 	</div></div>`;
 
-const ringSvg = '<svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="2" y="2" width="96" height="96" rx="48" pathLength="100"></rect></svg>';
+const ringSvg = '<svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="r1" x="2" y="2" width="96" height="96" rx="48" pathLength="100"></rect><rect class="r2" x="2" y="2" width="96" height="96" rx="48" pathLength="100"></rect></svg>';
 const waveSpans = () => `<span class="w1">${ringSvg}</span><span class="w2">${ringSvg}</span>`;
-const cell = (label, style, scope, expanded) => `<div class="dnl-col"><h3>${label}</h3>
+const cell = (label, style, scope, expanded, vivid) => `<div class="dnl-col"><h3>${label}</h3>
 	<div class="dnl-host dnl-host-preview"><div class="dnl-shell${expanded ? ' dnl-shell-expanded' : ''}">
-		<span class="dnl-halo dnl-halo-wave dnl-wave-${style}${scope === 'both' ? ' dnl-wave-both' : ''}" style="--dnl-glow-dur:5.6s;--dnl-glow-amp:1" aria-hidden="true">
+		<span class="dnl-halo dnl-halo-wave dnl-wave-${style}${scope === 'both' ? ' dnl-wave-both' : ''}${vivid ? ' dnl-wave-vivid' : ''}" style="--dnl-glow-dur:5.6s;--dnl-glow-amp:1" aria-hidden="true">
 			<span class="h1"></span><span class="h2"></span><span class="h3"></span><span class="h4"></span>${waveSpans()}</span>
 		<div class="dnl-island${expanded ? ' dnl-expanded' : ''}">
 			<button class="dnl-drag">⠿</button>
@@ -66,10 +66,12 @@ html,body{margin:0;background:#0e1016;font-family:"Segoe UI",system-ui,sans-seri
 </style>
 <style>${CSS}</style>
 <div class="dnl-grid">
-	${cell('点阵环 dots · 收起', 'dots', 'collapsed', false)}
-	${cell('星尘环 stardust · 收起', 'stardust', 'collapsed', false)}
-	${cell('波形描边 wave · 收起', 'wave', 'collapsed', false)}
-	${cell('波形描边 wave · 展开（范围=收起+展开）', 'wave', 'both', true)}
+	${cell('点阵环 dots · 收起 · 含蓄', 'dots', 'collapsed', false, false)}
+	${cell('点阵环 dots · 收起 · 鲜明', 'dots', 'collapsed', false, true)}
+	${cell('星尘环 stardust · 收起 · 含蓄', 'stardust', 'collapsed', false, false)}
+	${cell('星尘环 stardust · 收起 · 鲜明', 'stardust', 'collapsed', false, true)}
+	${cell('波形描边 wave · 收起 · 鲜明', 'wave', 'collapsed', false, true)}
+	${cell('波形描边 wave · 展开（范围=收起+展开）· 含蓄', 'wave', 'both', true, false)}
 </div>
 <script>
 window.addEventListener('load',()=>{setTimeout(()=>{
