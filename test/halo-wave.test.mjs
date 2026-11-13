@@ -77,17 +77,17 @@ assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:-4px;isolation:isol
 	'ONE tight band (-4px out), and it carries NO filter (v0.4.45: a pulsing filter over N running grain animations re-rasters the whole chain)');
 assert.doesNotMatch(CSS, /var\(--dnl-wave-hi\)\);filter:brightness/,
 	'the grain group must never take a beat-driven filter again (probe: 33.1 ms/frame at 300 grains)');
-assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.34 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.66\)/,
-	'the beat breathing lives on a CHILDLESS sibling layer instead (m08645 #2/#3)');
+assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.22 \+ min\(var\(--dnl-beat-gain,0\),1\.2\) \* var\(--dnl-beat-slow,0\) \* \.32\)/,
+	'the beat breathing lives on a CHILDLESS sibling layer, off the SLOW lane, gain-capped (m11591 #1/#3)');
 assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
 	'the two-orbit pair stays gone (user m07563: 合成一条宽带)');
 // The geometric contract that fixes the 6:1 squash:
-assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;inset:0;offset-path:inset\(0 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;inset:calc\(-1 \* var\(--off,0px\)\);offset-path:inset\(0 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
 	'the grain element FILLS the band and carries the path; offset-path resolves against the element\'s own border box, so a dot-sized element collapsed the whole ring onto one point (v0.4.43 bug; probe found 60/60 grains within 0.01px, 42px outside the pill)');
 assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{content:'';position:absolute;left:50%;top:50%;width:var\(--sz,3px\);height:var\(--sz,3px\);translate:-50% -50%;border-radius:50%;mix-blend-mode:plus-lighter;/,
 	'the visible dot is a centred ::after, so it lands exactly on the path anchor and overlaps accumulate light');
-assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-3px\}/,
-	'the plain-outset hug mode survives as the user-requested fallback (m08390: 先做略微外扩作为一种设置选项供用户回退)');
+assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-9px\}/,
+	'the plain-outset hug mode survives as the fallback and is now visibly wider than wrap (m11591 #4)');
 assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(0 round 999px\)\}/,
 	'fallback mode drops the end pinch and rides the band edge');
 assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{[^}]*background:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
@@ -122,7 +122,7 @@ assert.match(src, /const DUST_SIZE_PX = \{ fine: \[1\.5, 3\], medium: \[2\.5, 4\
 assert.match(src, /const DUST_COUNT = \(np\) =>/, 'the count helper exists');
 assert.match(src, /return np\.glowDustDensity === "dense" \? 300 : 150;/,
 	'legacy dense/normal prefs still resolve when no explicit count is saved');
-assert.match(src, /const dustGrains = \(count, sizeTier\) =>/, 'the grain factory takes a size tier');
+assert.match(src, /const dustGrains = \(count, sizeTier, spread\) =>/, 'the grain factory takes a size tier and a band spread');
 assert.match(src, /h\("i", \{\n\s+key: "d" \+ i,\n\s+className: "dnl-dust",/,
 	'grains render as DOM <i class="dnl-dust">, not svg circles');
 assert.match(src, /const at = \(i \/ count\) \* 100;/,
@@ -131,7 +131,7 @@ assert.doesNotMatch(src, /cx: \+\(50 \+ r \* Math\.cos/,
 	'the SVG centre-coordinate math is gone (that was the squashed geometry)');
 assert.doesNotMatch(src, /preserveAspectRatio: "none", "aria-hidden": "true" \}, dustGrains/,
 	'the dust field no longer rides a non-uniformly scaled viewBox');
-assert.match(src, /dustGrains\(DUST_COUNT\(prefs\), prefs\.glowDustSize === "fine" \? "fine" : "medium"\)/,
+assert.match(src, /dustGrains\(DUST_COUNT\(prefs\), prefs\.glowDustSize === "fine" \? "fine" : "medium", DUST_SPREAD\(prefs\)\)/,
 	'the render branch feeds count + size tier');
 assert.match(src, /"--sz": px\.toFixed\(2\) \+ "px"/, 'each grain carries its own diameter');
 

@@ -1,5 +1,7 @@
-// v0.4.44 preview: real plugin CSS + real island markup, dust frozen mid-cycle.
-// Usage: node test/_gen-hug-preview.mjs <out.html> [slight] [beat]
+// v0.4.46 preview: real plugin CSS + real island markup, dust frozen mid-cycle.
+// Usage: node test/_gen-hug-preview.mjs <out.html> [--slight] [--beat] [--spread=0..100]
+//   Flags, not positional args: PowerShell 5.1 silently swallows an empty ""
+//   argument, which once shifted --spread into the beat slot.
 import fs from 'node:fs';
 import vm from 'node:vm';
 import React from 'react';
@@ -20,8 +22,24 @@ const CSS = plugin.__test.CSS;
 const DUST = plugin.__test.dustGrains;
 if (typeof DUST !== 'function') { console.error('dustGrains is not exported via __test'); process.exit(2); }
 
-const mode = process.argv[3] === 'slight' ? 'slight' : 'wrap';
-const beat = process.argv[4] === 'beat' ? 0.85 : 0;
+/* Flags instead of positional args: PowerShell 5.1 drops a bare "" argument,
+ * which silently shifted the spread value into the beat slot (real bug this
+ * round — three pages all rendered spread=0.45 default). */
+const argv = process.argv.slice(3);
+const hasFlag = (f) => argv.includes(f);
+const flagValue = (f, fallback) => {
+	const hit = argv.find((a) => a.startsWith(f + '='));
+	if (!hit) return fallback;
+	const v = Number(hit.slice(f.length + 1));
+	return Number.isFinite(v) ? v : fallback;
+};
+const mode = hasFlag('--slight') ? 'slight' : 'wrap';
+const beat = hasFlag('--beat') ? 0.85 : 0;
+/* v0.4.46: the band thickness is a real pref — the preview must render through
+ * the same DUST_SPREAD helper the plugin uses, or it would show a band the
+ * plugin can never produce. */
+const spreadArg = flagValue('--spread', NaN);
+const spread = Number.isFinite(spreadArg) ? Math.min(100, Math.max(0, spreadArg)) / 100 : plugin.__test.DUST_SPREAD({});
 // Serialise the REAL grain nodes (no duplicated math): dustGrains() returns
 // plain React elements, so a tiny serialiser keeps the preview honest.
 const toHtml = (el) => {
@@ -35,7 +53,7 @@ const toHtml = (el) => {
 	].filter(Boolean).join(' ');
 	return '<' + el.type + (attrs ? ' ' + attrs : '') + '>' + toHtml(children) + '</' + el.type + '>';
 };
-const grains = toHtml(DUST(150, 'medium'));
+const grains = toHtml(DUST(150, 'medium', spread));
 
 const block = (hug, label) => `
 <div class="frame">
@@ -67,11 +85,11 @@ body{padding:26px;display:flex;flex-direction:column;gap:34px}
   border:1px dashed rgba(255,69,200,.65);pointer-events:none}
 .lbl{position:absolute;bottom:2px;left:40px;color:#7f90b4}
 </style>
-<h3>星尘环 · ${mode === 'slight' ? '整体略微外扩（回退档）' : '中间外扩 · 两端环绕（默认）'} · beat ${beat}</h3>
-${block(mode, mode === 'slight' ? 'inset 统一 3px' : '中间 +4px、两端贴齐')}
+<h3>星尘环 · ${mode === 'slight' ? '整体略微外扩（回退档）' : '中间外扩 · 两端环绕（默认）'} · 环带 ${Math.round(spread * 100)}% · beat ${beat}</h3>
+${block(mode, mode === 'slight' ? 'inset 统一 9px' : '中间 +4px、两端贴齐')}
 ${beat ? block(mode, '同上，节拍强度 0.85') : ''}`;
 
 const out = process.argv[2];
-if (!out) { console.error('usage: node test/_gen-hug-preview.mjs <out.html> [slight] [beat]'); process.exit(2); }
+if (!out) { console.error('usage: node test/_gen-hug-preview.mjs <out.html> [--slight] [--beat] [--spread=0..100]'); process.exit(2); }
 fs.writeFileSync(out, html, 'utf8');
-console.log('wrote ' + out + ' (150 grains, hug=' + mode + ', beat=' + beat + ')');
+console.log('wrote ' + out + ' (150 grains, hug=' + mode + ', spread=' + spread + ', beat=' + beat + ')');

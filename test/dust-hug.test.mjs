@@ -37,9 +37,9 @@ const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'
 const grainRule = CSS.match(/\.dnl-wave \.dnl-dust\{([^}]*)\}/);
 assert.ok(grainRule, 'the grain rule exists');
 const grain = grainRule[1];
-assert.match(grain, /position:absolute;inset:0;/,
-	'the grain element fills the band; a dot-sized element makes offset-path resolve '
-	+ 'against a dot-sized box, which collapses every grain onto one point (v0.4.43 bug)');
+assert.match(grain, /position:absolute;inset:calc\(-1 \* var\(--off,0px\)\);/,
+	'the grain element fills the band (grown by its own --off); a dot-sized element makes '
+	+ 'offset-path resolve against a dot-sized box, which collapses every grain onto one point (v0.4.43 bug)');
 assert.doesNotMatch(grain, /width:var\(--sz/,
 	'the grain element must NOT be sized by the dot diameter — that is what broke the ring');
 assert.doesNotMatch(grain, /height:var\(--sz/,
@@ -79,8 +79,8 @@ assert.equal(pathInset, 4, 'the path is inset 4px inside the band');
 assert.equal(bandOut + pathInset, 0, 'horizontally the ring is flush with the capsule width');
 
 // ---- 4. fallback hug mode is wired end to end -------------------------------
-assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-3px\}/,
-	'fallback mode pulls the band in to a plain 3px outset');
+assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-9px\}/,
+	'fallback mode is a visibly wider uniform 9px outset (v0.4.46: 3px read identical to wrap, user m11591 #4)');
 assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(0 round 999px\)\}/,
 	'fallback mode rides the band edge with no extra inset');
 assert.match(src, /if \(raw\?\.glowDustHug === "wrap" \|\| raw\?\.glowDustHug === "slight"\) out\.glowDustHug = raw\.glowDustHug;/,
@@ -89,14 +89,14 @@ assert.match(src, /prefs\.glowWaveStyle === "stardust" && prefs\.glowDustHug ===
 	'the hug choice reaches the wave span as a class');
 assert.match(src, /\[\["wrap", "中间外扩 · 两端环绕（默认）"\], \["slight", "整体略微外扩"\]\]/,
 	'both hug modes are offered in settings');
-assert.match(src, /glowDustHug: undefined \}\) \}, "恢复尘埃默认参数"\)/,
-	'the reset button restores the default hug mode too');
+assert.match(src, /glowDustHug: undefined, glowDustSpread: undefined \}\) \}, "恢复尘埃默认参数"\)/,
+	'the reset button restores the default hug mode and band thickness too');
 
 // ---- 5. beat drives the ring, not just a blink ------------------------------
 assert.doesNotMatch(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{[^}]*filter:brightness/,
 	'the grain group carries no beat-driven filter (v0.4.45: it re-rasters the whole chain)');
-assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.34 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.66\)/,
-	'the whole ring brightness rides the beat on a childless sibling layer (m08390 #2a / m08645 #2)');
+assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.22 \+ min\(var\(--dnl-beat-gain,0\),1\.2\) \* var\(--dnl-beat-slow,0\) \* \.32\)/,
+	'the bloom rides the SLOW lane and its gain is capped at 1.2 (v0.4.46: the 60 Hz lane made the halo tremble, 200% buried the pill — user m11591 #1/#3)');
 assert.match(CSS, /100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\)/,
 	'the outward drift distance swells with the SLOW beat lane (m08390 #2b, v0.4.45 detune)');
 assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 /,
@@ -106,10 +106,20 @@ assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 /,
 assert.equal(typeof plugin.__test.dustGrains, 'function',
 	'dustGrains is exported, so previews and probes render the REAL nodes instead of a copy that can drift');
 assert.equal(typeof plugin.__test.DUST_COUNT, 'function', 'DUST_COUNT is exported');
-const grains = plugin.__test.dustGrains(8, 'medium');
+assert.equal(typeof plugin.__test.DUST_SPREAD, 'function', 'DUST_SPREAD is exported');
+const grains = plugin.__test.dustGrains(8, 'medium', 0.45);
 assert.equal(grains.length, 8, 'one element per grain');
 const ats = grains.map((g) => g.props.style['--at']);
 assert.equal(ats[0], '0.000%', 'the ring starts at the path origin');
 assert.equal(new Set(ats).size, 8, 'every grain gets a distinct arc-length position');
+// ---- 7. the band has thickness (v0.4.46, user m11591 #1) -------------------
+const offs = grains.map((g) => parseFloat(g.props.style['--off']));
+assert.ok(offs.every((v) => v >= 0 && v <= plugin.__test.DUST_BAND_PX),
+	'every grain carries its own outward --off, so raising the count thickens the band instead of packing one line');
+assert.ok(new Set(offs).size >= 4, 'the offsets are scattered, not quantised to one ring');
+assert.match(CSS, /\.dnl-wave\.dnl-dust-dense \.dnl-dust::after\{mix-blend-mode:normal\}/,
+	'dense tiers drop the per-grain blend surface (user m11591 #2: 200 grains stuttered)');
+assert.match(CSS, /\.dnl-wave\.dnl-dust-dense>\.w1\{mix-blend-mode:plus-lighter\}/,
+	'...and re-add the SAME additive look once on the group, so the material does not change');
 
-console.log('ok — dust ring hugs the capsule (v0.4.45 contract)');
+console.log('ok — dust ring hugs the capsule (v0.4.46 contract)');
