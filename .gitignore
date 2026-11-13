@@ -14,3 +14,12 @@ desktop.ini
 .idea/
 *.swp
 *.tmp
+
+# Generated previews / one-off probes (regenerable; generators are tracked)
+test/_*.html
+test/_*.png
+test/_*.jsonl
+test/skin-matrix*.html
+test/skin-matrix*.png
+test/_probe-*
+test/_fft-probe/
