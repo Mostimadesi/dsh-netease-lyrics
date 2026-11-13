@@ -238,7 +238,7 @@ await check('旧缓存不挡住新回退；新缓存可恢复 QQ 来源',async()
   await fs.writeFile(file,JSON.stringify({version:1,entries:{[fingerprintOf('Hello','Adele')]:{status:'unmatched',fetchedAt:Date.now()}}}));
   const {service,calls}=make({ncm:'empty',migu:'empty',cacheFile:file});assert.equal((await service.resolve(facts)).source,'qq');assert.equal(calls.length,3);
   await new Promise(resolve=>setTimeout(resolve,2200));
-  const saved=JSON.parse(await fs.readFile(file,'utf8'));assert.equal(saved.version,2);
+  const saved=JSON.parse(await fs.readFile(file,'utf8'));assert.equal(saved.version,3);
   const fresh=make({cacheFile:file});assert.equal((await fresh.service.resolve(facts)).source,'qq');assert.equal(fresh.calls.length,0);
  }finally{
   // Only remove the exact test-created files/directory, whose paths were allocated above.
@@ -251,7 +251,7 @@ await check('corrupt cache entries do not prevent a later valid entry restoring'
  try{
   const entry={status:'matched',source:'qq',fetchedAt:Date.now(),lines:[{t:1,text:'cached valid'}]};
   const key=fingerprintOf(facts.title,facts.artist)+'|hello|295';
-  await fs.writeFile(file,JSON.stringify({version:2,entries:[
+  await fs.writeFile(file,JSON.stringify({version:3,entries:[
    null,42,{},['incomplete'],
    ['null-row',{...entry,lines:[null]}],
    ['primitive-row',{...entry,lines:['bad']}],
@@ -280,7 +280,7 @@ await check('local cache is not persisted or restored across local configuration
   assert(!saved.entries.some(([,entry])=>entry.source==='local'),'local entries must stay out of disk cache');
   // Seed the old v2 format explicitly: restore must reject local entries too.
   const key=fingerprintOf(facts.title,facts.artist)+'|hello|295';
-  await fs.writeFile(cacheFile,JSON.stringify({version:2,entries:[[key,{
+  await fs.writeFile(cacheFile,JSON.stringify({version:3,entries:[[key,{
    status:'matched',source:'local',lines:[{t:1,text:'stale old directory'}],fetchedAt:Date.now()
   }]]}));
   const disabled=make({...empty,cacheFile,localDirs:[dir],localLyrics:false});
