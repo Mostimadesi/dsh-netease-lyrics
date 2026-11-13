@@ -1,8 +1,9 @@
-// Frozen-frame preview for the v0.4.42 宇宙尘埃 lifecycle field.
-// Usage: node test/_gen-dust-preview.mjs <out.html> [dense]
-// v0.4.42 grains run a pure-CSS lifecycle (dnl-dust-life with per-grain
-// --dur/--del/--dx/--dy/--peak), so the frame only freezes a deterministic
-// global phase by shifting every grain's animation-delay by a constant.
+// Frozen-frame preview for the v0.4.43 宇宙尘埃 offset-path dust field.
+// Usage: node test/_gen-dust-preview.mjs <out.html> [count] [fine|medium]
+// The grains are DOM elements placed on the capsule outline by
+// `offset-path: rect(0 100% 100% 0 round 999px)` — the basic shape clamps
+// `round` to half the box height, so the path hugs the pill at any width.
+// Everything here mirrors dustGrains() in lib/client.js; keep the math in sync.
 import fs from 'node:fs';
 import vm from 'node:vm';
 import React from 'react';
@@ -21,46 +22,49 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 });
 const CSS = plugin.__test.CSS;
 
-const COUNT = process.argv[3] === 'dense' ? 300 : 150;
-// same grain math as dustGrains in lib/client.js (keep in sync!)
-const AN = (() => { const out = []; for (let i = 0; i < COUNT; i++) out.push(Math.round((i * 137.508 - 90) % 360)); return out; })();
+const COUNT = Math.min(300, Math.max(60, Number(process.argv[3]) || 150));
+const TIER = process.argv[4] === 'fine' ? 'fine' : 'medium';
+const PX = TIER === 'fine' ? [1.5, 3] : [2.5, 4.5];
+
 const grains = [];
 for (let i = 0; i < COUNT; i++) {
-	const ang = AN[i] * Math.PI / 180;
-	const jitter = ((i * 31) % 7 - 3) * 1.2;
-	const r = 46 - (i % 3) * 1.4 + jitter;
-	const size = +(0.6 + ((i * 13) % 6) / 10).toFixed(2);
-	const drift = 9 + ((i * 17) % 5);
-	const dur = 7 + ((i * 11) % 7);
+	// arc-length parameterised, with a sub-percent wobble so the ring reads as
+	// dust rather than a comb (still evenly distributed)
+	const at = (i / COUNT) * 100 + ((i * 31) % 7 - 3) * 0.012;
+	const size = PX[0] + ((i * 13) % 7) / 6 * (PX[1] - PX[0]);
+	const ang = (i * 137.508) * Math.PI / 180;        // outward direction
+	const drift = 9 + ((i * 17) % 5);                 // 9-13px outward
+	const dur = 7 + ((i * 11) % 7);                   // 7-13s cycle
 	const del = -((((i * 23) % 100) / 100) * dur);
 	const peak = +(0.55 + ((i * 29) % 4) * 0.1).toFixed(2);
-	grains.push(`<circle class="dp" cx="${(50 + r * Math.cos(ang)).toFixed(1)}" cy="${(50 + r * Math.sin(ang)).toFixed(1)}" r="${size}"`
-		+ ` style="--dx:${(Math.cos(ang) * drift).toFixed(2)};--dy:${(Math.sin(ang) * drift).toFixed(2)};--dur:${dur}s;--del:${del.toFixed(2)}s;--peak:${peak}"/>`);
+	grains.push(`<i class="dnl-dust" style="--at:${at.toFixed(3)}%;--dx:${(Math.cos(ang) * drift).toFixed(1)}px;--dy:${(Math.sin(ang) * drift).toFixed(1)}px;--dur:${dur}s;--del:${del.toFixed(2)}s;--peak:${peak};--sz:${size.toFixed(2)}px"></i>`);
 }
 
 const html = `<!doctype html><meta charset="utf-8"><style>
-html,body{margin:0;height:100%;background:#141824;display:grid;place-items:center;font:16px/1.4 sans-serif}
-:root{--dsw-alias-brand-primary:#6a8dff;--dsw-alias-label-primary:#f5f7ff}
+html,body{margin:0;height:100%;background:#141824;display:grid;place-items:center;font:16px/1.4 system-ui,sans-serif}
+:root{--dsw-alias-brand-primary:#6a8dff;--dsw-alias-label-primary:#f5f7ff;--dnl-halo:#6a8dff}
 ${CSS}
-/* freeze a deterministic mid-flight frame: every grain 3.4s into its own cycle,
-   twinkle at its bright peak, whole-ring beat pulse held high */
-.dnl-wave-stardust>.w1 circle.dp{animation-play-state:paused!important;animation-delay:calc(var(--del,0s) - 3.4s)!important}
-.dnl-wave-stardust>.w1{animation-play-state:paused!important;animation-delay:calc(var(--dnl-glow-dur,5.6s) * -0.25)!important}
-.dnl-wave svg{transform:scale(calc(1 + 1 * .6 * .05))!important;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--dnl-halo,var(--dsw-alias-brand-primary)) 38%,transparent)) brightness(calc(1 + 1 * .6 * .55))!important}
-.stage{position:relative;width:560px;height:260px}
-.island{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;height:38px;border-radius:999px;border:.5px solid rgba(255,255,255,.14);background:rgb(18,22,34);display:grid;place-items:center;color:#e8edff;font-size:14px}
+/* Freeze a deterministic mid-flight frame: every grain 3.4s into its own
+   cycle (no live JS needed), twinkle held at its bright peak. */
+.dnl-dust{animation-play-state:paused!important;animation-delay:calc(var(--del,0s) - 3.4s)!important}
+.dnl-wave.dnl-wave-stardust>.w1{animation-play-state:paused!important;animation-delay:calc(var(--dnl-glow-dur,5.6s) * -.25)!important}
+.dnl-wave svg{transform:none}
+.stage{position:relative;width:620px;height:300px}
+.island{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;height:38px;border-radius:999px;border:.5px solid rgba(255,255,255,.14);background:rgb(18,22,34);display:grid;place-items:center;color:#e8edff;font-size:13px}
+.cap{position:absolute;left:0;right:0;bottom:8px;text-align:center;color:#8b93a7;font-size:12px}
 </style>
 <div class="stage">
 <div class="island">
 <span class="dnl-halobox" style="--dnl-glow-dur:5.6s;--dnl-glow-amp:1;--dnl-beat-gain:1">
 <span class="dnl-halo"><span class="h1"></span><span class="h2"></span><span class="h3"></span><span class="h4"></span></span>
-<span class="dnl-wave dnl-wave-stardust"><span class="w1"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${grains.join('')}</svg></span></span>
+<span class="dnl-wave dnl-wave-stardust" style="--dnl-dust-glow:1"><span class="w1">${grains.join('')}</span></span>
 </span>
-星尘环 v0.4.42（宇宙尘埃 · 外漂-渐隐-重生生命周期）· ${COUNT} 颗
+星尘环 v0.4.43 · ${COUNT} 颗 · ${TIER === 'fine' ? '细碎' : '适中'}
 </div>
+<div class="cap">offset-path 真胶囊轮廓（不再横向拉伸）· 径向羽化 + plus-lighter 加法混合 · 外漂-渐隐-重生</div>
 </div>`;
 
 const out = process.argv[2];
-if (!out) { console.error('usage: node test/_gen-dust-preview.mjs <out.html> [dense]'); process.exit(2); }
+if (!out) { console.error('usage: node test/_gen-dust-preview.mjs <out.html> [count] [fine|medium]'); process.exit(2); }
 fs.writeFileSync(out, html, 'utf8');
-console.log('wrote ' + out + ' (' + COUNT + ' grains, v0.4.42 lifecycle, frozen mid-flight frame)');
+console.log('wrote ' + out + ' (' + COUNT + ' offset-path grains, ' + TIER + ', frozen mid-flight)');
