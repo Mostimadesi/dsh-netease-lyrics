@@ -47,8 +47,8 @@ const CSS = plugin.__test.CSS;
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 
 // ---- 1. the wave layer base + brightness knob ----------------------------------
-assert.match(CSS, /\.dnl-halo-wave\{overflow:visible;--dnl-wave-hi:1\}/,
-	'the halo span lets the rings spill outside; default brightness factor 1');
+assert.match(CSS, /\.dnl-halo-wave\{overflow:visible;--dnl-wave-hi:1;--dnl-beat:0\}/,
+	'the halo span lets the rings spill outside; default brightness factor 1; the beat scalar rests at 0');
 assert.match(CSS, /\.dnl-halo-wave\.dnl-wave-vivid\{--dnl-wave-hi:1\.45\}/,
 	'vivid raises the brightness factor');
 assert.match(CSS, /\.dnl-halo-wave>\.w1,\.dnl-halo-wave>\.w2\{position:absolute;pointer-events:none;border:none\}/,
