@@ -1,8 +1,8 @@
-// Frozen-frame preview for the v0.4.41 宇宙尘埃 random-walk field.
+// Frozen-frame preview for the v0.4.42 宇宙尘埃 lifecycle field.
 // Usage: node test/_gen-dust-preview.mjs <out.html> [dense]
-// The JS random walk cannot run headless here, so the frame pre-bakes a slow
-// deterministic walk (every grain wanders from its anchor) + band-keyed
-// opacity — a static approximation of the live field.
+// v0.4.42 grains run a pure-CSS lifecycle (dnl-dust-life with per-grain
+// --dur/--del/--dx/--dy/--peak), so the frame only freezes a deterministic
+// global phase by shifting every grain's animation-delay by a constant.
 import fs from 'node:fs';
 import vm from 'node:vm';
 import React from 'react';
@@ -22,43 +22,45 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 const CSS = plugin.__test.CSS;
 
 const COUNT = process.argv[3] === 'dense' ? 300 : 150;
-// same grain math as dustGrains in lib/client.js
-const AN = (() => { const out = []; for (let i = 0; i < COUNT; i++) out.push((i * 137.508 - 90) % 360); return out; })();
-// a mid-stomp band profile: kick loud, highs tapering off
-const bands = [0.35, 0.9, 0.75, 0.5, 0.32, 0.2, 0.12, 0.06, 0.02, 0.0];
+// same grain math as dustGrains in lib/client.js (keep in sync!)
+const AN = (() => { const out = []; for (let i = 0; i < COUNT; i++) out.push(Math.round((i * 137.508 - 90) % 360)); return out; })();
 const grains = [];
 for (let i = 0; i < COUNT; i++) {
 	const ang = AN[i] * Math.PI / 180;
 	const jitter = ((i * 31) % 7 - 3) * 1.2;
 	const r = 46 - (i % 3) * 1.4 + jitter;
-	const big = i % 5 === 4;
-	const size = big ? 1.5 + ((i * 3) % 10) / 10 : 0.5 + ((i * 7) % 7) / 10;
-	// pre-baked slow walk: deterministic wander (seeds, no Math.random for reproducibility)
-	const wx = (((i * 7) % 11) - 5) * 0.5, wy = (((i * 13) % 11) - 5) * 0.5;
-	// band pair like DUST_BAND_MIX(count)
-	const pos = (i * 10) / COUNT, a = Math.floor(pos), fa = 1 - (pos - a), fb = pos - a;
-	const band = bands[a] * fa + bands[(a + 1) % 10] * fb;
-	grains.push(`<circle class="dp" cx="${(50 + r * Math.cos(ang)).toFixed(1)}" cy="${(50 + r * Math.sin(ang)).toFixed(1)}" r="${size.toFixed(2)}" transform="translate(${wx.toFixed(1)} ${wy.toFixed(1)})" opacity="${(0.3 + band * 0.6).toFixed(2)}"/>`);
+	const size = +(0.6 + ((i * 13) % 6) / 10).toFixed(2);
+	const drift = 9 + ((i * 17) % 5);
+	const dur = 7 + ((i * 11) % 7);
+	const del = -((((i * 23) % 100) / 100) * dur);
+	const peak = +(0.55 + ((i * 29) % 4) * 0.1).toFixed(2);
+	grains.push(`<circle class="dp" cx="${(50 + r * Math.cos(ang)).toFixed(1)}" cy="${(50 + r * Math.sin(ang)).toFixed(1)}" r="${size}"`
+		+ ` style="--dx:${(Math.cos(ang) * drift).toFixed(2)};--dy:${(Math.sin(ang) * drift).toFixed(2)};--dur:${dur}s;--del:${del.toFixed(2)}s;--peak:${peak}"/>`);
 }
-const bandVars = bands.map((v, i) => `--dnl-b${i}:${v};`).join('');
 
 const html = `<!doctype html><meta charset="utf-8"><style>
 html,body{margin:0;height:100%;background:#141824;display:grid;place-items:center;font:16px/1.4 sans-serif}
 :root{--dsw-alias-brand-primary:#6a8dff;--dsw-alias-label-primary:#f5f7ff}
 ${CSS}
-/* freeze the breathing so the frame is static */
-.dnl-wave-stardust>.w1{animation-delay:calc(var(--dnl-glow-dur,5.6s) * -0.35)!important}
+/* freeze a deterministic mid-flight frame: every grain 3.4s into its own cycle,
+   twinkle at its bright peak, whole-ring beat pulse held high */
+.dnl-wave-stardust>.w1 circle.dp{animation-play-state:paused!important;animation-delay:calc(var(--del,0s) - 3.4s)!important}
+.dnl-wave-stardust>.w1{animation-play-state:paused!important;animation-delay:calc(var(--dnl-glow-dur,5.6s) * -0.25)!important}
+.dnl-wave svg{transform:scale(calc(1 + 1 * .6 * .05))!important;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--dnl-halo,var(--dsw-alias-brand-primary)) 38%,transparent)) brightness(calc(1 + 1 * .6 * .55))!important}
 .stage{position:relative;width:560px;height:260px}
-.pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;height:38px;border-radius:20px;background:color-mix(in srgb,var(--dsw-alias-brand-primary) 12%,rgb(12,16,26));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);display:grid;place-items:center;color:#e8edff;font-size:14px}
+.island{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;height:38px;border-radius:999px;border:.5px solid rgba(255,255,255,.14);background:rgb(18,22,34);display:grid;place-items:center;color:#e8edff;font-size:14px}
 </style>
 <div class="stage">
-<span class="dnl-halo dnl-halo-wave dnl-wave-stardust" style="--dnl-glow-dur:5.6s;--dnl-glow-amp:1;--dnl-beat-gain:1;${bandVars}">
-<span class="h1"></span><span class="h2"></span><span class="h3"></span><span class="h4"></span>
-<span class="w1"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g class="dg">${grains.join('')}</g></svg></span>
+<div class="island">
+<span class="dnl-halobox" style="--dnl-glow-dur:5.6s;--dnl-glow-amp:1;--dnl-beat-gain:1">
+<span class="dnl-halo"><span class="h1"></span><span class="h2"></span><span class="h3"></span><span class="h4"></span></span>
+<span class="dnl-wave dnl-wave-stardust"><span class="w1"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${grains.join('')}</svg></span></span>
 </span>
-<div class="pill">星尘环 v3（宇宙尘埃 · 随机游走预烘）· ${COUNT} 颗 · kick 频段高、高频渐弱</div>
+星尘环 v0.4.42（宇宙尘埃 · 外漂-渐隐-重生生命周期）· ${COUNT} 颗
+</div>
 </div>`;
 
 const out = process.argv[2];
+if (!out) { console.error('usage: node test/_gen-dust-preview.mjs <out.html> [dense]'); process.exit(2); }
 fs.writeFileSync(out, html, 'utf8');
-console.log('wrote ' + out + ' (' + COUNT + ' grains)');
+console.log('wrote ' + out + ' (' + COUNT + ' grains, v0.4.42 lifecycle, frozen mid-flight frame)');

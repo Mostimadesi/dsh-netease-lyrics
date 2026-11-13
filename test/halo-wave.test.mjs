@@ -1,20 +1,18 @@
-// Style + render contracts for the ambient wave ornaments (v0.4.34, restyled
-// in v0.4.36, stardust rebuilt as the 宇宙尘埃 dust field in v0.4.40). User
-// reference: NetEase Cloud Music 「音波」/「宇宙尘埃」 player effects.
+// Style + render contracts for the ambient wave ornaments — v0.4.42: the
+// breathing halo and the wave ring are now INDEPENDENT modules (user m07693
+// #2): two sibling spans inside one positioning wrapper (.dnl-halobox). The
+// wrapper carries the beat driver ref + inline CSS vars; hold parks BOTH
+// modules at once. 音波环 works regardless of the 呼吸灯 mode.
 //
-// Rendering model (hardened after the "下垂大U环" bug): the ring element itself
-// must NEVER rotate — a capsule-shaped ring turned 40° swings its long axis
-// ~150px off the pill. w1/w2 are plain boxes hugging the pill. dots/wave keep
-// TWO <rect> rings (r1/r2, pathLength=100) whose dashes ride the path via an
-// animated stroke-dashoffset. stardust renders the 宇宙尘埃 model instead: a
-// group of discrete grains (.dg circle.dp) that ROTATES around the viewBox
-// centre (orbit) while each grain pulses with its own FFT band pair
-// (fftrandom — baked --dnl-bN interpolation in inline style).
+// stardust = 宇宙尘埃 lifecycle (m07693 #1/#3): every grain is born on the
+// band, drifts OUTWARD along its own radius, fades past the rim and respawns —
+// constant density, zero JS. Grains NEVER orbit and never random-walk; sizes
+// are uniformly small (0.6-1.2u). The whole ring's brightness (+ a hint of
+// scale) pulses with the beat on the svg filter (m07693 #4 整环呼吸).
 //
-// v0.4.40 driver contract (shared data layer, kept from the v0.4.39 spec
-// attempt): the helper emits 10 dB-normalised log bands; the driver shapes
-// them with fftpow 1.5, eases each band independently, and publishes
-// --dnl-b0..9 on the halo span. lyric lane drives all bands uniformly (cur).
+// dots/wave keep the fixed SHAPE = rect rings, MOTION = stroke-dashoffset.
+// The ring element itself must NEVER rotate — a capsule-shaped ring turned
+// 40° swings its long axis ~150px off the pill (the "下垂大U环" bug).
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -37,131 +35,136 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 const CSS = plugin.__test.CSS;
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
 
-// ---- 1. the wave layer base + brightness knob ----------------------------------
-assert.match(CSS, /\.dnl-halo-wave\{overflow:visible;--dnl-wave-hi:1;--dnl-beat:0\}/,
-	'the halo span lets the rings spill outside; default brightness factor 1; the beat scalar rests at 0');
-assert.match(CSS, /\.dnl-halo-wave\.dnl-wave-vivid\{--dnl-wave-hi:1\.45\}/,
+// ---- 1. wrapper + wave layer base -------------------------------------------
+assert.match(CSS, /\.dnl-halobox\{position:absolute;inset:0;z-index:0;pointer-events:none\}/,
+	'the positioning wrapper hosts both modules and stays click-through');
+assert.match(CSS, /\.dnl-wave\{position:absolute;inset:0;overflow:visible;pointer-events:none;--dnl-wave-hi:1\}/,
+	'the wave span lets the rings spill outside; default brightness factor 1');
+assert.match(CSS, /\.dnl-wave\.dnl-wave-vivid\{--dnl-wave-hi:1\.45\}/,
 	'vivid raises the brightness factor');
-assert.match(CSS, /\.dnl-halo-wave>\.w1,\.dnl-halo-wave>\.w2\{position:absolute;pointer-events:none;border:none\}/,
-	'w1/w2 ring boxes are border-less and positioned inside the halo');
-assert.match(CSS, /\.dnl-halo-wave svg\{[^}]*overflow:visible[^}]*filter:drop-shadow\(/,
-	'the ring svg paints outside its own box and carries a soft glow');
-assert.match(CSS, /\.dnl-halo-wave rect\{fill:none;stroke:color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 55%,#ffffff\);vector-effect:non-scaling-stroke;stroke-linecap:round\}/,
-	'dots/wave strokes brighten toward white (official ffffff88 reference) and keep width under stretching');
-assert.match(CSS, /\.dnl-halo-wave \.r2\{stroke:color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 38%,#ffffff\)\}/,
+assert.match(CSS, /\.dnl-wave>\.w1,\.dnl-wave>\.w2\{position:absolute;pointer-events:none;border:none\}/,
+	'w1/w2 ring boxes are border-less and positioned inside the wave span');
+assert.match(CSS, /\.dnl-wave svg\{[^}]*overflow:visible[^}]*filter:drop-shadow\(0 0 3px color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 38%,transparent\)\) brightness\(calc\(1 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.55\)\)/,
+	'the ring svg paints outside its own box and the WHOLE RING brightness pulses with the beat (m07693 #4)');
+assert.match(CSS, /\.dnl-wave svg\{[^}]*transform:scale\(calc\(1 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.05\)\)/,
+	'a hint of whole-ring scale rides the same beat (stardust no longer opts out)');
+assert.match(CSS, /\.dnl-wave rect\{fill:none;stroke:color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 30%,transparent\);stroke-width:1\.2;vector-effect:non-scaling-stroke;will-change:stroke-dashoffset,stroke,opacity\}/,
+	'strokes are brand-tinted against transparent (keeps width under stretching, no hard-coded white)');
+assert.match(CSS, /\.dnl-wave \.r2\{stroke:color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 16%,transparent\)\}/,
 	'the second rect is dimmer so the mixed-size dots read as dust, not as a fence');
 
 // ---- 2. dots style --------------------------------------------------------------
-assert.match(CSS, /\.dnl-wave-dots>\.w1\{inset:-13px;opacity:calc\(\.72 \* var\(--dnl-wave-hi\)\)\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-wave-dots>\.w1\{inset:-13px;opacity:calc\(\.72 \* var\(--dnl-wave-hi\)\)\}/,
 	'dots w1: ring box just outside the pill rim, brightness-scaled');
-assert.match(CSS, /\.dnl-wave-dots>\.w1 \.r1\{stroke-width:2\.6;stroke-dasharray:\.1 3\.15;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 4\) linear infinite\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-wave-dots>\.w1 \.r1\{stroke-width:2\.6;stroke-dasharray:\.1 3\.15;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 4\) linear infinite\}/,
 	'dots w1 r1: primary dots orbit on 4 cycles per breath');
-assert.match(CSS, /\.dnl-wave-dots>\.w1 \.r2\{stroke-width:1\.4;stroke-dasharray:\.1 6\.35;opacity:\.6;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 5\) linear infinite\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-wave-dots>\.w1 \.r2\{stroke-width:1\.4;stroke-dasharray:\.1 6\.35;opacity:\.6;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 5\) linear infinite\}/,
 	'dots w1 r2: smaller sparser dots ride a different period (mixed sizes)');
-assert.match(CSS, /\.dnl-wave-dots>\.w2\{inset:-21px;opacity:calc\(\.42 \* var\(--dnl-wave-hi\)\)\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-wave-dots>\.w2\{inset:-21px;opacity:calc\(\.42 \* var\(--dnl-wave-hi\)\)\}/,
 	'dots w2: a second, fainter outer ring');
-assert.match(CSS, /\.dnl-wave-dots>\.w2 \.r1\{[^}]*linear infinite reverse\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-wave-dots>\.w2 \.r1\{stroke-width:2;stroke-dasharray:\.1 5\.9;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 7\) linear infinite reverse\}/,
 	'dots w2: primary dots counter-orbit');
 
-// ---- 3. stardust style (v0.4.41 宇宙尘埃 random-walk field) --------------------------
-assert.match(CSS, /\.dnl-wave-stardust>\.w1\{inset:-22px;opacity:calc\(\.88 \* var\(--dnl-wave-hi\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\)/,
-	'ONE wide band: w1 sits -22px out (grains land ~10-30px outside the capsule), twinkle kept');
-assert.match(CSS, /\.dnl-wave-stardust>\.w1 \.dg\{animation:dnl-wave-orbit-g calc\(var\(--dnl-glow-dur,5\.6s\) \* 6\) linear infinite\}/,
-	'the grain group swirls slowly (6 cycles per breath)');
+// ---- 3. stardust style (v0.4.42 宇宙尘埃 lifecycle) ------------------------------
+assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:-22px;opacity:calc\(\.88 \* var\(--dnl-wave-hi\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\) ease-in-out infinite\}/,
+	'ONE wide band (-22px out, grains land ~10-30px outside the capsule); the band itself twinkles');
 assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
-	'the two-orbit pair is gone (user m07563: 合成一条宽带)');
-assert.match(CSS, /\.dnl-halo-wave\.dnl-wave-stardust circle\.dp\{fill:color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 35%,#ffffff\);stroke:none;transform-box:fill-box;transform-origin:center\}/,
-	'grains fill white-forward (official 宇宙尘埃 alpha-white), scale around their own centre');
-assert.match(CSS, /\.dnl-halo-wave\.dnl-wave-stardust svg\{transform:none;/,
-	'stardust svg opts out of the generic whole-ring beat-scale (official shakebeat:0 — no 全部跳动)');
-assert.match(CSS, /\.dnl-halo-wave \.dg\{transform-box:view-box;transform-origin:50% 50%\}/,
-	'the grain group rotates around the viewBox centre (orbit, not capsule rotation)');
-assert.match(CSS, /@keyframes dnl-wave-orbit-g\{to\{transform:rotate\(360deg\)\}\}/,
-	'orbit rotates the grain group; the capsule boxes never rotate');
-assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:\.32;transform:scale\(\.97\)\}50%\{opacity:calc\(\.62 \* var\(--dnl-wave-hi\)\);transform:scale\(1\.03\)\}\}/,
-	'the twinkle cycle breathes opacity and scale, vivid raises the peak');
+	'the two-orbit pair stays gone (user m07563: 合成一条宽带)');
+assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust circle\.dp\{fill:color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 35%,#ffffff\);stroke:none\}/,
+	'grains fill white-forward (official 宇宙尘埃 alpha-white)');
+assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1 circle\.dp\{animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
+	'every grain runs its own lifecycle; --dur/--del are baked per grain so density stays constant');
+assert.match(CSS, /@keyframes dnl-dust-life\{0%\{transform:translate\(0,0\);opacity:var\(--peak,\.9\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* \.5\)\}100%\{transform:translate\(var\(--dx,6\),var\(--dy,6\)\);opacity:0\}\}/,
+	'born on the band → drift OUTWARD → fade → respawn (user m07693 #1: the official turnover)');
+assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.34 \* var\(--dnl-wave-hi\)\)\}50%\{opacity:calc\(\.9 \* var\(--dnl-wave-hi\)\)\}\}/,
+	'the twinkle is whole-band brightness breathing (vivid raises the peak)');
+assert.doesNotMatch(CSS, /dnl-wave-orbit-g|className: "dg"|\.dnl-wave \.dg/,
+	'grains NEVER orbit: the rotating group and its keyframes are gone');
 
 // ---- 4. wave (dashed outline) style ----------------------------------------------
-assert.match(CSS, /\.dnl-wave-wave>\.w1 \.r1\{stroke-width:1\.8;stroke-dasharray:7 2\.2;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 3\) linear infinite\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-wave-wave>\.w1 \.r1\{stroke-width:1\.8;stroke-dasharray:7 2\.2;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 3\) linear infinite\}/,
 	'wave style draws a long-dash ring that flows on 3 cycles per breath');
-assert.match(CSS, /\.dnl-wave-wave>\.w1 \.r2\{stroke-width:1;stroke-dasharray:2\.2 5\.6;opacity:\.6;animation:dnl-wave-orbit[^}]*reverse\}/,
+assert.match(CSS, /\.dnl-wave\.dnl-wave-wave>\.w1 \.r2\{stroke-width:1;stroke-dasharray:2\.2 5\.6;opacity:\.6;animation:dnl-wave-orbit calc\(var\(--dnl-glow-dur,5\.6s\) \* 4\.5\) linear infinite reverse\}/,
 	'wave w1 r2: short interleaved dashes counter-flow (ripple moiré)');
 assert.match(CSS, /@keyframes dnl-wave-orbit\{to\{stroke-dashoffset:-100\}\}/,
 	'the orbit keyframes walk the dashes along the path (never rotate the element)');
 
 // ---- 5. hold / burst / scope / reduced-motion -------------------------------------
-// Specificity must beat the per-style shorthand animations
-// (.dnl-wave-dots>.w1 .r1 = 0,3,0; the shorthand resets play-state):
-assert.match(CSS, /\.dnl-halo\.dnl-halo-hold\.dnl-halo-wave>\.w1,\.dnl-halo\.dnl-halo-hold\.dnl-halo-wave>\.w2,\.dnl-halo\.dnl-halo-hold\.dnl-halo-wave rect\{animation-play-state:paused\}/,
-	'paused playback stills the rings AND their dash orbit (hold rule out-specifies the shorthand)');
-assert.match(CSS, /\.dnl-halo-hold\.dnl-halo-wave \.dg\{animation-play-state:paused\}/,
-	'paused playback also stills the dust orbit group');
-assert.match(CSS, /\.dnl-halo\.dnl-halo-hold>span\{animation:none\}/,
-	'the legacy hold rule also out-specifies the h1-h4 shorthand animations (.dnl-halo>.hN = 0,2,0)');
-assert.match(CSS, /\.dnl-halo-burst>\.w1,\.dnl-halo-burst>\.w2\{display:none\}/,
-	'the notice burst hides the ambient rings (spec tier is gone)');
-assert.match(CSS, /\.dnl-shell-expanded \.dnl-halo-wave:not\(\.dnl-wave-both\)>\.w1[^}]*display:none/,
+assert.match(CSS, /\.dnl-halobox\.dnl-halo-hold \.dnl-halo>span\{animation:none\}/,
+	'parked playback: the breathing halo layers freeze (hold lives on the shared wrapper)');
+assert.match(CSS, /\.dnl-halobox\.dnl-halo-hold \.dnl-wave>\.w1,\.dnl-halobox\.dnl-halo-hold \.dnl-wave>\.w2,\.dnl-halobox\.dnl-halo-hold \.dnl-wave \.r1,\.dnl-halobox\.dnl-halo-hold \.dnl-wave \.r2,\.dnl-halobox\.dnl-halo-hold \.dnl-wave circle\.dp\{animation-play-state:paused\}/,
+	'parked playback also stills the ring boxes, dash orbits AND every grain lifecycle');
+assert.doesNotMatch(CSS, /\.dnl-halo-burst>\.w1/,
+	'burst no longer hides the ring — breathing lamp and wave ring are independent modules (m07693 #2)');
+assert.match(CSS, /\.dnl-shell-expanded \.dnl-wave:not\(\.dnl-wave-both\)>\.w1,\.dnl-shell-expanded \.dnl-wave:not\(\.dnl-wave-both\)>\.w2\{display:none\}/,
 	'rings hide in the expanded card unless scope=both');
-assert.match(CSS, /\.dnl-halo>\.w1,\.dnl-halo>\.w2\{display:none\}/,
+assert.match(CSS, /\.dnl-wave>\.w1,\.dnl-wave>\.w2\{display:none\}/,
 	'reduced-motion removes the rings outright');
-assert.doesNotMatch(src, /className: "w3"/, 'the v0.4.39 spec bar tier is removed');
-assert.doesNotMatch(CSS, /dnl-wave-spec/, 'no spec CSS survives');
+assert.doesNotMatch(src, /className: "w3"|dnl-wave-spec/, 'the retired spec tier stays gone');
 
-// ---- 5a. dust render wiring (v0.4.41 random-walk field) ------------------------------
-assert.match(src, /const DUST_BAND_MIX = \(count\) =>/, 'band-pair interpolation helper exists (driver-side now)');
+// ---- 5a. dust render wiring (v0.4.42 lifecycle field) ------------------------------
+assert.match(src, /const DUST_ANGLES = \(count\) =>/, 'golden-angle spread helper');
 assert.match(src, /i \* 137\.508 - 90/, 'golden-angle (sunflower) spread keeps the field organic');
-assert.match(src, /const dustGrains = \(count\) =>/, 'grain factory is anchor-only (no inline band styles)');
-assert.match(src, /i % 5 === 4/, 'the 80/20 size split marker (every 5th grain is a bright anchor)');
-assert.match(src, /1\.5 \+ \(\(i \* 3\) % 10\) \/ 10/, 'bright anchors: 1.5-2.5');
-assert.match(src, /0\.5 \+ \(\(i \* 7\) % 7\) \/ 10/, 'fine dust: 0.5-1.2');
+assert.match(src, /const dustGrains = \(count\) =>/, 'grain factory bakes each grain\'s phase into CSS vars');
+assert.match(src, /\+\(0\.6 \+ \(\(i \* 13\) % 6\) \/ 10\)\.toFixed\(2\)/,
+	'uniformly small sizes 0.6-1.2u (user m07693 #3: no mixed-size grains)');
+assert.match(src, /const drift = 9 \+ \(\(i \* 17\) % 5\);/, 'outward drift 9-13u past the rim');
+assert.match(src, /const dur = 7 \+ \(\(i \* 11\) % 7\);/, 'independent 7-13s cycles');
+assert.match(src, /const del = -\(\(\(\(i \* 23\) % 100\) \/ 100\) \* dur\);/, 'negative delays desync respawns');
+assert.match(src, /\+\(0\.55 \+ \(\(i \* 29\) % 4\) \* 0\.1\)\.toFixed\(2\)/, 'per-grain brightness ceiling');
+assert.match(src, /"--dur": dur \+ "s"|"--del": del\.toFixed\(2\) \+ "s"|"--dx": String/,
+	'phase/vector vars ship in inline style (CSS animates, zero JS)');
 assert.match(src, /dustGrains\(prefs\.glowDustDensity === "dense" \? 300 : 150\)/,
-	'two density tiers ship together (user m07563: 1和2都实现, 实机取舍)');
-assert.doesNotMatch(src, /className: "dg dg2"/, 'the second orbit group is gone');
-assert.doesNotMatch(src, /SPEC_SEGMENT_COUNT/, 'the SPEC constants stay gone');
+	'two density tiers ship together (user m07563)');
+assert.doesNotMatch(src, /DUST_BAND_MIX|querySelectorAll\("circle\.dp"\)|dustNodes/,
+	'the per-grain JS random-walk data path is retired (m07693 #4: CSS lifecycle + whole-ring pulse)');
 
-// ---- 5b. band driver (shared --dnl-b0..9 data layer, kept from v0.4.39) -------------
+// ---- 5b. band driver (shared --dnl-b0..9 data layer) ---------------------------------
 assert.match(src, /Math\.pow\(bandRaw\[i\], 1\.5\)/,
 	'bands read fftpow-1.5 shaped targets (vision.json fftpow:1.5)');
 assert.match(src, /setProperty\("--dnl-b" \+ i, bands\[i\] < 0\.004 \? "0" : bands\[i\]\.toFixed\(3\)\)/,
-	'the driver publishes one --dnl-bN variable per band, with the same kill-threshold as --dnl-beat');
+	'the driver publishes one --dnl-bN variable per band (kill-threshold shared with --dnl-beat)');
 assert.match(src, /const bandAudio = beatSource === "audio" && playing && miss < 3 && audioLive && lastTickAt > 0 && now - lastTickAt < 2000;/,
 	'the audio lane only drives bands on fresh ticks (stale helper → quiet field, never frozen grains)');
-assert.match(src, /for \(let i = 0; i < 10; i\+\+\) haloRef\.current\.style\.setProperty\("--dnl-b" \+ i, "0"\);/,
-	'lane off/empty zeroes every band variable (no stale grains after a source switch)');
 assert.match(src, /const bandTarget = beatSource === "audio" \? \(bandAudio \? Math\.pow\(bandRaw\[i\], 1\.5\) : 0\) : cur;/,
 	'lyric lane drives all ten bands uniformly from the grid (cur) like NCM dust on a vocal line');
-// v0.4.41 random walk: position IS the pulse (user m07556: 律动是位置不是大小)
-assert.match(src, /querySelectorAll\("circle\.dp"\)/, 'the driver caches the live grain nodes');
-assert.match(src, /DUST_BAND_MIX\(dustNodes\.length\)/, 'grain band pairs come from the same interpolation table');
-assert.match(src, /!dustNodes\[0\]\.isConnected/, 'a stale cache (style/density switch re-rendered the grains) is detected and rebuilt');
-assert.match(src, /gs\.vx \+= \(Math\.random\(\) - 0\.5\) \* 14 \* dt/, 'velocity is jittered every frame (true random walk, not a keyframe)');
-assert.match(src, /const sp = 0\.6 \+ band \* 9;/, 'drift speed = quiet 0.6 u/s base + band × 9 (频段决定漂移速度)');
-assert.match(src, /gs\.x -= gs\.x \* Math\.min\(1, dt \* 0\.35\)/, 'a soft spring pulls grains home so the cloud never disperses');
-assert.match(src, /setAttribute\("transform", "translate\("/, 'position is written as a translate (viewBox units)');
-assert.match(src, /setAttribute\("opacity", \(0\.3 \+ band \* 0\.6\)\.toFixed\(2\)\)/, 'opacity still follows the grain\'s band (bright loud, dim quiet)');
-assert.match(src, /st\?\.playing, prefs\.glowWaveStyle, prefs\.glowDustDensity, prefs\.glow\]/,
-	'the driver effect restarts on style/density/glow changes so the walk state always matches the rendered field');
+assert.match(src, /\}, \[beatSource, beatKey, st\?\.playing\]\);/,
+	'the driver effect restarts only on source/song/playing changes (the walk-state deps are gone)');
 
 // ---- 6. render wiring --------------------------------------------------------------
-assert.match(src, /glowMode !== "notice" && prefs\.glowWaveStyle \? " dnl-halo-wave dnl-wave-" \+ prefs\.glowWaveStyle : ""/,
-	'the wave class applies only outside notice mode when a style is picked');
-assert.match(src, /prefs\.glowWaveStyle && prefs\.glowWaveScope === "both" \? " dnl-wave-both" : ""/,
+assert.match(src, /\(glowMode === "notice" \? noticeRowShown : !noticeMode\)\) \|\| prefs\.glowWaveStyle\)/,
+	'the wrapper appears when EITHER module is on (breathing lamp OR wave ring — independent, m07693 #2)');
+assert.match(src, /className: "dnl-halobox"\s*\+\s*\(st\.playing === true \|\| glowMode === "notice" \? "" : " dnl-halo-hold"\)/,
+	'hold parks BOTH modules: the class lives on the shared wrapper');
+assert.match(src, /className: "dnl-wave dnl-wave-" \+ prefs\.glowWaveStyle/,
+	'the wave sibling picks its style class with no glowMode gate');
+assert.match(src, /prefs\.glowWaveScope === "both" \? " dnl-wave-both" : ""/,
 	'the both-scope class applies only when both is picked');
-assert.match(src, /prefs\.glowWaveStyle && prefs\.glowWaveBright === "vivid" \? " dnl-wave-vivid" : ""/,
+assert.match(src, /prefs\.glowWaveBright === "vivid" \? " dnl-wave-vivid" : ""/,
 	'the vivid class applies only when vivid is picked');
+assert.doesNotMatch(src, /dnl-halo-wave/,
+	'the fused halo+wave class is gone (siblings inside .dnl-halobox now)');
 assert.match(src, /h\("rect", \{ key: "r1", className: "r1", x: 2, y: 2, width: 96, height: 96, rx: 48, pathLength: 100 \}\)/,
 	'dots/wave ring svgs still render the r1 rect (pathLength=100)');
 assert.match(src, /h\("rect", \{ key: "r2", className: "r2", x: 2, y: 2, width: 96, height: 96, rx: 48, pathLength: 100 \}\)/,
 	'dots/wave ring svgs still render the r2 rect (mixed dot sizes)');
 assert.doesNotMatch(src, /className: "wt"/,
-	'the rotated .wt span is gone (rotating a capsule ring was the U-shape bug)');
+	'the rotated .wt span stays gone (rotating a capsule ring was the U-shape bug)');
 
 // ---- 7. settings UI ------------------------------------------------------------------
+assert.match(src, /h\("h3", \{ key: "grp-glow", className: "dnl-set-group" \}, "呼吸灯"\)/,
+	'the 呼吸灯 group header exists');
+assert.match(src, /h\("h3", \{ key: "grp-wave", className: "dnl-set-group" \}, "音频环"\)/,
+	'the 音频环 group header exists (a separate module, m07693 #2)');
+assert.doesNotMatch(src, /prefs\.glow === "theme" \|\| prefs\.glow === "cover" \|\| prefs\.glow === undefined \? h\("label", \{ key: "glow-wave"/,
+	'the wave-ring select is no longer gated on the breathing lamp mode');
+assert.match(CSS, /\.dnl-set-group\{display:flex;flex-direction:column/,
+	'group header styling exists');
 assert.match(src, /"aria-label": "音波环样式"/, 'the style select exists');
 assert.match(src, /\["dots", "点阵环"\]/, 'dots offered');
-assert.match(src, /\["stardust", "星尘环（音频律动）"\]/, 'stardust offered as the audio-reactive default face');
+assert.match(src, /\["stardust", "星尘环（音频律动）"\]/, 'stardust offered as the audio-reactive face');
 assert.match(src, /\["wave", "波形描边"\]/, 'wave offered');
-assert.doesNotMatch(src, /\["spec", /, 'the spec bar option is removed');
+assert.doesNotMatch(src, /\["spec", /, 'the spec bar option stays removed');
 assert.match(src, /"aria-label": "尘埃密度"/, 'the dust density select exists (stardust-only)');
 assert.match(src, /\["normal", "标准（150 颗，默认）"\]/, 'normal tier = 150 grains');
 assert.match(src, /\["dense", "极密（300 颗）"\]/, 'dense tier = 300 grains');
@@ -200,4 +203,4 @@ localStore.raw = null;
 disp = plugin.__test.readDisplay();
 assert.equal(disp.glowWaveBright, undefined, 'absent brightness falls through to subtle');
 
-console.log('halo-wave contract: PASS (dots/wave rect rings, v0.4.41 stardust 宇宙尘埃 random-walk field: 150/300-grain single wide band, per-grain FFT band decides drift SPEED + opacity, spring home, spec bars removed, band driver --dnl-b0..9 shared, scope/burst/hold/reduced-motion, settings + sanitizer)');
+console.log('halo-wave contract: PASS (v0.4.42 independent modules: .dnl-halobox wrapper, breathing halo + wave ring siblings; stardust = 宇宙尘埃 CSS lifecycle — outward drift, fade, respawn, zero JS; whole-ring beat pulse on svg; dots/wave dash chains; hold parks both; settings groups 呼吸灯/音频环)');

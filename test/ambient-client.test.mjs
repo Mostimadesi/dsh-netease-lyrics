@@ -447,7 +447,7 @@ assert(haloCss.includes('.dnl-halo>.h3{inset:-16px;border-width:9px'), 'outer bl
 assert(haloCss.includes('.dnl-halo>.h4{inset:-7px;border-width:5px;filter:blur(9px) hue-rotate(18deg)'), 'hue-drift layer');
 assert(haloCss.includes('animation-delay:0s') && haloCss.includes('calc(var(--dnl-glow-dur,5.6s) * .05)') && haloCss.includes('calc(var(--dnl-glow-dur,5.6s) * .1)'), 'layers lag proportionally to the period');
 assert(haloCss.includes('@keyframes dnl-glow-drift') && haloCss.includes('@keyframes dnl-kick'), 'drift and ripple keyframes exist');
-assert(haloCss.includes('.dnl-halo-hold>span{animation:none}') && haloCss.includes('.dnl-halo-hold>.dnl-kick{display:none}'), 'paused state freezes the breath and hides the ripple');
+assert(haloCss.includes('.dnl-halobox.dnl-halo-hold .dnl-halo>span{animation:none}') && haloCss.includes('.dnl-halobox.dnl-halo-hold .dnl-halo>.dnl-kick{display:none}'), 'paused state freezes the breath and hides the ripple (hold lives on the shared .dnl-halobox wrapper)');
 const rimTrack = haloCss.slice(haloCss.indexOf('@keyframes dnl-glow-rim'), haloCss.indexOf('@keyframes dnl-glow-mid'));
 assert(/26%\{opacity:\.95\}/.test(rimTrack) && /44%\{opacity:\.85\}/.test(rimTrack), 'fast inhale, then a hold');
 

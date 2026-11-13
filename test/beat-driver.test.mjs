@@ -116,15 +116,16 @@ const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'
 	assert.match(src, /grid\.beatAt\(clock\.read\(now\)\)/, 'sampling uses the raw playback position (song time, aligned with the audio)');
 	assert.match(src, /const playing = st !== null && st\.playing === true;\n\s+let target = playing \? grid\.beatAt/, 'paused playback targets 0 (decays instead of freezing)');
 	assert.match(src, /requestAnimationFrame === "function"\) raf = requestAnimationFrame\(tick\);\n\s+else timer = setTimeout\(tick, 50\)/, 'rAF with a timer fallback for harnesses');
-	assert.match(src, /ref: haloRef,\n\s+style: \{ "--dnl-glow-dur"/, 'the halo span carries the ref');
+	assert.match(src, /ref: haloRef,\n\s+style: \{ "--dnl-glow-dur"/, 'the shared .dnl-halobox wrapper carries the driver ref so vars reach BOTH modules');
 	assert.match(src, /"--dnl-beat-gain": String\(\(Number\.isFinite\(prefs\.glowBeatGain\) \? prefs\.glowBeatGain : 100\) \/ 100\)/, 'the gain ships as an inline CSS var');
-	assert.match(src, /\[beatSource, beatKey, st\?\.playing, prefs\.glowWaveStyle, prefs\.glowDustDensity, prefs\.glow\]/,
-		'the effect re-arms on song/source/playback + wave-style/dust-density/glow-mode changes');
+	assert.match(src, /\}, \[beatSource, beatKey, st\?\.playing\]\);/,
+		'the effect re-arms only on song/source/playback (v0.4.42: no per-grain walk state to resync)');
 }
 {
-	// CSS consumption: the wave svg scales and brightens with the beat.
+	// CSS consumption: the wave svg scales and brightens with the beat (whole-ring
+	// pulse; --dnl-beat uses var fallbacks, no declared default needed).
 	const css = plugin.__test.CSS;
-	assert.match(css, /\.dnl-halo-wave\{overflow:visible;--dnl-wave-hi:1;--dnl-beat:0\}/, '--dnl-beat defaults to 0');
+	assert.match(css, /\.dnl-halobox\{position:absolute;inset:0;z-index:0;pointer-events:none\}/, 'the driver ref target is the shared positioning wrapper');
 	assert.match(css, /transform:scale\(calc\(1 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.05\)\)/, 'a hint of scale with the beat');
 	assert.match(css, /brightness\(calc\(1 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.55\)\)/, 'brightness pulse with the beat');
 }
