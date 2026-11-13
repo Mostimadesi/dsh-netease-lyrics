@@ -73,8 +73,12 @@ assert.match(CSS, /@keyframes dnl-wave-orbit\{to\{stroke-dashoffset:-100\}\}/,
 	'the orbit keyframes walk the dashes along the path (never rotate the element)');
 
 // ---- 3. stardust: DOM offset-path particles (v0.4.43 方案 D) -------------------
-assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:-4px;isolation:isolate;opacity:calc\(\.86 \* var\(--dnl-wave-hi\)\);filter:brightness\(calc\(1 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.6\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\) ease-in-out infinite\}/,
-	'ONE tight band (-4px out); the whole ring brightness itself breathes with the beat (m08390 #2)');
+assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:-4px;isolation:isolate;opacity:calc\(\.86 \* var\(--dnl-wave-hi\)\);animation:dnl-wave-twinkle var\(--dnl-glow-dur,5\.6s\) ease-in-out infinite\}/,
+	'ONE tight band (-4px out), and it carries NO filter (v0.4.45: a pulsing filter over N running grain animations re-rasters the whole chain)');
+assert.doesNotMatch(CSS, /var\(--dnl-wave-hi\)\);filter:brightness/,
+	'the grain group must never take a beat-driven filter again (probe: 33.1 ms/frame at 300 grains)');
+assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.34 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.66\)/,
+	'the beat breathing lives on a CHILDLESS sibling layer instead (m08645 #2/#3)');
 assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
 	'the two-orbit pair stays gone (user m07563: 合成一条宽带)');
 // The geometric contract that fixes the 6:1 squash:
@@ -90,8 +94,8 @@ assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{[^}]*background:radial-gradient
 	'a feathered radial core (bright centre → transparent rim) instead of a hard-edged solid disc');
 assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
 	'every grain runs its own lifecycle; --dur/--del are baked per grain so density stays constant');
-assert.match(CSS, /@keyframes dnl-dust-life\{0%\{translate:0 0;opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\)\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\) \* \.55\)\}100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat,0\) \* var\(--dnl-beat-gain,0\)\)\) calc\(var\(--dy,6px\) \* \(1 \+ var\(--dnl-beat,0\) \* var\(--dnl-beat-gain,0\)\)\);opacity:0\}\}/,
-	'born on the band → drift OUTWARD → fade → respawn, and the outward distance itself swells with the beat (m08390 #2)');
+assert.match(CSS, /@keyframes dnl-dust-life\{0%\{translate:0 0;opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\)\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\) \* \.55\)\}100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\) calc\(var\(--dy,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\);opacity:0\}\}/,
+	'born on the band → drift OUTWARD → fade → respawn; the outward distance swells with the SLOW beat lane (m08390 #2, v0.4.45 detune)');
 assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 \* var\(--dnl-wave-hi\)\)\}50%\{opacity:calc\(\.92 \* var\(--dnl-wave-hi\)\)\}\}/,
 	'the twinkle survives only as weak background noise (m08390 #4: 保留但压弱), so the beat pulse reads as the main motion');
 assert.doesNotMatch(CSS, /dnl-wave-orbit-g|\.dnl-wave \.dg|class="dp"/,

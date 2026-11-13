@@ -93,10 +93,12 @@ assert.match(src, /glowDustHug: undefined \}\) \}, "恢复尘埃默认参数"\)/
 	'the reset button restores the default hug mode too');
 
 // ---- 5. beat drives the ring, not just a blink ------------------------------
-assert.match(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{[^}]*filter:brightness\(calc\(1 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.6\)\)/,
-	'the whole ring brightness rides the beat (m08390 #2a)');
-assert.match(CSS, /100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat,0\) \* var\(--dnl-beat-gain,0\)\)\)/,
-	'the outward drift distance also swells with the beat (m08390 #2b)');
+assert.doesNotMatch(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{[^}]*filter:brightness/,
+	'the grain group carries no beat-driven filter (v0.4.45: it re-rasters the whole chain)');
+assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.34 \+ var\(--dnl-beat-gain,0\) \* var\(--dnl-beat,0\) \* \.66\)/,
+	'the whole ring brightness rides the beat on a childless sibling layer (m08390 #2a / m08645 #2)');
+assert.match(CSS, /100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\)/,
+	'the outward drift distance swells with the SLOW beat lane (m08390 #2b, v0.4.45 detune)');
 assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 /,
 	'twinkle was pushed back to weak background noise (m08390 #4: 保留但压弱)');
 
@@ -110,4 +112,4 @@ const ats = grains.map((g) => g.props.style['--at']);
 assert.equal(ats[0], '0.000%', 'the ring starts at the path origin');
 assert.equal(new Set(ats).size, 8, 'every grain gets a distinct arc-length position');
 
-console.log('ok — dust ring hugs the capsule (v0.4.44 contract)');
+console.log('ok — dust ring hugs the capsule (v0.4.45 contract)');

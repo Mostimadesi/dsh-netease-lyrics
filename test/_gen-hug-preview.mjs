@@ -42,6 +42,7 @@ const block = (hug, label) => `
   <span class="dnl-wave dnl-wave-stardust dnl-wave-both${hug === 'slight' ? ' dnl-hug-slight' : ''}"
         style="--dnl-beat:${beat};--dnl-beat-gain:1;--dnl-dust-glow:1">
     <span class="w1">${grains}</span>
+    <span class="dnl-dustpulse"></span>
   </span>
   <div class="dnl-island"><span class="dnl-line">这是测试歌词的一行</span></div>
   <div class="edge"></div>
@@ -73,4 +74,4 @@ ${beat ? block(mode, '同上，节拍强度 0.85') : ''}`;
 const out = process.argv[2];
 if (!out) { console.error('usage: node test/_gen-hug-preview.mjs <out.html> [slight] [beat]'); process.exit(2); }
 fs.writeFileSync(out, html, 'utf8');
-console.log('wrote ' + out + ' (' + (grains.match(/dnl-dust/g) || []).length + ' grains, hug=' + mode + ', beat=' + beat + ')');
+console.log('wrote ' + out + ' (150 grains, hug=' + mode + ', beat=' + beat + ')');
