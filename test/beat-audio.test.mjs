@@ -97,4 +97,13 @@ test("helper source: the shipped C# compiles the same protocol the host parses",
 	assert.match(csSrc, /AUDCLNT_STREAMFLAGS_LOOPBACK/);
 	// no file writing, no network: prove the helper only computes
 	assert.doesNotMatch(csSrc, /System\.Net|WebRequest|File\.Write|FileStream|Registry/);
+	// v0.4.39: bands are dB-normalized to 0..1 before emit — raw FFT
+	// magnitudes (0..20+) saturated kick/1.2 = the 全部跳动 root cause; the
+	// NCM vision.json dbrange approach maps -60..-20 dB re 256 → 0..1.
+	assert.match(csSrc, /Math\.Log10\(Math\.Max\(v0, 1e-9\) \/ 256\.0\)/,
+		"band magnitudes go through dB normalization (full-scale sine ≈ FFT_N/4 = 256)");
+	assert.match(csSrc, /\(db \+ 60\.0\) \/ 40\.0/,
+		"-60..-20 dB maps to 0..1");
+	assert.match(csSrc, /Math\.Max\(0\.0, Math\.Min\(1\.0,/,
+		"normalized bands are clamped to 0..1");
 });

@@ -3,6 +3,7 @@
 // band magnitudes via a 1024-point FFT, and emits one JSON line per tick on stdout:
 //   {"t":<ms>,"rms":<f>,"b":[<band0>..<band9>]}
 // Bands (Hz): 30-60, 60-120, 120-240, 240-480, 480-960, 960-1920,
+// v0.4.39: each band is dB-normalized to 0..1 (see the emit loop below).
 //             1920-3840, 3840-7680, 7680-15360, 15360-22050
 // Modes:
 //   LoopbackAudio.exe <seconds>   probe mode: self-terminates after N seconds
@@ -265,7 +266,14 @@ class LoopbackAudio {
                     sb.Append((now - t0).ToString(CultureInfo.InvariantCulture));
                     sb.Append(",\"rms\":").Append(Fmt(rms)).Append(",\"b\":[");
                     for (int b = 0; b < 10; b++) {
-                        double v = bandCnt[b] > 0 ? bandSum[b] / bandCnt[b] : 0;
+                        // v0.4.39: dB-normalize each band to 0..1 (the NCM
+                        // vision.json dbrange approach). A full-scale sine
+                        // peaks near FFT_N/4 = 256 with the Hann window, so
+                        // -60..-20 dB re 256 maps to 0..1 — raw magnitudes
+                        // (0..20+) saturated every client-side consumer.
+                        double v0 = bandCnt[b] > 0 ? bandSum[b] / bandCnt[b] : 0;
+                        double db = 20.0 * Math.Log10(Math.Max(v0, 1e-9) / 256.0);
+                        double v = Math.Max(0.0, Math.Min(1.0, (db + 60.0) / 40.0));
                         if (b > 0) sb.Append(',');
                         sb.Append(Fmt(v));
                     }
