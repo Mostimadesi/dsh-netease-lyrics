@@ -97,8 +97,13 @@ const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'
 assert.match(src, /const lineStateRef = useRef\(null\)/, 'the shown index is remembered across renders');
 assert.match(src, /lineStateRef\.current = \{ shown: -1, pending: -1, pendingSince: 0 \}/,
 	'the state object is created lazily (useRef initial values are not universal)');
-assert.match(src, /settleLineIndex\(linesForHooks, clockPos, lineStateRef\.current, Date\.now\(\), backwardSettleMs\(st\?\.pollMs\)\)/,
+// v0.4.27: the lookup position is now the CALIBRATED one (per-track offset), so
+// the assertion pins the argument that reaches settleLineIndex without
+// forbidding the calibration wrapper around it.
+assert.match(src, /settleLineIndex\(linesForHooks, lookupPos, lineStateRef\.current, Date\.now\(\), backwardSettleMs\(st\?\.pollMs\)\)/,
 	'the settled index drives the render, sized by the poll interval');
+assert.match(src, /const lookupPos = offsetPosition\(clockPos, offsetMs\)/,
+	'the lookup position is derived from the clock through the per-track offset');
 assert.match(src, /const index = indexForHooks;/, 'the render reuses the same settled index');
 assert(!/stickyLineIndex\(lines, pos, shownIndexRef/.test(src), 'no second, independent index computation is left');
 

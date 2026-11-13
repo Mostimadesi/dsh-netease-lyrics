@@ -8,7 +8,8 @@ import path from 'node:path';
 import { createLyricService, fingerprintOf } from '../lib/lyric-service.js';
 import {
 	mixinKeyEnc, parseNetscapeCookies, extractBilibiliSessdata, wbiKeysFromNav,
-	signWbiParams, pickSubtitleTrack, subtitlesToLines, splitSubtitleCue, fetchBilibiliSubtitles,
+	signWbiParams, pickSubtitleTrack, pickSubtitlePair, mergeSubtitleTranslation,
+	subtitlesToLines, splitSubtitleCue, fetchBilibiliSubtitles,
 } from '../lib/bilibili-subtitles.js';
 
 let failed = 0;
@@ -65,16 +66,84 @@ check('signWbiParams deterministic',
 	signWbiParams({ bvid: 'BV1GJ411x7h7', cid: '137649199' }, '7cd084941338484aae1ad9425b84077c',
 		'4932caff0ff746eab6f01bf08b70ac45', 1700000000) === signed, 'differs');
 
-// 5. track picking: zh-CN > ai-zh > first-with-url; empty-url tracks skipped.
-check('pickSubtitleTrack prefers zh-CN', pickSubtitleTrack([
-	{ lan: 'en', subtitle_url: 'http://en' }, { lan: 'zh-CN', subtitle_url: 'http://zh' }])?.lan === 'zh-CN', '');
-check('pickSubtitleTrack falls back to ai-zh', pickSubtitleTrack([
-	{ lan: 'en', subtitle_url: 'http://en' }, { lan: 'ai-zh', subtitle_url: 'http://ai' }])?.lan === 'ai-zh', '');
+// 5. track picking.
+//
+// v0.4.28 CHANGED CONTRACT: the old rule was "zh-CN > ai-zh > first", which made
+// a Japanese song display its CHINESE TRANSLATION as the lyric text and never
+// fetch the original at all (reported live 2026-11-11 on BV1W8XjBHEb8, tracks
+// `lan:"zh" 中文` + `lan:"ja" 日本語`). The sung language must win; Chinese then
+// becomes the translation row. A single-language video keeps the old preference.
+check('pickSubtitleTrack prefers the SUNG language over Chinese', pickSubtitleTrack([
+	{ lan: 'zh', subtitle_url: 'http://zh' }, { lan: 'ja', subtitle_url: 'http://ja' }])?.lan === 'ja',
+	'Japanese original must beat the Chinese translation');
+check('pickSubtitleTrack prefers English over Chinese when both exist', pickSubtitleTrack([
+	{ lan: 'zh-CN', subtitle_url: 'http://zh' }, { lan: 'en', subtitle_url: 'http://en' }])?.lan === 'en', '');
+check('pickSubtitleTrack keeps zh-CN when the video is Chinese-only', pickSubtitleTrack([
+	{ lan: 'zh', subtitle_url: 'http://zh' }, { lan: 'zh-CN', subtitle_url: 'http://zhcn' }])?.lan === 'zh-CN',
+	'Chinese-only video keeps the historical zh-CN preference');
+check('pickSubtitleTrack falls back to ai-zh for a Chinese-only video', pickSubtitleTrack([
+	{ lan: 'zh', subtitle_url: 'http://zh' }, { lan: 'ai-zh', subtitle_url: 'http://ai' }])?.lan === 'ai-zh', '');
 check('pickSubtitleTrack skips empty urls', pickSubtitleTrack([
 	{ lan: 'zh-CN', subtitle_url: '' }, { lan: 'en', subtitle_url: 'http://en' }])?.lan === 'en', '');
 check('pickSubtitleTrack null when no urls',
 	pickSubtitleTrack([{ lan: 'zh-CN', subtitle_url: '' }]) === null && pickSubtitleTrack([]) === null
 		&& pickSubtitleTrack(null) === null, '');
+
+// 5b. pickSubtitlePair: primary + translation, and the kana tie-breaker.
+{
+	const zh = { lan: 'zh', subtitle_url: 'http://zh' };
+	const ja = { lan: 'ja', subtitle_url: 'http://ja' };
+	const pair = pickSubtitlePair([zh, ja]);
+	check('pair: ja primary + zh translation', pair.primary?.lan === 'ja' && pair.translation?.lan === 'zh',
+		JSON.stringify({ p: pair.primary?.lan, t: pair.translation?.lan }));
+
+	// Chinese original with English subs: `lan` alone says "en primary", which is
+	// wrong. The kana map cannot help here (no kana either way), but it must not
+	// make things worse: with no kana anywhere, rule 2 still applies.
+	const en = { lan: 'en', subtitle_url: 'http://en' };
+	const pair2 = pickSubtitlePair([zh, en], new Map([['http://zh', false], ['http://en', false]]));
+	check('pair: no kana anywhere -> non-Chinese stays primary', pair2.primary?.lan === 'en', JSON.stringify(pair2));
+
+	// Kana on the Japanese track overrides the `lan`-based guess.
+	const pair3 = pickSubtitlePair([zh, ja], new Map([['http://zh', false], ['http://ja', true]]));
+	check('pair: kana picks the Japanese track', pair3.primary?.lan === 'ja' && pair3.translation?.lan === 'zh', JSON.stringify(pair3));
+
+	// A Chinese-only video: primary is the Chinese track, no translation.
+	const pair4 = pickSubtitlePair([{ lan: 'zh', subtitle_url: 'http://a' }, { lan: 'zh-CN', subtitle_url: 'http://b' }]);
+	check('pair: Chinese-only yields no translation row',
+		pair4.primary?.lan === 'zh-CN' && pair4.translation === null, JSON.stringify(pair4));
+
+	check('pair: empty inputs are safe',
+		pickSubtitlePair([]).primary === null && pickSubtitlePair(null).primary === null
+		&& pickSubtitlePair([{ lan: 'ja', subtitle_url: '' }]).primary === null, '');
+}
+
+// 5c. mergeSubtitleTranslation: pair two tracks by time, 1:1, never guess.
+{
+	const primary = [{ t: 1.28, text: 'あ' }, { t: 13.59, text: 'い' }, { t: 24.8, text: 'う' }];
+	const translated = [{ t: 1.27, text: '甲' }, { t: 13.59, text: '乙' }, { t: 24.8, text: '丙' }];
+	const merged = mergeSubtitleTranslation(primary, translated);
+	check('merge: every line gets its translation', merged.filter((r) => r.trans).length === 3, JSON.stringify(merged));
+	check('merge: a 0.01s offset still pairs', merged[0].trans === '甲', String(merged[0].trans));
+	check('merge: primary text is untouched', merged[1].text === 'い');
+
+	// A translation far away must NOT be attached to the wrong line.
+	const sparse = mergeSubtitleTranslation([{ t: 0, text: 'a' }, { t: 60, text: 'b' }], [{ t: 60, text: 'B' }]);
+	check('merge: a distant cue is not borrowed', sparse[0].trans === undefined && sparse[1].trans === 'B',
+		JSON.stringify(sparse));
+
+	// One-to-one: two short lines may not both take the same long translation.
+	const once = mergeSubtitleTranslation([{ t: 10, text: 'a' }, { t: 10.1, text: 'b' }], [{ t: 10.05, text: 'X' }]);
+	check('merge: a translation row is used at most once',
+		[once[0].trans, once[1].trans].filter(Boolean).length === 1, JSON.stringify(once));
+
+	// A cue that already carries its own translation keeps it (two-in-one track).
+	const own = mergeSubtitleTranslation([{ t: 1, text: 'a', trans: 'own' }], [{ t: 1, text: 'other' }]);
+	check('merge: an existing translation wins', own[0].trans === 'own');
+
+	check('merge: empty translation is a no-op', mergeSubtitleTranslation(primary, []).length === 3);
+	check('merge: empty primary is safe', mergeSubtitleTranslation([], translated).length === 0);
+}
 
 // 6. subtitle body -> lyric lines.
 const lines = subtitlesToLines([
@@ -128,9 +197,12 @@ function makeBilibiliFetch() {
 			img_url: 'https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png',
 			sub_url: 'https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png' } } });
 		if (url.includes('/x/player/wbi/v2?')) return json({ code: 0, data: { subtitle: { subtitles: [
-			{ lan: 'en', subtitle_url: '//aisubtitle.hdslb.com/en.json' },
-			{ lan: 'zh-CN', subtitle_url: '//aisubtitle.hdslb.com/zh.json' },
+			{ lan: 'ja', subtitle_url: '//aisubtitle.hdslb.com/ja.json' },
+			{ lan: 'zh', subtitle_url: '//aisubtitle.hdslb.com/zh.json' },
 			{ lan: 'ko', subtitle_url: '' } ] } } });
+		// Japanese original: contains kana, so it must win over the Chinese track.
+		if (url.startsWith('https://aisubtitle.hdslb.com/ja.json')) return json({ body: [
+			{ from: 0.12, to: 5.12, content: 'あきらめないで' }, { from: 18.55, to: 22.27, content: '恋に不慣れなふたり' } ] });
 		if (url.startsWith('https://aisubtitle.hdslb.com/zh.json')) return json({ body: [
 			{ from: 0.12, to: 5.12, content: '永不放弃你' }, { from: 18.55, to: 22.27, content: '我们对爱情并不陌生' } ] });
 		throw new Error('unexpected url ' + url);
@@ -141,13 +213,19 @@ function makeBilibiliFetch() {
 const chainFetch = makeBilibiliFetch();
 const chainResult = await fetchBilibiliSubtitles({
 	bvid: 'BV1GJ411x7h7', sessdata: 'sess-test', fetchImpl: chainFetch, minGapMs: 0 });
-check('chain maps lines + meta', chainResult.lines.length === 2 && chainResult.pickedLan === 'zh-CN'
+check('chain maps lines + meta', chainResult.lines.length === 2 && chainResult.pickedLan === 'ja'
 	&& chainResult.title === '【官方 MV】测试视频' && chainResult.upName === '测试UP主'
 	&& chainResult.trackCount === 3 && chainResult.urlCount === 2, JSON.stringify(chainResult).slice(0, 220));
+check('chain: the Japanese original is the lyric text, Chinese becomes the translation',
+	chainResult.lines[0].text === 'あきらめないで' && chainResult.lines[0].trans === '永不放弃你'
+		&& chainResult.translationLan === 'zh',
+	JSON.stringify(chainResult.lines[0]));
+check('chain: every line is paired', chainResult.lines.every((row) => typeof row.trans === 'string' && row.trans !== ''),
+	JSON.stringify(chainResult.lines));
 const viewCall = chainFetch.calls.find((row) => row.url.includes('/x/web-interface/view?'));
 const navCall = chainFetch.calls.find((row) => row.url.includes('/x/web-interface/nav'));
 const playerCall = chainFetch.calls.find((row) => row.url.includes('/x/player/wbi/v2?'));
-const subCall = chainFetch.calls.find((row) => row.url.startsWith('https://aisubtitle.hdslb.com/zh.json'));
+const subCall = chainFetch.calls.find((row) => row.url.startsWith('https://aisubtitle.hdslb.com/ja.json'));
 check('view is public (no cookie header)',
 	viewCall && !viewCall.headers.cookie, JSON.stringify(viewCall?.headers));
 check('nav carries SESSDATA cookie', navCall && navCall.headers.cookie === 'SESSDATA=sess-test', JSON.stringify(navCall?.headers));
@@ -155,7 +233,10 @@ check('player is signed and carries cookie',
 	playerCall && /\/x\/player\/wbi\/v2\?bvid=BV1GJ411x7h7&cid=137649199&wts=\d+&w_rid=[0-9a-f]{32}$/.test(playerCall.url)
 		&& playerCall.headers.cookie === 'SESSDATA=sess-test', playerCall?.url);
 check('subtitle download upgrades // to https: and needs no cookie',
-	subCall && subCall.url === 'https://aisubtitle.hdslb.com/zh.json' && !subCall.headers.cookie, subCall?.url);
+	subCall && subCall.url === 'https://aisubtitle.hdslb.com/ja.json' && !subCall.headers.cookie, subCall?.url);
+check('the two tracks are downloaded once each (no duplicate request)',
+	chainFetch.calls.filter((row) => row.url.includes('aisubtitle.hdslb.com')).length === 2,
+	String(chainFetch.calls.filter((row) => row.url.includes('aisubtitle.hdslb.com')).length));
 
 // 8. failure shapes: signature rejection is a distinct error; empty tracks
 // and API codes are clean errors; bad bvid never reaches the network.
