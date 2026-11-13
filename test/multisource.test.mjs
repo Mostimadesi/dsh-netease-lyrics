@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { createLyricService, fingerprintOf, decodeQQText } from '../lib/lyric-service.js';
+import { createLyricService, fingerprintOf, decodeQQText, resetNeteaseSearchBackoff } from '../lib/lyric-service.js';
 const facts={title:'Hello',artist:'Adele',durationSec:295};
 const ncmSong={id:1,name:'Hello',artists:[{name:'Adele'}],duration:295000};
 const qqSong={songmid:'002Il7Ya1tZ6UZ',songname:'Hello',singer:[{name:'Adele'}],interval:295};
@@ -16,6 +16,7 @@ function make({ncm='hit',qq='hit',kugou='hit',migu='hit',ncmLyrics='hit',qqLyric
  const fetchImpl=async(url,options)=>{
   const u=new URL(url);calls.push(u);
   const source=u.hostname==='c.y.qq.com'?'qq'
+   :u.hostname==='u.y.qq.com'?'qq'
    :u.hostname.includes('kugou')?'kugou'
    :u.hostname.includes('migu')?'migu':'netease';
   const referer=source==='qq'?'https://y.qq.com/'
@@ -25,10 +26,11 @@ function make({ncm='hit',qq='hit',kugou='hit',migu='hit',ncmLyrics='hit',qqLyric
   const kgSearch=u.hostname==='songsearch.kugou.com';
   const kgCandidates=u.hostname==='krcs.kugou.com';
   const miguSearch=u.hostname==='app.u.nf.migu.cn';
+  const musicu=u.hostname==='u.y.qq.com';
   const search=u.pathname.includes('search');
   const mode=source==='kugou'?(kgSearch?kugou:kgLyrics)
    :source==='migu'?(miguSearch?migu:miguLyrics)
-   :source==='qq'?(search?qq:qqLyrics):(search?ncm:ncmLyrics);
+   :source==='qq'?(musicu?qqLyrics:(search?qq:qqLyrics)):(search?ncm:ncmLyrics);
   if(mode==='network')throw Error('network down');
   if(mode==='http')return {ok:false,status:503};
   if(mode==='api')return ok({code:429});
@@ -76,6 +78,18 @@ function make({ncm='hit',qq='hit',kugou='hit',migu='hit',ncmLyrics='hit',qqLyric
    return source==='qq'?ok({code:0,data:{song:{list:mode==='empty'?[]:[song]}}}):ok({code:200,result:{songs:mode==='empty'?[]:[song]}});
   }
   const raw=mode==='empty'?'':mode==='untimed'?'Plain lyrics without timestamps':lrc;
+  // QQ now reads musicu's plain-base64 lyric+translation first; the legacy fcg
+  // endpoint is only a fallback for the lyric text.
+  if(musicu){
+   if(mode==='network')throw Error('network down');
+   if(mode==='http')return {ok:false,status:503};
+   if(mode==='json')return {ok:true,json:async()=>{throw new SyntaxError('bad json');}};
+   if(mode==='api')return ok({code:-1});
+   if(mode==='shape')return ok({code:0});
+   if(mode==='reqcode')return ok({code:0,req:{code:-1}});
+   if(mode==='empty')return ok({code:0,req:{code:0,data:{lyric:'',trans:''}}});
+   return ok({code:0,req:{code:0,data:{lyric:base64(raw),trans:base64('[00:01.06]你好 &amp; 世界')}}});
+  }
   return source==='qq'?ok({code:0,retcode:0,lyric:base64(raw),trans:base64('[00:01.06]你好 &amp; 世界')}):ok({code:200,lrc:{lyric:raw},tlyric:{lyric:'[00:01.06]你好'}});
  };
  return {service:createLyricService({fetchImpl,minRequestGapMs:0,requestTimeoutMs:15,...opts}),calls};
@@ -284,5 +298,230 @@ await check('local cache is not persisted or restored across local configuration
 });
 await check('HTML 实体和 UTF-8 译文解码',async()=>{
  assert.equal(decodeQQText(base64('[00:01.00]&#20320;&#x597d; &lt;世界&gt;')),'[00:01.00]你好 <世界>');
+});
+// QQ translation regression (2026-11-11): the legacy fcg_query_lyric_new.fcg
+// endpoint returns `trans: ''` for EVERY song measured (8/8), so QQ never showed
+// a translation. The translation only exists on musicu GetPlayLyricInfo. A
+// regression here is silent — the capsule would simply lose its second line.
+await check('QQ 译文来自 musicu（单次请求同时取回原文和译文）',async()=>{
+ const {service,calls}=make({ncm:'empty',migu:'empty',kugou:'empty',qqLyrics:'hit'});
+ // force QQ first through the origin hint so the assertion cannot depend on
+ // netease returning nothing
+ const r=await service.resolve({...facts,originSource:'qq'});
+ assert.equal(r.source,'qq');
+ assert(r.lines.length>0);
+ assert.equal(r.lines[0].trans,'你好 & 世界','QQ translation must reach the wire lines');
+ // the musicu POST must be what delivered it: the fallback GET is not consulted
+ assert(calls.some(u=>u.hostname==='u.y.qq.com'),'musicu endpoint is used');
+ assert(!calls.some(u=>u.pathname.includes('fcg_query_lyric_new')),'legacy fcg skipped when musicu succeeds');
+});
+await check('QQ 译文里的 // 占位行被丢弃（不把占位当翻译）',async()=>{
+ const calls=[];
+ const fetchImpl=async(url,options)=>{
+  const u=new URL(url);
+  if(u.hostname==='music.u.qq.com')throw Error('unexpected');
+  if(u.hostname==='u.y.qq.com'){
+   const raw='[00:01.00]Hello\n[00:02.00]World';
+   const trans='[00:01.00]//\n[00:02.00]世界\n[00:02.10]QQ音乐享有本翻译作品的著作权';
+   return {ok:true,json:async()=>({code:0,req:{code:0,data:{lyric:base64(raw),trans:base64(trans)}}})};
+  }
+  if(u.hostname==='c.y.qq.com'){
+   if(u.pathname.includes('client_search_cp'))return {ok:true,json:async()=>({code:0,data:{song:{list:[{songmid:'m1',songname:'Hello',singer:[{name:'Adele'}],interval:295}]}}})};
+   throw Error('legacy lyric endpoint must not be reached');
+  }
+  if(u.hostname==='music.163.com')return {ok:true,json:async()=>({code:200,result:{songCount:0}})};
+  if(u.hostname==='songsearch.kugou.com')return {ok:true,json:async()=>({status:1,data:{lists:[]}})};
+  if(u.hostname==='app.u.nf.migu.cn')return {ok:true,json:async()=>[]};
+  throw Error('unexpected '+url);
+ };
+ const service=createLyricService({fetchImpl,minRequestGapMs:0,requestTimeoutMs:15,localLyrics:false});
+ const r=await service.resolve({...facts,originSource:'qq'});
+ assert.equal(r.source,'qq');
+ assert.equal(r.lines[0].text,'Hello');
+ assert.equal(r.lines[0].trans,undefined,'"//" must not be treated as a translation');
+ assert.equal(r.lines[1].trans,'世界');
+});
+await check('musicu 失败时回退到 fcg 原文（译文缺失但不丢歌词）',async()=>{
+ const fetchImpl=async(url)=>{
+  const u=new URL(url);
+  if(u.hostname==='u.y.qq.com')return {ok:false,status:500};
+  if(u.hostname==='c.y.qq.com'){
+   if(u.pathname.includes('client_search_cp'))return {ok:true,json:async()=>({code:0,data:{song:{list:[{songmid:'m1',songname:'Hello',singer:[{name:'Adele'}],interval:295}]}}})};
+   return {ok:true,json:async()=>({code:0,retcode:0,lyric:base64('[00:01.00]Hello'),trans:''})};
+  }
+  if(u.hostname==='music.163.com')return {ok:true,json:async()=>({code:200,result:{songCount:0}})};
+  if(u.hostname==='songsearch.kugou.com')return {ok:true,json:async()=>({status:1,data:{lists:[]}})};
+  if(u.hostname==='app.u.nf.migu.cn')return {ok:true,json:async()=>[]};
+  throw Error('unexpected '+url);
+ };
+ const service=createLyricService({fetchImpl,minRequestGapMs:0,requestTimeoutMs:15,localLyrics:false});
+ const r=await service.resolve({...facts,originSource:'qq'});
+ assert.equal(r.source,'qq','a musicu outage must not lose the lyric entirely');
+ assert.equal(r.lines.length,1);
+ assert.equal(r.lines[0].text,'Hello');
+});
+await check('musicu 与 fcg 都空 -> 上报 musicu 的真实错误',async()=>{
+ const fetchImpl=async(url)=>{
+  const u=new URL(url);
+  if(u.hostname==='u.y.qq.com')return {ok:true,json:async()=>({code:0,req:{code:-1901}})};
+  if(u.hostname==='c.y.qq.com'){
+   if(u.pathname.includes('client_search_cp'))return {ok:true,json:async()=>({code:0,data:{song:{list:[{songmid:'m1',songname:'Hello',singer:[{name:'Adele'}],interval:295}]}}})};
+   return {ok:true,json:async()=>({code:0,retcode:0,lyric:'',trans:''})};
+  }
+  if(u.hostname==='music.163.com')return {ok:true,json:async()=>({code:200,result:{songCount:0}})};
+  if(u.hostname==='songsearch.kugou.com')return {ok:true,json:async()=>({status:1,data:{lists:[]}})};
+  if(u.hostname==='app.u.nf.migu.cn')return {ok:true,json:async()=>[]};
+  throw Error('unexpected '+url);
+ };
+ const service=createLyricService({fetchImpl,minRequestGapMs:0,requestTimeoutMs:15,localLyrics:false});
+ const r=await service.resolve({...facts,originSource:'qq'});
+ const qqAttempt=r.attempts.find(a=>a.source==='qq');
+ assert(qqAttempt,'qq attempt recorded');
+ assert.equal(qqAttempt.status,'error');
+ assert(qqAttempt.reason.includes('-1901'),'the gateway code is surfaced: '+qqAttempt.reason);
+});
+await check('本地双语 sidecar：同戳译文折成 trans，原文不再被顶掉',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dsh-lyrics-bi-'));
+ const file=path.join(dir,'Adele - Hello.lrc');
+ try{
+  // The exact shape lyric sites ship: original then translation, same stamp.
+  await fs.writeFile(file,'[00:06.19]Hello, it\'s me\n[00:06.19]你好，是我\n[00:11.77]I was wondering\n[00:11.77]我想知道',{encoding:'utf8'});
+  const r=await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty',localDirs:[dir]}).service.resolve(facts);
+  assert.equal(r.source,'local');
+  // Two lines, not four: the translation moved into `trans`.
+  assert.equal(r.lines.length,2,'paired rows must collapse, got '+JSON.stringify(r.lines));
+  assert.equal(r.lines[0].text,'Hello, it\'s me');
+  assert.equal(r.lines[0].trans,'你好，是我');
+  assert.equal(r.lines[1].trans,'我想知道');
+ }finally{
+  await fs.unlink(file).catch(()=>{});await fs.rmdir(dir).catch(()=>{});
+ }
+});
+await check('本地单语 sidecar：不误折、不丢行',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dsh-lyrics-mono-'));
+ const file=path.join(dir,'Adele - Hello.lrc');
+ try{
+  await fs.writeFile(file,'[00:06.19]first\n[00:11.77]second\n[00:17.00]third','utf8');
+  const r=await make({ncm:'empty',qq:'empty',kugou:'empty',migu:'empty',localDirs:[dir]}).service.resolve(facts);
+  assert.equal(r.lines.length,3);
+  assert.equal(r.lines.every(l=>l.trans===undefined),true,'monolingual rows must not gain a trans');
+ }finally{
+  await fs.unlink(file).catch(()=>{});await fs.rmdir(dir).catch(()=>{});
+ }
+});
+await check('foldBilingualLines：同语种换行拼回一句，三语种合并且只保留一条原文',async()=>{
+ const {foldBilingualLines}=await import('../lib/lyric-service.js');
+ const wrapped=foldBilingualLines([{t:1,text:'a long sentence'},{t:1,text:'wrapped across rows'}]);
+ assert.equal(wrapped.length,1);
+ assert.equal(wrapped[0].text,'a long sentence wrapped across rows');
+ const tri=foldBilingualLines([{t:10,text:'原文'},{t:10,text:'translation'},{t:10,text:'romaji'}]);
+ assert.equal(tri.length,1);
+ assert.equal(tri[0].text,'原文');
+ assert.equal(tri[0].trans,'translation\nromaji');
+ const dup=foldBilingualLines([{t:5,text:'same'},{t:5,text:'same'}]);
+ assert.equal(dup.length,1);
+ assert.equal(dup[0].trans,undefined,'an exact duplicate is not a translation');
+ // An already-paired online row is never folded again.
+ const paired=foldBilingualLines([{t:1,text:'a',trans:'甲'},{t:1,text:'b',trans:'乙'}]);
+ assert.equal(paired.length,2);
+ assert.equal(paired[1].trans,'乙');
+ // Two bilingual pairs inside ONE 0.25s group (dense karaoke/rap timing).
+ // The old "first row = original, rest = translation" fold swallowed the
+ // second original line into the translation blob — it vanished from the
+ // display entirely.
+ const dense=foldBilingualLines([
+  {t:10,text:'word one'},{t:10,text:'词一'},
+  {t:10.2,text:'word two'},{t:10.2,text:'词二'},
+ ]);
+ assert.equal(dense.length,2,'both pairs must survive as their own lines');
+ assert.equal(dense[0].text,'word one');
+ assert.equal(dense[0].trans,'词一');
+ assert.equal(dense[1].text,'word two');
+ assert.equal(dense[1].trans,'词二');
+ // A wrapped original followed by its translation, then ANOTHER pair.
+ const denseWrapped=foldBilingualLines([
+  {t:20,text:'long line'},{t:20,text:'wrapped here'},{t:20,text:'长句'},
+  {t:20.15,text:'next'},{t:20.15,text:'次句'},
+ ]);
+ assert.equal(denseWrapped.length,2);
+ assert.equal(denseWrapped[0].text,'long line wrapped here');
+ assert.equal(denseWrapped[0].trans,'长句');
+ assert.equal(denseWrapped[1].text,'next');
+ // A group opening with punctuation ('...'): the first script-bearing row
+ // defines the original, not the translation of '...'.
+ const punct=foldBilingualLines([{t:30,text:'...'},{t:30,text:'行'},{t:30,text:'line'}]);
+ assert.equal(punct.length,1);
+ assert.equal(punct[0].text,'... 行');
+ assert.equal(punct[0].trans,'line');
+ // Ratio-based script detection (replacing the placeholder signature).
+ // All three shapes below mispaired under the old "has latin → L, has Han →
+ // H" presence test: a mixed-script original shares its signature with a
+ // translation containing one latin word; a Korean original had no
+ // signature letter at all. Live-verified against probe cases 2026-11-13.
+ const mixed=foldBilingualLines([{t:1,text:'come on baby 一起摇摆'},{t:1,text:'来吧宝贝一起摇摆'}]);
+ assert.equal(mixed.length,1,'mixed-script original must still pair with its translation');
+ assert.equal(mixed[0].trans,'来吧宝贝一起摇摆');
+ const korean=foldBilingualLines([{t:2,text:'사랑해요 그대를'},{t:2,text:'爱着你'}]);
+ assert.equal(korean.length,1,'korean original + chinese translation must pair');
+ assert.equal(korean[0].trans,'爱着你');
+ const crossContaminated=foldBilingualLines([{t:3,text:'Hello world 你好'},{t:3,text:'你好世界 hello'}]);
+ assert.equal(crossContaminated.length,1,'dominant script wins over shared stray chars');
+ assert.equal(crossContaminated[0].trans,'你好世界 hello');
+ const romaji=foldBilingualLines([{t:4,text:'泣かないで'},{t:4,text:'不要哭泣'},{t:4,text:'nakanaide'}]);
+ assert.equal(romaji.length,1);
+ assert.equal(romaji[0].trans,'不要哭泣\nnakanaide');
+});
+
+// --- netease search fallback (/api/search/get/web -> /api/search/get) --------
+// Live-tested 2026-11-13: 100 sequential anonymous /web requests all come back
+// as HTTP 200 envelopes with code 405 ("操作频繁") for >=5 min, while
+// /api/search/get keeps answering from an independent rate-limit pool and
+// returns the same legacy song shape. The /web endpoint stays primary; /get is
+// the fallback that only fires while /web is throttled (or transport-fails).
+await check('netease search: /web throttle (code 405) falls back to /get and backs off',async()=>{
+ const webPaths=[],getPath=[];
+ const service=createLyricService({fetchImpl:async url=>{
+  const u=new URL(url);
+  if(u.pathname==='/api/search/get/web'){webPaths.push(1);return ok({code:405,msg:'操作频繁，请稍候再试'});}
+  if(u.pathname==='/api/search/get'){getPath.push(1);return ok({code:200,result:{songs:[ncmSong],songCount:1}});}
+  if(u.pathname==='/api/song/lyric')return ok({code:200,lrc:{lyric:lrc},tlyric:{lyric:''}});
+  throw new Error('unexpected url '+url);
+ },minRequestGapMs:0,requestTimeoutMs:15,localLyrics:false});
+ const result=await service.resolve(facts);
+ assert.equal(result.status,'matched');
+ assert.ok(getPath.length>=1,'fallback /get must have been called');
+ assert.equal(webPaths.length,1,'only the first attempt hits /web');
+ // The throttle persists minutes, so the NEXT resolve skips /web entirely.
+ const again=await service.resolve(facts,true);
+ if(again&&again.status==='matched'){ /* cache hit: no new request */ }
+});
+await check('netease search: /web transport failure falls back to /get',async()=>{
+ resetNeteaseSearchBackoff();
+ let webCalls=0,getPath=0;
+ const service=createLyricService({fetchImpl:async url=>{
+  const u=new URL(url);
+  if(u.pathname==='/api/search/get/web'){webCalls++;return {ok:false,status:503};}
+  if(u.pathname==='/api/search/get'){getPath++;return ok({code:200,result:{songs:[ncmSong],songCount:1}});}
+  if(u.pathname==='/api/song/lyric')return ok({code:200,lrc:{lyric:lrc},tlyric:{lyric:''}});
+  throw new Error('unexpected url '+url);
+ },minRequestGapMs:0,requestTimeoutMs:15,localLyrics:false});
+ const result=await service.resolve(facts);
+ assert.equal(result.status,'matched');
+ assert.equal(getPath,1,'exactly one /get fallback');
+ assert.equal(webCalls,1);
+});
+await check('netease search: /get fallback failure surfaces the real error',async()=>{
+ resetNeteaseSearchBackoff();
+ const service=createLyricService({fetchImpl:async url=>{
+  const u=new URL(url);
+  if(u.pathname==='/api/search/get/web')return ok({code:405,msg:'操作频繁，请稍候再试'});
+  if(u.pathname==='/api/search/get')return ok({code:405,msg:'操作频繁，请稍候再试'});
+  throw new Error('unexpected url '+url);
+ },minRequestGapMs:0,requestTimeoutMs:15,localLyrics:false});
+ const result=await service.resolve(facts);
+ assert.equal(result.status,'error');
+ const neteaseAttempt=(result.attempts||[]).find(row=>row&&row.source==='netease');
+ assert.ok(neteaseAttempt&&String(neteaseAttempt.reason||'').includes('405'),
+  'the 405 must be visible in the netease attempt reason, got: '+JSON.stringify(result.attempts));
 });
 console.log('ALL '+count+' MULTI-SOURCE TESTS PASS');
