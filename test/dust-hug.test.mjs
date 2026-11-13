@@ -42,15 +42,17 @@ const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'
 const grainRule = CSS.match(/\.dnl-wave \.dnl-dust\{([^}]*)\}/);
 assert.ok(grainRule, 'the grain rule exists');
 const grain = grainRule[1];
-assert.match(grain, /position:absolute;inset:0;/,
-	'the grain element fills the band; a dot-sized element makes the path collapse onto one point (v0.4.43 bug)');
+assert.match(grain, /position:absolute;left:0;top:0;width:var\(--sz,3px\);height:var\(--sz,3px\);/,
+	'the grain box IS the dot (v0.4.48): pixel probe 16 rendered dot-sized and full-bleed carriers and the '
+	+ 'rings were identical, so the band-sized box was pure cost');
+assert.match(grain, /contain:layout style paint;/,
+	'each grain is layout/paint contained, so no grain can dirty the whole band');
 assert.doesNotMatch(grain, /inset:calc\(-1 \* var\(--off/,
 	'the band offset must NOT be applied by growing the grain box — inset() resolves against the '
 	+ 'containing block, so the path stayed identical and the thickness slider did nothing (v0.4.46 bug, user m11872 #1)');
-assert.doesNotMatch(grain, /width:var\(--sz/,
-	'the grain element must NOT be sized by the dot diameter — that is what broke the ring');
-assert.doesNotMatch(grain, /height:var\(--sz/,
-	'the grain element must not be dot-sized vertically either');
+assert.doesNotMatch(grain, /inset:0;contain/,
+	'a full-bleed carrier is no longer needed: the ring shape comes from inset() resolving against the '
+	+ 'containing block, not from the grain box (v0.4.48)');
 assert.match(grain, /offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) 4px round 999px\);/,
 	'each grain carries its own outward offset inside the path expression, so raising the count '
 	+ 'thickens the band instead of piling every grain on one line');
@@ -61,20 +63,16 @@ assert.match(grain, /offset-anchor:center;/,
 assert.match(grain, /offset-rotate:0deg;/,
 	'the dot never rotates with the path tangent');
 
-// ---- 2. the visible dot is the ::after, pinned to the anchor -----------------
-const dotRule = CSS.match(/\.dnl-wave \.dnl-dust::after\{([^}]*)\}/);
-assert.ok(dotRule, 'the dot pseudo-element exists');
-const dot = dotRule[1];
-assert.match(dot, /position:absolute;left:50%;top:50%;/,
-	'the dot is centred on the path anchor');
-assert.match(dot, /translate:-50% -50%;/,
-	'the dot is offset by half its own size so it is truly centred');
-assert.match(dot, /width:var\(--sz,3px\);height:var\(--sz,3px\);/,
-	'each grain keeps its own baked diameter');
-assert.match(dot, /border-radius:50%;/,
+// ---- 2. the dot IS the element; light piles up once, on the group -----------
+assert.doesNotMatch(CSS, /\.dnl-wave \.dnl-dust::after/,
+	'there is no ::after: the gradient paints on the element itself, which halves the painted nodes');
+assert.match(grain, /border-radius:50%;/,
 	'the dot is round — never a stretched bar');
-assert.match(dot, /mix-blend-mode:plus-lighter;/,
-	'overlaps accumulate light like the official additive particle field');
+assert.match(grain, /background-image:radial-gradient\(circle,/,
+	'the material is a feathered radial core, not a hard-edged disc');
+assert.match(CSS, /\.dnl-wave>\.w1\{mix-blend-mode:plus-lighter\}/,
+	'overlaps accumulate light like the official additive particle field — applied ONCE on the group, '
+	+ 'because probe v5 measured per-grain and group blending as indistinguishable in cost and look');
 
 // ---- 3. ring-vs-band geometry: the ring lands outside the pill rim ----------
 const bandOut = Number(CSS.match(/\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:(-?\d+)px/)?.[1]);
@@ -137,9 +135,9 @@ const denseOffs = denseGrains.map((g) => parseFloat(g.props.style['--off']));
 assert.equal(new Set(denseOffs).size, 220,
 	'offsets are low-discrepancy, so 220 grains still get 220 distinct rings — '
 	+ 'the old ((i*37)%100)/100 repeated every 100 and striped the band');
-assert.match(CSS, /\.dnl-wave\.dnl-dust-dense \.dnl-dust::after\{mix-blend-mode:normal\}/,
-	'dense tiers drop the per-grain blend surface (user m11591 #2: 200 grains stuttered)');
-assert.match(CSS, /\.dnl-wave\.dnl-dust-dense>\.w1\{mix-blend-mode:plus-lighter\}/,
-	'...and re-add the SAME additive look once on the group, so the material does not change');
+assert.match(CSS, /\.dnl-wave>\.w1\{mix-blend-mode:plus-lighter\}/,
+	'the additive surface is a single group layer for every tier (user m11591 #2: 200 grains stuttered)');
+assert.doesNotMatch(CSS, /\.dnl-wave \.dnl-dust\{[^}]*mix-blend-mode:/,
+	'no per-grain blend surface is left behind — that was the cost that scaled with the grain count');
 
-console.log('ok — dust ring hugs the capsule (v0.4.47 contract)');
+console.log('ok — dust ring hugs the capsule (v0.4.48 contract)');

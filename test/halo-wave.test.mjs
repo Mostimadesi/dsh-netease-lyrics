@@ -1,6 +1,6 @@
 // Style + render contracts for the ambient wave ornaments.
 //
-// v0.4.43 宇宙尘埃 rework (user m08159 → m08199 方案 D): the dust field is DOM
+// v0.4.48 宇宙尘埃 rework (user m08159 → m08199 方案 D): the dust field is DOM
 // particles, NOT SVG circles. The old build rode `viewBox="0 0 100 100"` with
 // `preserveAspectRatio="none"` inside a 484×82 box — 4.84× horizontal scale
 // against 0.82× vertical, i.e. a 5.9:1 stretch that turned every round grain
@@ -82,15 +82,17 @@ assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.22 \+ min\(var\(--dnl-b
 assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
 	'the two-orbit pair stays gone (user m07563: 合成一条宽带)');
 // The geometric contract that fixes the 6:1 squash:
-assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;inset:0;offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
-	'the grain element FILLS the band and carries the path, and its own --off lives INSIDE the path expression — a dot-sized element collapsed the whole ring onto one point (v0.4.43), and growing the box instead left the path byte-identical because inset() resolves against the containing block (v0.4.46, user m11872 #1)');
-assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{content:'';position:absolute;left:50%;top:50%;width:var\(--sz,3px\);height:var\(--sz,3px\);translate:-50% -50%;border-radius:50%;mix-blend-mode:plus-lighter;/,
-	'the visible dot is a centred ::after, so it lands exactly on the path anchor and overlaps accumulate light');
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;left:0;top:0;width:var\(--sz,3px\);height:var\(--sz,3px\);border-radius:50%;contain:layout style paint;offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;/,
+	'the grain box IS the dot, and its --off lives INSIDE the path expression — inset() resolves against the containing block, so the ring shape is independent of the box (pixel probe 16 renders dot-sized and full-bleed carriers identically) while a band-sized box per grain was the only cost scaling with the grain count (user m12299 #2)');
+assert.doesNotMatch(CSS, /\.dnl-wave \.dnl-dust::after/,
+	'there is no ::after any more — the gradient paints on the element itself, halving the painted nodes (v0.4.48)');
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*contain:layout style paint;/,
+	'each grain is layout/paint contained so it cannot dirty the whole band');
 assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-9px\}/,
 	'the plain-outset hug mode survives as the fallback and is now visibly wider than wrap (m11591 #4)');
 assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) round 999px\)\}/,
 	'fallback mode drops the end pinch and rides the band edge');
-assert.match(CSS, /\.dnl-wave \.dnl-dust::after\{[^}]*background:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*background-image:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
 	'a feathered radial core (bright centre → transparent rim) instead of a hard-edged solid disc');
 assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
 	'every grain runs its own lifecycle; --dur/--del are baked per grain so density stays constant');
@@ -168,10 +170,10 @@ assert.doesNotMatch(src, /className: "wt"/,
 	'the rotated .wt span stays gone (rotating a capsule ring was the U-shape bug)');
 
 // ---- 8. settings UI ------------------------------------------------------------------
-assert.match(src, /h\("h3", \{ key: "grp-glow", className: "dnl-set-group" \}, "呼吸灯"\)/,
-	'the 呼吸灯 group header exists');
-assert.match(src, /h\("h3", \{ key: "grp-wave", className: "dnl-set-group" \}, "音频环"\)/,
-	'the 音频环 group header exists (a separate module, m07693 #2)');
+assert.match(src, /SEC\("呼吸灯", false\)/,
+	'呼吸灯 is a collapsible section (user m12299 #0: 每个设置区域可展开/收起)');
+assert.match(src, /SEC\("音频环", false\)/,
+	'音频环 is its own collapsible section, independent of 呼吸灯 (a separate module, m07693 #2)');
 assert.doesNotMatch(src, /prefs\.glow === "theme" \|\| prefs\.glow === "cover" \|\| prefs\.glow === undefined \? h\("label", \{ key: "glow-wave"/,
 	'the wave-ring select is no longer gated on the breathing lamp mode');
 assert.match(CSS, /\.dnl-set-group\{display:flex;flex-direction:column/, 'group header styling exists');
