@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.4.49 - 2026-11-14 (dev)
+
+**修复：YRC 逐字歌词 sweep 卡顿（4fps → 每帧驱动）**
+
+用户报告逐字"点亮的填充"不平滑、看起来帧数很低。根因：sweep 值在 React 渲染期
+计算（`wordProgress(lines[i], lookupPos)` 写进 `--dnl-sweep`），而组件重渲染由
+`useTrackState` 的 **250ms 插值 tick** 驱动——逐字进度每秒只更新 4 次。进度计算
+与播放时钟插值本身都正确，瓶颈只在更新频率。
+
+修复：新增 rAF sweep driver（`lib/client.js`，beat driver 之后的 useEffect）——
+仅当 `playing` 且 active 行带词级时间轴时启动，每帧 `clock.read(now)` 采样、
+`wordProgress` 计算、直接对 active 行 DOM 写 `--dnl-sweep`（CSS 变量继承到行的
+`.dnl-line-sweep` 子节点）。设计要点：
+
+- **双写者共存**：React 渲染仍会写一次 4Hz 值，rAF 下一帧立即覆盖纠正，视觉无跳变；
+  不把 sweep 改成 React state（60fps setState 会全树重渲染）。
+- **暂停即停**：`sweepLineKey` 置空 → effect cleanup 取消挂起帧、循环停止；
+  最后写入值保留（时钟冻结时该值仍正确；不删属性，避免 CSS fallback
+  `var(--dnl-sweep, 100%)` 把暂停读成"全唱完"）。
+- 仅 `0 < sweep < 1` 时写值，边界走 React 原路径。
+
+测试：新增 `test/sweep-driver.test.mjs`（可运行 React shim + 假 DOM + 手动 rAF
+pump，观测 ref DOM 直写而非 vnode 树）：驱动每帧写且值推进（66.8% → 66.9%…）、
+无词级歌词不启动循环、暂停后 cleanup 生效不再写入，3 项全过。全量 npm test
+fail 0、npm run check 7 文件语法全过。
+
 ## 0.4.36 - 2026-11-13 (dev)
 
 **修复：QQ 译文修复前的旧缓存把无译文结果服务满 15 天（缓存版本 2→3）**
