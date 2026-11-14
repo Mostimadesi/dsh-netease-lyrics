@@ -1,5 +1,5 @@
 // v0.4.46 preview: real plugin CSS + real island markup, dust frozen mid-cycle.
-// Usage: node test/_gen-hug-preview.mjs <out.html> [--slight] [--beat] [--spread=0..100]
+// Usage: node test/_gen-hug-preview.mjs <out.html> [--slight] [--beat] [--spread=0..100] [--count=4..300]
 //   Flags, not positional args: PowerShell 5.1 silently swallows an empty ""
 //   argument, which once shifted --spread into the beat slot.
 import fs from 'node:fs';
@@ -40,6 +40,10 @@ const beat = hasFlag('--beat') ? 0.85 : 0;
  * plugin can never produce. */
 const spreadArg = flagValue('--spread', NaN);
 const spread = Number.isFinite(spreadArg) ? Math.min(100, Math.max(0, spreadArg)) / 100 : plugin.__test.DUST_SPREAD({});
+/* v0.4.49: at counts above DUST_ANIM_CAP some grains hold a static brightness,
+ * so the preview has to be able to render the full 300 to show that. */
+const countArg = flagValue('--count', 150);
+const count = Math.min(300, Math.max(4, Math.round(countArg)));
 // Serialise the REAL grain nodes (no duplicated math): dustGrains() returns
 // plain React elements, so a tiny serialiser keeps the preview honest.
 const toHtml = (el) => {
@@ -53,7 +57,7 @@ const toHtml = (el) => {
 	].filter(Boolean).join(' ');
 	return '<' + el.type + (attrs ? ' ' + attrs : '') + '>' + toHtml(children) + '</' + el.type + '>';
 };
-const grains = toHtml(DUST(150, 'medium', spread));
+const grains = toHtml(DUST(count, 'medium', spread));
 
 const block = (hug, label) => `
 <div class="frame">
@@ -92,4 +96,4 @@ ${beat ? block(mode, '同上，节拍强度 0.85') : ''}`;
 const out = process.argv[2];
 if (!out) { console.error('usage: node test/_gen-hug-preview.mjs <out.html> [--slight] [--beat] [--spread=0..100]'); process.exit(2); }
 fs.writeFileSync(out, html, 'utf8');
-console.log('wrote ' + out + ' (150 grains, hug=' + mode + ', spread=' + spread + ', beat=' + beat + ')');
+console.log('wrote ' + out + ' (' + count + ' grains, hug=' + mode + ', spread=' + spread + ', beat=' + beat + ')');

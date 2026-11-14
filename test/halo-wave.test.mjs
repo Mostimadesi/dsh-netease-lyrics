@@ -94,8 +94,12 @@ assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(cal
 	'fallback mode drops the end pinch and rides the band edge');
 assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*background-image:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
 	'a feathered radial core (bright centre → transparent rim) instead of a hard-edged solid disc');
-assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
-	'every grain runs its own lifecycle; --dur/--del are baked per grain so density stays constant');
+assert.doesNotMatch(CSS, /\.dnl-wave \.dnl-dust\{[^}]*animation:dnl-dust-life/,
+	'the ANIMATION now belongs to .dnl-dust-live only (v0.4.50): the per-frame cost is linear in the number of elements that own a CSS animation (probe v9: 600=17.9ms, 1200=32.8ms, 2400=75.4ms) while the same field with the animations removed sits at 16.7ms even at 2400, so a budget caps which grains cycle and the count slider stops costing frames');
+assert.match(CSS, /\.dnl-wave \.dnl-dust\.dnl-dust-live\{animation:dnl-dust-life var\(--dur,9s\) linear var\(--del,0s\) infinite\}/,
+	'the grains that DID get an animation slot still run their own lifecycle; --dur/--del are baked per grain so density stays constant');
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*opacity:var\(--fade,\.6\)/,
+	'grains outside the budget hold a fixed per-grain brightness (--fade) instead of cycling, so the field keeps its uneven, dusty look');
 assert.match(CSS, /@keyframes dnl-dust-life\{0%\{translate:0 0;opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\)\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\) \* \.55\)\}100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\) calc\(var\(--dy,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\);opacity:0\}\}/,
 	'born on the band → drift OUTWARD → fade → respawn; the outward distance swells with the SLOW beat lane (m08390 #2, v0.4.45 detune)');
 assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 \* var\(--dnl-wave-hi\)\)\}50%\{opacity:calc\(\.92 \* var\(--dnl-wave-hi\)\)\}\}/,
@@ -108,8 +112,8 @@ assert.doesNotMatch(CSS, /dnl-wave-wave>|dnl-wave\.dnl-wave-wave/,
 // ---- 4. hold / burst / scope / reduced-motion -------------------------------------
 assert.match(CSS, /\.dnl-halobox\.dnl-halo-hold \.dnl-halo>span\{animation:none\}/,
 	'parked playback: the breathing halo layers freeze (hold lives on the shared wrapper)');
-assert.match(CSS, /\.dnl-halobox\.dnl-halo-hold \.dnl-wave>\.w1,\.dnl-halobox\.dnl-halo-hold \.dnl-wave>\.w2,\.dnl-halobox\.dnl-halo-hold \.dnl-wave \.r1,\.dnl-halobox\.dnl-halo-hold \.dnl-wave \.r2,\.dnl-halobox\.dnl-halo-hold \.dnl-wave circle\.dp\{animation-play-state:paused\}/,
-	'parked playback also stills the ring boxes, dash orbits AND every grain lifecycle');
+assert.match(CSS, /\.dnl-halobox\.dnl-halo-hold \.dnl-wave>\.w1,\.dnl-halobox\.dnl-halo-hold \.dnl-wave>\.w2,\.dnl-halobox\.dnl-halo-hold \.dnl-wave \.r1,\.dnl-halobox\.dnl-halo-hold \.dnl-wave \.r2,\.dnl-halobox\.dnl-halo-hold \.dnl-wave circle\.dp,\.dnl-halobox\.dnl-halo-hold \.dnl-wave \.dnl-dust\.dnl-dust-live\{animation-play-state:paused\}/,
+	'parked playback also stills the ring boxes, dash orbits AND every live grain lifecycle (v0.4.50: the animation moved to .dnl-dust-live, so the hold rule has to name it too or the grains keep drifting while the song is paused)');
 assert.doesNotMatch(CSS, /\.dnl-halo-burst>\.w1/,
 	'burst no longer hides the ring — breathing lamp and wave ring are independent modules (m07693 #2)');
 assert.match(CSS, /\.dnl-shell-expanded \.dnl-wave:not\(\.dnl-wave-both\)>\.w1,\.dnl-shell-expanded \.dnl-wave:not\(\.dnl-wave-both\)>\.w2\{display:none\}/,
@@ -125,8 +129,12 @@ assert.match(src, /const DUST_COUNT = \(np\) =>/, 'the count helper exists');
 assert.match(src, /return np\.glowDustDensity === "dense" \? 300 : 150;/,
 	'legacy dense/normal prefs still resolve when no explicit count is saved');
 assert.match(src, /const dustGrains = \(count, sizeTier, spread\) =>/, 'the grain factory takes a size tier and a band spread');
-assert.match(src, /h\("i", \{\n\s+key: "d" \+ i,\n\s+className: "dnl-dust",/,
-	'grains render as DOM <i class="dnl-dust">, not svg circles');
+assert.match(src, /h\("i", \{\n\s+key: "d" \+ i,\n\s+className: live \? "dnl-dust dnl-dust-live" : "dnl-dust",/,
+	'grains render as DOM <i class="dnl-dust">, and the ones inside the animation budget also carry .dnl-dust-live (v0.4.50)');
+assert.match(src, /const anim = dustAnimSet\(count\);/,
+	'the factory asks the budget helper which grains may animate');
+assert.match(src, /const dustAnimSet = \(count\) => \{[\s\S]*?const cap = Math\.min\(count, DUST_ANIM_CAP\);/,
+	'the budget is min(count, DUST_ANIM_CAP) so the cost is O(cap), not O(count)');
 assert.match(src, /const at = \(i \/ count\) \* 100;/,
 	'offset-distance is arc-length parameterised, so equal steps are equally spaced around the capsule');
 assert.doesNotMatch(src, /cx: \+\(50 \+ r \* Math\.cos/,

@@ -140,4 +140,33 @@ assert.match(CSS, /\.dnl-wave>\.w1\{mix-blend-mode:plus-lighter\}/,
 assert.doesNotMatch(CSS, /\.dnl-wave \.dnl-dust\{[^}]*mix-blend-mode:/,
 	'no per-grain blend surface is left behind — that was the cost that scaled with the grain count');
 
-console.log('ok — dust ring hugs the capsule (v0.4.48 contract)');
+/* ---- 8. the animation budget decouples frames from the count (v0.4.50) -----
+ * Probe v9 measured the law: frames track the number of elements that OWN a CSS
+ * animation (600=17.9ms, 1200=32.8ms, 2400=75.4ms), while the identical field
+ * with the animations stripped stays at 16.7ms even at 2400 grains. Probe v10
+ * then capped the animated subset at 128/256 and got 16.7ms at both 1200 and
+ * 2400. So the budget, not the drawing, is what buys headroom for slower
+ * machines — user m12681 #2. */
+assert.ok(plugin.__test.DUST_ANIM_CAP > 0 && plugin.__test.DUST_ANIM_CAP <= 300,
+	'DUST_ANIM_CAP is a real budget inside the shipped count range');
+assert.equal(typeof plugin.__test.dustAnimSet, 'function', 'dustAnimSet is exported so probes can reuse it');
+const big = plugin.__test.dustGrains(300, 'medium', 0.45);
+const live = big.filter((g) => String(g.props.className).includes('dnl-dust-live'));
+assert.equal(live.length, plugin.__test.DUST_ANIM_CAP,
+	'at the max count exactly DUST_ANIM_CAP grains animate — the rest hold a static brightness, '
+	+ 'so the frame cost no longer grows with the slider');
+const small = plugin.__test.dustGrains(60, 'medium', 0.45);
+assert.equal(small.filter((g) => String(g.props.className).includes('dnl-dust-live')).length, 60,
+	'below the budget every grain still animates — the cap must never thin a small field');
+const liveIdx = [];
+big.forEach((g, i) => { if (String(g.props.className).includes('dnl-dust-live')) liveIdx.push(i); });
+const gaps = liveIdx.slice(1).map((v, i) => v - liveIdx[i]);
+assert.ok(Math.max(...gaps) <= 4,
+	'the animated grains are spread around the ring (golden-ratio stride), not clumped into one arc');
+const fades = big.filter((g) => !String(g.props.className).includes('dnl-dust-live'))
+	.map((g) => parseFloat(g.props.style['--fade']));
+assert.ok(fades.every((v) => v > 0.3 && v < 1),
+	'parked grains carry a plausible --fade instead of going fully transparent');
+assert.ok(new Set(fades).size >= 3, 'the static brightness varies, so the field still reads as dust');
+
+console.log('ok — dust ring hugs the capsule (v0.4.50 contract)');
