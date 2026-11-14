@@ -169,4 +169,42 @@ assert.ok(fades.every((v) => v > 0.3 && v < 1),
 	'parked grains carry a plausible --fade instead of going fully transparent');
 assert.ok(new Set(fades).size >= 3, 'the static brightness varies, so the field still reads as dust');
 
-console.log('ok — dust ring hugs the capsule (v0.4.50 contract)');
+/* ---- 9. constant ink: the band must not saturate as the count rises (v0.4.51)
+ * A 440x38 capsule has a 923px perimeter, so spacing falls from 6.2px at 150
+ * grains to 3.1px at 300 while the dots stayed 2.5-4.5px wide. From ~200 on they
+ * overlap, and because the grain group carries plus-lighter every overlap ADDS
+ * light: the band turned into a solid line with clumps at the caps — the artefact
+ * the user photographed above 200 grains (m13125). Shrinking the dot with
+ * sqrt(150/count) keeps the painted area flat, so density reads as finer dust
+ * instead of a brighter wall. */
+assert.equal(typeof plugin.__test.DUST_INK_SCALE, 'function',
+	'DUST_INK_SCALE is exported so probes can render the shipped geometry');
+assert.equal(typeof plugin.__test.DUST_MAX_COUNT, 'number',
+	'DUST_MAX_COUNT is exported instead of hiding a magic 300 in two places');
+const dot = (n) => parseFloat(plugin.__test.dustGrains(n, 'medium', 0.45)[0].props.style['--sz']);
+assert.equal(dot(150), dot(100), 'below the reference density the dots are untouched');
+assert.ok(dot(300) < dot(200) && dot(200) < dot(150),
+	'the dot shrinks monotonically with the count, so total painted area stays roughly constant');
+const ratio = dot(300) / dot(150);
+assert.ok(ratio > 0.6 && ratio < 0.8,
+	'at the 300-grain max the dot is ~0.71x (sqrt(150/300)) rather than the 1.0x that saturated the band');
+assert.ok(plugin.__test.DUST_INK_SCALE(300) >= 0.66,
+	'the scale is floored so the dust never shrinks below visibility');
+
+/* Parked grains carry a static translate. Without it they inherit no keyframe
+ * motion and sit exactly on the path at a fixed opacity: offset-distance is
+ * arc-length parameterised, so they weld into a regular bead chain on the
+ * outline — invisible at 150 grains (all animate) but a dotted frame from 181
+ * up, compressing into a bright streak at the caps. A static translate costs no
+ * animation budget (probe v9: only CSS animations are expensive). */
+const parked = plugin.__test.dustGrains(300, 'medium', 0.45)
+	.filter((g) => !String(g.props.className).includes('dnl-dust-live'));
+assert.equal(parked.length, 300 - plugin.__test.DUST_ANIM_CAP, 'sanity: the parked set is the complement of the budget');
+assert.ok(parked.every((g) => /^calc\(var\(--dx\) \* \.55\) /.test(String(g.props.style.translate))),
+	'every parked grain is offset off the path, so it scatters into the band like its animated neighbours');
+const moving = plugin.__test.dustGrains(300, 'medium', 0.45)
+	.filter((g) => String(g.props.className).includes('dnl-dust-live'));
+assert.ok(moving.every((g) => g.props.style.translate === undefined),
+	'animated grains must NOT take the static translate — it would fight the keyframe');
+
+console.log('ok — dust ring hugs the capsule (v0.4.51 contract)');

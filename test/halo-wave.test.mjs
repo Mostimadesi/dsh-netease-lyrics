@@ -143,7 +143,8 @@ assert.doesNotMatch(src, /preserveAspectRatio: "none", "aria-hidden": "true" \},
 	'the dust field no longer rides a non-uniformly scaled viewBox');
 assert.match(src, /dustGrains\(DUST_COUNT\(prefs\), prefs\.glowDustSize === "fine" \? "fine" : "medium", DUST_SPREAD\(prefs\)\)/,
 	'the render branch feeds count + size tier');
-assert.match(src, /"--sz": px\.toFixed\(2\) \+ "px"/, 'each grain carries its own diameter');
+assert.match(src, /"--sz": \(px \* inkScale\)\.toFixed\(2\) \+ "px"/,
+	'each grain carries its own diameter, scaled by the constant-ink factor (v0.4.51)');
 
 // ---- 6. band driver (shared --dnl-b0..9 data layer) ---------------------------------
 assert.match(src, /Math\.pow\(bandRaw\[i\], 1\.5\)/,
