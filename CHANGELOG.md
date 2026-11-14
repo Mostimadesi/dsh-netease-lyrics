@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.56 - 2026-11-14 (dev)
+
+修复：粒子密度高时的"下垂"。**前三轮都判断错了**，这次是解析几何证明的。
+
+真实胶囊是 132×78（1.7:1），不是早先假定的 440×38（11.6:1）——之前所有探针都画错了形状，所以量不出差异。放弃浏览器仪器（`getBoundingClientRect` 不反映 `offset-path` 位移；headless 里行内 `inset()` 的 `offset-distance` 完全不生效），改用纯 Node 从真实的 `dustGrains()` 输出反算：
+
+    leg length         1.96–4.26px  (×1.7 at beat peak ⇒ 7.2px)
+    outward component  p50 -0.02  p90 2.90  max 4.20px  (⇒ 7.1px at peak)
+    legs pushing OUT   114/300 = 38%
+    bottom rim moving DOWN   57 grains, worst 7.1px at peak
+    legs>1px outward by count:  60→23   150→59   300→114
+
+腿的方向是**黄金角**（`(i * 137.508 - 90) % 360`），不是轮廓法线，所以 38% 的腿被甩到胶囊外；而外向腿的数量随密度线性增长。这同时解释了「密度越高越下垂」、与胶囊长短无关、以及 0% 环带厚度也照样下垂——三个用户反复强调的现象。
+
+胶囊的像素尺寸在渲染时不可知（`.dnl-island` 是 `max-width:min(560px,70vw)` + 内容决定高度），所以无法在 JS 里逐粒算轮廓法线。改为让生命周期沿 `offset-distance` 滑动：几何上不可能离开轮廓，任何密度、任何胶囊尺寸都成立。
+
+    - translate: calc(var(--dx) * min(1.7, 1 + beat*gain)) ...
+    + offset-distance: calc(var(--at) + var(--slide) * min(1.7, 1 + beat*gain))
+
+`--dx/--dy`（黄金角腿）整体删除，换成 `--slide`（1.6–5% 弧长）；冻结粒子改用固定 1–2px 的 park 向量，仍能打散珠链但读不出"腿"。
+
+测试：`dust-hug.test.mjs` 第 5 节 keyframe 断言改 `offset-distance` 并新增「不得出现 `100%{translate:`」防回归；第 9 节 parked 断言改固定 px；第 10 节整段重写为 slide 契约（每颗都有 `--slide`、都无 `--dx/--dy`、滑程 ≤6%、至少 4 档）。`halo-wave.test.mjs` 的 keyframe 长断言同步。
+
 ## 0.4.55 - 2026-11-14 (dev)
 
 修复：被主视图消费的通知在切走后“复活”（用户 m04732：当前会话提问/完成时通知不显示是对的，但切去其他会话后这条被消费的通知又显示了，而不是只有新通知才显示）。

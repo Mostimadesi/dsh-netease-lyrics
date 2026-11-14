@@ -114,8 +114,10 @@ assert.doesNotMatch(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{[^}]*filter:bright
 	'the grain group carries no beat-driven filter (v0.4.45: it re-rasters the whole chain)');
 assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.22 \+ min\(var\(--dnl-beat-gain,0\),1\.2\) \* var\(--dnl-beat-slow,0\) \* \.32\)/,
 	'the bloom rides the SLOW lane and its gain is capped at 1.2 (v0.4.46: the 60 Hz lane made the halo tremble, 200% buried the pill — user m11591 #1/#3)');
-assert.match(CSS, /100%\{translate:calc\(var\(--dx,6px\) \* min\(1\.7, 1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\)/,
-	'the outward drift still swells with the SLOW beat lane, but capped at 1.7x (m08390 #2b; v0.4.52: at 200% strength the uncapped 3x turned a 9px leg into a 27px thread hanging off an 84px-tall capsule — user m13378)');
+assert.match(CSS, /100%\{offset-distance:calc\(var\(--at,0%\) \+ var\(--slide,3%\) \* min\(1\.7, 1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\)/,
+	'the lifecycle drifts ALONG the outline and still swells with the SLOW beat lane, capped at 1.7x (m08390 #2b; v0.4.56: a translate leg is aimed by a golden angle, not the outline normal, so 38% of it was thrown off the rim — user m14425 「密度足够高就一直下垂」)');
+assert.doesNotMatch(CSS, /@keyframes dnl-dust-life\{[^}]*100%\{translate:/,
+	'no translate leg may come back inside the lifecycle — it cannot follow the outline, so it droops at any band thickness');
 assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 /,
 	'twinkle was pushed back to weak background noise (m08390 #4: 保留但压弱)');
 
@@ -207,34 +209,46 @@ assert.ok(plugin.__test.DUST_INK_SCALE(300) >= 0.66,
  * arc-length parameterised, so they weld into a regular bead chain on the
  * outline — invisible at 150 grains (all animate) but a dotted frame from 181
  * up, compressing into a bright streak at the caps. A static translate costs no
- * animation budget (probe v9: only CSS animations are expensive). */
+ * animation budget (probe v9: only CSS animations are expensive).
+ *
+ * v0.4.56: the parked offset is now a fixed 1-2px park vector instead of a
+ * fraction of the old golden-angle leg, because the leg itself is gone. */
 const parked = plugin.__test.dustGrains(300, 'medium', 0.45)
 	.filter((g) => !String(g.props.className).includes('dnl-dust-live'));
 assert.equal(parked.length, 300 - plugin.__test.DUST_ANIM_CAP, 'sanity: the parked set is the complement of the budget');
-assert.ok(parked.every((g) => /^calc\(var\(--dx\) \* \.55\) /.test(String(g.props.style.translate))),
+assert.ok(parked.every((g) => /^\d+(\.\d+)?px \d+(\.\d+)?px$/.test(String(g.props.style.translate))),
 	'every parked grain is offset off the path, so it scatters into the band like its animated neighbours');
+assert.ok(parked.every((g) => {
+	const [x, y] = String(g.props.style.translate).split(' ');
+	return parseFloat(x) >= 1 && parseFloat(x) <= 2.5 && parseFloat(y) >= 0.5 && parseFloat(y) <= 1.6;
+}), 'the park vector stays at 1-2px — enough to break the bead chain, far too short to read as a leg');
 const moving = plugin.__test.dustGrains(300, 'medium', 0.45)
 	.filter((g) => String(g.props.className).includes('dnl-dust-live'));
 assert.ok(moving.every((g) => g.props.style.translate === undefined),
 	'animated grains must NOT take the static translate — it would fight the keyframe');
 
-/* ---- 10. the outward leg has to fit inside the capsule (v0.4.52) ----------
- * Every probe before this painted a 440x38 capsule — 11.6:1 — while the real
- * one is about 150x84. On that squat shape a grain thrown 5-9px along a
- * golden-angle bearing is a fifth of the height and frequently points straight
- * down, which is exactly the hanging thread the user photographed twice
- * (m13125, m13378). The leg is now 2-4.2px and the beat can only stretch it to
- * 1.7x, so the worst case stays near 7px — under a tenth of the capsule. */
-const legs = plugin.__test.dustGrains(300, 'medium', 0.45).map((g) => {
-	const dx = parseFloat(g.props.style['--dx']);
-	const dy = parseFloat(g.props.style['--dy']);
-	return Math.hypot(dx, dy);
-});
-assert.ok(Math.max(...legs) <= 4.5,
-	'the base leg never exceeds ~4px, so a grain cannot hang a thread off the band');
-assert.ok(Math.min(...legs) >= 1.5,
-	'the leg never collapses to zero, so the field still drifts instead of freezing');
-assert.ok(new Set(legs.map((v) => v.toFixed(1))).size >= 3,
-	'leg lengths vary, so the drift does not read as a mechanical pulse');
+/* ---- 10. the drift slides along the outline, it never leaves it (v0.4.56) --
+ * Every probe before v0.4.56 painted a 440x38 capsule — 11.6:1 — while the real
+ * one is about 132x78. Repeated attempts to shorten the outward leg failed at
+ * 0% band thickness too, because the problem was never its LENGTH: the leg was
+ * thrown along a golden-angle bearing instead of the outline normal, so 38% of
+ * it pointed away from the rim (measured: p90 2.90px, max 4.20px, x1.7 at beat
+ * peak => 7.1px) and the count of outward legs grew linearly with density
+ * (60 grains -> 23, 150 -> 59, 300 -> 114). That is the reported droop.
+ *
+ * The pill's pixel size is not knowable at render time (.dnl-island is
+ * max-width:min(560px,70vw) with a content-driven height), so a per-grain
+ * outline normal cannot be computed in JS. Sliding by offset-distance is
+ * geometrically incapable of leaving the rim at any density or pill size. */
+const sliding = plugin.__test.dustGrains(300, 'medium', 0.45);
+assert.ok(sliding.every((g) => g.props.style['--slide'] !== undefined),
+	'every grain carries a slide distance along the outline');
+assert.ok(sliding.every((g) => g.props.style['--dx'] === undefined && g.props.style['--dy'] === undefined),
+	'no grain may keep a --dx/--dy leg: an off-outline vector cannot follow the rim');
+const slides = sliding.map((g) => parseFloat(g.props.style['--slide']));
+assert.ok(Math.max(...slides) <= 6,
+	'one lifecycle sweeps at most ~5% of the path, so a grain keeps its place on the ring');
+assert.ok(new Set(slides.map((v) => v.toFixed(2))).size >= 4,
+	'slide distances vary, so the field does not read as one mechanical conveyor');
 
-console.log('ok — dust ring hugs the capsule (v0.4.54 contract)');
+console.log('ok — dust ring hugs the capsule (v0.4.56 contract)');
