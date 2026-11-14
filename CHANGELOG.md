@@ -1,21 +1,16 @@
 # Changelog
 
-## 0.4.53 - 2026-11-14 (dev)
+## 0.4.55 - 2026-11-14 (dev)
 
-新增：轮对话出错的通知形态（用户 m04562 裁定：只在「完成」「提问」之外加一个「出错」分支，不做全套改造）。
+修复：被主视图消费的通知在切走后“复活”（用户 m04732：当前会话提问/完成时通知不显示是对的，但切去其他会话后这条被消费的通知又显示了，而不是只有新通知才显示）。
 
-此前轮结束通知只有一种视觉（✔ + 中性文案），一轮对话失败和正常完成看起来完全一样——要展开列表逐条读才知道哪轮出错了。现在 outcome==='error' 的轮结束通知有独立形态：
+scoped ack（v0.4.4）的触发条件 scopedRoundEnd 要求 turnEnd 属于**当前** mainGroup。时序缺口：轮在宿主 fold 后，插件要等下一次 poll（250ms–5s）才带回 turnEnd；若用户在 poll 间隙切到别的会话，scopedRoundEnd 永远不会为这条旧组的 ending 变 true，ack 从未发出——切走后每次 poll 它都以“新通知”出现。宿主端没有任何事件回放机制（Session.append 恰好一次通知、seed 不发布、热重载不回放，asar 取证确认），所以不是复活，是 ack 从未送达。
 
-- 标题从「第 x 轮对话结束」变为「**第 x 轮对话出错**」（noticeHeadline）；
-- 胶囊图标 ⚠（替代 ✔），错误红着色（--dsw-alias-state-error-primary，复用诊断区既有 alias，与主题一致）——胶囊容器 dnl-notice-now-e、展开列表行 dnl-notice-row-e；
-- detail 行不再为无 label 的 outcome 渲染空 div。
+修法：记录离开的组与离开时刻（prevGroupRef/leftGroupRef/leftAtRef）。render 期计算 lateRoundEnd：离开的组里存在 turnEnd.at ≤ 离开时刻的 pending ending（轮结束发生在用户离开前，属被访问会话）→ 立即 scoped ack 到**离开的组**（刻意不并入当前组：当前组的 pending 由原 scopedRoundEnd 分支管，scope 蔓延到从未看过的会话是错的），消费后清空防重复。离开后新产生的 ending（at 更晚）是新闻，走正常显示。
 
-注：outcome 只有宿主下发的 kind；max-tokens/interrupted/forked 等宿主内部原因仍显示为普通「结束」（宿主未把这些映射为 error kind，属宿主侧语义）。
+测试：test/notice-client.test.mjs 新增 poll-gap 场景（观看时无数据不发 ack → 切走 → 迟到 ending 精确 ack 到离开组 → 无复活）。
 
-测试：test/notice-client.test.mjs 新增 errored-turn 渲染测试（aria-label 出错 headline、⚠ 图标、now-e/row-e 着色类）与纯函数断言（aborted 保持普通「结束」文案）。
-
-另修：test/style-balance-guard.test.mjs 复制 test/ 到临时目录时被外观会话留下的在用 Chromium 探针 profile（test/_geo/u*/Default/Network/Cookies 被活进程独占锁）绊死 EPIPE——守卫现在只拷贝真实测试文件，跳过下划线前缀的探针产物。
-
+另修：test/skin-ember.test.mjs 的 clamp 断言从未可能通过——mock localStorage 挂在宿主 globalThis 上，而 readNoticePrefs 在 vm 沙箱里读到的是 sandbox 自带的 getItem:()=>null（恒走 fallback emberGlow=100）。沙箱改为显式对象后 mock 正确接线。
 ## 0.4.54 - 2026-11-14 (dev)
 
 修复：星尘环在胶囊上/下鼓起来、左/右却贴着（用户 m13602「垂着的长轨迹并没有消失，只是变得
@@ -41,6 +36,22 @@
 
 测试：`test/dust-hug.test.mjs` 第 1 节新增 doesNotMatch（禁止回到只长竖向的形式），第 3 节整段
 重写为「常数环带」契约；`test/halo-wave.test.mjs` 的两处长断言同步。
+
+## 0.4.53 - 2026-11-14 (dev)
+
+新增：轮对话出错的通知形态（用户 m04562 裁定：只在「完成」「提问」之外加一个「出错」分支，不做全套改造）。
+
+此前轮结束通知只有一种视觉（✔ + 中性文案），一轮对话失败和正常完成看起来完全一样——要展开列表逐条读才知道哪轮出错了。现在 outcome==='error' 的轮结束通知有独立形态：
+
+- 标题从「第 x 轮对话结束」变为「**第 x 轮对话出错**」（noticeHeadline）；
+- 胶囊图标 ⚠（替代 ✔），错误红着色（--dsw-alias-state-error-primary，复用诊断区既有 alias，与主题一致）——胶囊容器 dnl-notice-now-e、展开列表行 dnl-notice-row-e；
+- detail 行不再为无 label 的 outcome 渲染空 div。
+
+注：outcome 只有宿主下发的 kind；max-tokens/interrupted/forked 等宿主内部原因仍显示为普通「结束」（宿主未把这些映射为 error kind，属宿主侧语义）。
+
+测试：test/notice-client.test.mjs 新增 errored-turn 渲染测试（aria-label 出错 headline、⚠ 图标、now-e/row-e 着色类）与纯函数断言（aborted 保持普通「结束」文案）。
+
+另修：test/style-balance-guard.test.mjs 复制 test/ 到临时目录时被外观会话留下的在用 Chromium 探针 profile（test/_geo/u*/Default/Network/Cookies 被活进程独占锁）绊死 EPIPE——守卫现在只拷贝真实测试文件，跳过下划线前缀的探针产物。
 
 ## 0.4.52 - 2026-11-14 (dev)
 

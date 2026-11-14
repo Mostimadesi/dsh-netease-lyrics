@@ -160,6 +160,28 @@ assert.match(src, /const fallbackLabel = \(displayTitle\(title\)/,
 assert.ok(!/if \(lineTextForHooks === ""\) return;/.test(src),
 	'the width effect no longer early-returns on empty text');
 
+// v0.4.46 (user report): the measurement used to take ONLY the original line,
+// so a longer translation row (same pinned width, its own ellipsis cap is
+// 48vw but the wrap was nailed to the original's width) was cut off mid-word.
+// The hooks expression must now consider currentLine.trans and keep the
+// LONGER of the two texts.
+assert.match(src,
+	/transForHooks\.length > originalForHooks\.length[\s\S]{0,80}\? transForHooks[\s\S]{0,40}: originalForHooks/,
+	'the measured text is the longer of the original and its translation');
+assert.match(src, /const transForHooks = currentLineForHooks !== null/,
+	'the translation feeds the width measurement');
+
+// v0.4.46 (user report): the wrap ref used to be conditional
+// (`noticeRowShown ? undefined : nowWrapRef`), which made the effect's
+// notice-branch dead code — while a notice row was shown the ref was null,
+// the effect early-returned, and the notice inherited the previous song's
+// pinned lyric width (a notice over a short line was cut off). The ref must
+// be attached unconditionally so the notice row auto-sizes.
+assert.ok(!/noticeRowShown \? undefined : nowWrapRef/.test(src),
+	'the width ref is attached unconditionally (the notice-branch is not dead code)');
+assert.match(src, /className: "dnl-now-wrap", ref: nowWrapRef/,
+	'the wrap ref stays on the wrapper in every mode');
+
 // 3b. Entering through the left gutter must NOT expand the capsule, otherwise
 //     the hover expansion resizes the capsule and the drag handle under the
 //     pointer mid-gesture (measured: 61x34 -> 362x341, drag produced no move).

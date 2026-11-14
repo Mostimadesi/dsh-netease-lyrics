@@ -255,8 +255,10 @@ assert.match(src, /if \(!smtcActive && !noticeMode && !noticeGhost\) return null
 	'idle WITHOUT a notice (or ghost) stays hidden — the combined early-return condition');
 assert.match(src, /const mainGroup = mainSessionId === null \? null[\s\S]{0,150}workspaceGroupOf\(clientWorkspaces, mainSessionId\)[\s\S]{0,900}const notices = mainGroup === null \? freshNotices[\s\S]{0,80}\.filter\(\(item\) => !mainGroup\.has\(item\.sessionId\)\);/,
 	'notices are filtered by the WORKSPACE group of the main session BEFORE any early return');
-assert.match(src, /postNoticeAck\(\{ sessionIds: Array\.from\(mainGroup\) \}\);/,
-	'visiting a workspace posts the scoped ack naming the whole group');
+assert.match(src, /const lateRoundEnd = \(\(\) => \{[\s\S]{0,600}leftGroup\.has\(item\.sessionId\)[\s\S]{0,200}return item;/,
+	'v0.4.54 gap fix: an ending that ENDED before the user left the group is consumed on arrival');
+assert.match(src, /leftGroupRef\.current = null;[\s\S]{0,80}leftAtRef\.current = 0;/,
+	'the late-ack memory clears after one consumption');
 assert.match(src, /try \{ clientWorkspaces = ctx\.get\("workspaces"\) \|\| null; \} catch \{ clientWorkspaces = null; \}/,
 	'apply() performs the optional workspaces lookup defensively');
 assert.match(src, /try \{ clientSessions = ctx\.get\("sessions"\) \|\| null; \} catch \{ clientSessions = null; \}/,
@@ -602,6 +604,49 @@ try {
 		{ sessionId: 's1b', workspace: 'gamma', question: { kind: 'user-question', preview: 'q', at: 12 }, turnEnd: null }] } });
 	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'a question from the viewed workspace stays hidden');
 	assert.equal(posted.length, 0, 'a question is never acked by visiting');
+
+	// ---- v0.4.54 poll-gap fix: switch lands BEFORE the turnEnd arrives -------
+	// The round ends while the user watches s1's workspace, but the client
+	// only learns of it on the NEXT poll. If the user switches to s2 inside
+	// that gap, the old code acked only the CURRENT (s2) group — the s1
+	// ending was never consumed and re-showed on every later switch away.
+	// The fix acks prevGroup ∪ currentGroup; this sequence reproduces it.
+	mainById = { s1: { id: 's1', retainedBy: { mainView: 1 } } };
+	// A poll while watching s1 that carries NO s1 notice (the round has not
+	// ended yet — nothing to ack; the ref must NOT roll anywhere).
+	posted.length = 0;
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 18, items: [] } });
+	assert.equal(posted.length, 0, 'no ack when the watched workspace has no pending ending');
+	// The round ENDS host-side (folded), but the user switches away BEFORE
+	// the next poll delivers it: the switch render sees no turnEnd at all.
+	mainById = { s2: { id: 's2', retainedBy: { mainView: 1 } } };
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 19, items: [] } });
+	assert.equal(posted.length, 0, 'the switch itself posts nothing (the ending has not arrived)');
+	// NOW the next poll carries the s1 ending. scopedRoundEnd flips true and
+	// the ack must cover BOTH groups — the s1 the round belongs to and the
+	// s2 the user has meanwhile landed on.
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 20, items: [
+		{ sessionId: 's1', workspace: 'gamma', question: null, turnEnd: { turn: 21, outcome: 'completed', at: Date.now() - 1000 } }] } });
+	assert.equal(posted.length, 1, 'the late-arriving ending is acked');
+	const unionBody = JSON.parse(posted[0].options.body);
+	assert.ok(unionBody.sessionIds.includes('s1') && unionBody.sessionIds.includes('s1b'),
+		'the ack covers the PREVIOUS workspace group (where the round ended)');
+	// Deliberately scoped to the LEFT group only: the current group has no
+	// pending ending here, and the regular scopedRoundEnd branch handles that
+	// case; scope-creeping into never-visited sessions would be wrong.
+	// And the stale ending does NOT re-show as a dot: s1 is not the viewed
+	// workspace anymore, so the pill/dot is the correct surface — but a
+	// switch BACK to s1 must find nothing (host consumed it). Simulated by
+	// the host dropping the item after the ack: next poll it is gone.
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 21, items: [] } });
+	mainById = { s1: { id: 's1', retainedBy: { mainView: 1 } } };
+	act(() => firePoll());
+	await resolve({ ...trackBase, notice: { serial: 22, items: [] } });
+	assert.equal(byClass(renderer, 'dnl-dot').length, 0, 'after the union ack, switching back shows no resurrected dot');
 
 	// active + no notice → no dot at all.
 	act(() => firePoll());

@@ -16,7 +16,7 @@ import vm from 'node:vm';
 import React from 'react';
 
 let plugin;
-vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), {
+const sandbox = {
 	window: {
 		__ModuleLoader__: { load: ({ factory }) => { plugin = factory(() => ({ default: React })); } },
 		addEventListener() {}, removeEventListener() {}, dispatchEvent() {},
@@ -26,7 +26,8 @@ vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url),
 	fetch: () => new Promise(() => {}),
 	Event: class {}, localStorage: { getItem: () => null, setItem() {} },
 	setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
-});
+};
+vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), sandbox);
 
 const CSS = plugin.__test.CSS;
 const src = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
@@ -144,7 +145,7 @@ assert.match(src, /恢复暗夜余烬默认参数/, 'the reset button restores t
 const readNoticePrefs = plugin.__test.readNoticePrefs;
 assert.equal(typeof readNoticePrefs, 'function', 'readNoticePrefs is exported for tests');
 const store = {};
-globalThis.localStorage = {
+sandbox.localStorage = {
 	getItem: () => JSON.stringify(store),
 	setItem() {},
 };

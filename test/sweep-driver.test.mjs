@@ -112,6 +112,12 @@ const ctx = {
   cancelAnimationFrame: (id) => { rafCancelled.add(id) },
 }
 ctx.globalThis = ctx
+// Deterministic wall clock for the vm realm: the context auto-creates its own
+// Date, and a HOST-level Date.now monkeypatch never reaches it. Shim the
+// sandbox Date BEFORE the plugin loads; pump() advances sandboxNowMs by one
+// frame (~16 ms) per rAF callback so the sweep value moves every frame.
+let sandboxNowMs = Date.now()
+ctx.Date = { now: () => sandboxNowMs }
 vm.runInNewContext(source, ctx, { filename: 'lib/client.js' })
 
 plugin.apply({
@@ -178,7 +184,10 @@ function pump(frames) {
   for (let i = 0; i < frames; i++) {
     const pending = rafQueue.splice(0)
     for (const { id, fn } of pending) {
-      if (!rafCancelled.has(id)) fn()
+      if (!rafCancelled.has(id)) {
+        fn()
+        sandboxNowMs += 16 // one frame of wall time for the vm-realm Date.now
+      }
     }
   }
 }
