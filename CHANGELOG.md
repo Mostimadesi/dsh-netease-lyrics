@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.53 - 2026-11-14 (dev)
+
+新增：轮对话出错的通知形态（用户 m04562 裁定：只在「完成」「提问」之外加一个「出错」分支，不做全套改造）。
+
+此前轮结束通知只有一种视觉（✔ + 中性文案），一轮对话失败和正常完成看起来完全一样——要展开列表逐条读才知道哪轮出错了。现在 outcome==='error' 的轮结束通知有独立形态：
+
+- 标题从「第 x 轮对话结束」变为「**第 x 轮对话出错**」（noticeHeadline）；
+- 胶囊图标 ⚠（替代 ✔），错误红着色（--dsw-alias-state-error-primary，复用诊断区既有 alias，与主题一致）——胶囊容器 dnl-notice-now-e、展开列表行 dnl-notice-row-e；
+- detail 行不再为无 label 的 outcome 渲染空 div。
+
+注：outcome 只有宿主下发的 kind；max-tokens/interrupted/forked 等宿主内部原因仍显示为普通「结束」（宿主未把这些映射为 error kind，属宿主侧语义）。
+
+测试：test/notice-client.test.mjs 新增 errored-turn 渲染测试（aria-label 出错 headline、⚠ 图标、now-e/row-e 着色类）与纯函数断言（aborted 保持普通「结束」文案）。
+
+另修：test/style-balance-guard.test.mjs 复制 test/ 到临时目录时被外观会话留下的在用 Chromium 探针 profile（test/_geo/u*/Default/Network/Cookies 被活进程独占锁）绊死 EPIPE——守卫现在只拷贝真实测试文件，跳过下划线前缀的探针产物。
+
 ## 0.4.52 - 2026-11-14 (dev)
 
 修复：粒子数量高时"粒子外溢"（用户 m13378 第二次反馈，此前 v0.4.51 只解决了变亮/变糊）。

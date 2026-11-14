@@ -153,6 +153,12 @@ assert.equal(sanitizeNotices({ items: Array.from({ length: 20 }, (_, i) => (
 assert.equal(noticeHeadline(cleaned[0]), 'alpha会话区有提问');
 assert.equal(noticeHeadline({ workspace: 'beta', question: null, turnEnd: { turn: 3, outcome: 'completed', at: 1 } }),
 	'beta会话区第3轮对话结束');
+assert.equal(noticeHeadline({ workspace: 'gamma', question: null, turnEnd: { turn: 4, outcome: 'error', at: 1 } }),
+	'gamma会话区第4轮对话出错',
+	'an errored round gets its own alarm headline (v0.4.53)');
+assert.equal(noticeHeadline({ workspace: 'g2', question: null, turnEnd: { turn: 5, outcome: 'aborted', at: 1 } }),
+	'g2会话区第5轮对话结束',
+	'non-error outcomes keep the plain 结束 headline');
 assert.match(noticeClockLabel(new Date('2026-11-06T21:05:00').getTime()), /^\d{2}:\d{2}$/);
 assert.equal(noticeClockLabel(0), '');
 assert.equal(noticeClockLabel(Number.NaN), '');
@@ -381,6 +387,14 @@ const idleTurnEnd = {
 	active: false, pollMs: 500,
 	notice: { serial: 8, items: [
 		{ workspace: 'beta', question: null, turnEnd: { turn: 3, outcome: 'completed', at: Date.now() - 1000 } },
+	] },
+};
+// v0.4.53: an errored round is a THIRD notice class — own headline (出错),
+// own pill icon (⚠), own red-tinted row (dnl-notice-row-e / dnl-notice-now-e).
+const idleTurnError = {
+	active: false, pollMs: 500,
+	notice: { serial: 10, items: [
+		{ workspace: 'gamma', question: null, turnEnd: { turn: 4, outcome: 'error', at: Date.now() - 1000 } },
 	] },
 };
 const trackBase = {
@@ -954,6 +968,29 @@ assert.equal([...timers].filter(([, t]) => !t.repeat).length, 0, 'all one-shot t
 	} finally {
 		if (r10b) await act(async () => { r10b.unmount(); await flush(); });
 		storeMap.delete(PREFS_KEY);
+	}
+}
+
+// ---- v0.4.53: errored round as a third notice class ---------------------------
+{
+	let rE;
+	try {
+		act(() => { rE = TestRenderer.create(React.createElement(Island)); });
+		await resolve({ active: false, pollMs: 500 });
+		act(() => firePoll());
+		await resolve(idleTurnError);
+		const island = rE.root.findByProps({ role: 'status' });
+		assert.equal(island.props['aria-label'], '会话区提示：gamma会话区第4轮对话出错',
+			'the pill headline reads 出错 for an errored round');
+		const pill = rE.root.find((n) => String(n.props.className || '').includes('dnl-notice-now'));
+		assert.ok(String(pill.props.className).includes('dnl-notice-now-e'),
+			'the pill container carries the error tint class');
+		const icon = rE.root.findByProps({ className: 'dnl-notice-icon' });
+		assert.equal(icon.children[0], '⚠', 'the pill icon is the warning sign, not the check');
+		const row = rE.root.find((n) => String(n.props.className || '').includes('dnl-notice-row-e'));
+		assert.ok(row, 'the expanded list row carries the error tint class');
+	} finally {
+		if (rE) await act(async () => { rE.unmount(); await flush(); });
 	}
 }
 

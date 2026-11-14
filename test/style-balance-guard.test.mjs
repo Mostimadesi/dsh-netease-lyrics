@@ -8,7 +8,7 @@
  */
 
 import assert from 'node:assert/strict'
-import { writeFileSync, mkdtempSync, rmSync, cpSync, readFileSync } from 'node:fs'
+import {writeFileSync, mkdtempSync, rmSync, cpSync, copyFileSync, readdirSync, statSync, readFileSync, mkdirSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
@@ -22,7 +22,18 @@ const original = join(root, 'lib', 'client.js')
 function runGuardWith(mutated) {
   const dir = mkdtempSync(join(tmpdir(), 'css-guard-'))
   try {
-    cpSync(join(root, 'test'), join(dir, 'test'), { recursive: true })
+    mkdirSync(join(dir, 'test'), { recursive: true })
+    // Copy only real test files: the workspace test/ dir also holds the
+    // appearance session's untracked probe dirs (_geo/_path/_probe-*/…),
+    // some of which contain a LIVE headless-Chromium profile whose Cookies
+    // file is exclusively locked — cpSync of the whole tree dies with EPIPE.
+    for (const entry of readdirSync(join(root, 'test'))) {
+      if (entry.startsWith('_')) continue
+      const src = join(root, 'test', entry)
+      const dst = join(dir, 'test', entry)
+      if (statSync(src).isDirectory()) cpSync(src, dst, { recursive: true })
+      else copyFileSync(src, dst)
+    }
     cpSync(join(root, 'lib'), join(dir, 'lib'), { recursive: true })
     writeFileSync(join(dir, 'lib', 'client.js'), mutated, 'utf8')
     const result = spawnSync(process.execPath, [join(dir, 'test', 'style-balance.test.mjs')], {
