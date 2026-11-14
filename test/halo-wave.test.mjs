@@ -118,6 +118,10 @@ assert.doesNotMatch(CSS, /\.dnl-halo-burst>\.w1/,
 	'burst no longer hides the ring — breathing lamp and wave ring are independent modules (m07693 #2)');
 assert.match(CSS, /\.dnl-shell-expanded \.dnl-wave:not\(\.dnl-wave-both\)>\.w1,\.dnl-shell-expanded \.dnl-wave:not\(\.dnl-wave-both\)>\.w2\{display:none\}/,
 	'rings hide in the expanded card unless scope=both');
+assert.match(CSS, /\.dnl-shell-expanded \.dnl-wave-stardust>\.w1,\.dnl-shell-expanded \.dnl-wave-stardust>\.dnl-dustpulse\{display:none\}/,
+	'v0.4.57 (user m14751 route B): the stardust band is collapsed-only even under scope=both — its offset-path is the pill stadium, and a tall shell turns that path into a slot that droops below the card');
+assert.doesNotMatch(CSS, /dnl-wave-both \.dnl-wave-stardust|dnl-wave-stardust\.dnl-wave-both/,
+	'there is no escape hatch that re-enables the band on a tall box');
 assert.match(CSS, /\.dnl-wave>\.w1,\.dnl-wave>\.w2\{display:none\}/,
 	'reduced-motion removes the rings outright');
 assert.doesNotMatch(src, /className: "w3"|dnl-wave-spec/, 'the retired spec tier stays gone');
@@ -169,6 +173,10 @@ assert.match(src, /className: "dnl-wave dnl-wave-" \+ prefs\.glowWaveStyle/,
 	'the wave sibling picks its style class with no glowMode gate');
 assert.match(src, /prefs\.glowWaveScope === "both" \? " dnl-wave-both" : ""/,
 	'the both-scope class applies only when both is picked');
+assert.match(src, /prefs\.glowWaveStyle === "stardust"[\s\S]{0,500}?glow-wave-scope-note[\s\S]{0,160}?星尘环只在收起态环绕胶囊/,
+	'v0.4.57: the scope select is replaced by an explanation for stardust, so the panel never offers a control that cannot work');
+assert.doesNotMatch(src, /glow-wave-scope[\s\S]{0,40}?glowWaveStyle === "stardust"/,
+	'the scope select is not rendered for stardust before the note');
 assert.match(src, /prefs\.glowWaveBright === "vivid" \? " dnl-wave-vivid" : ""/,
 	'the vivid class applies only when vivid is picked');
 assert.doesNotMatch(src, /dnl-halo-wave/,

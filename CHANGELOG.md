@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.57 - 2026-11-14 (dev)
+
+修复：展开态时星尘环被拉成一条"下垂的大 U"（用户 m14726 截图，密度 300 / 环带厚度 0%）。
+
+环的几何来自 `offset-path: inset(calc(4px - var(--off,0px)) round 999px)`。这个 basic shape 的参照系是**包含块**（`.w1` → `.dnl-wave` → `.dnl-shell`，三者都 `inset:0` 铺满外壳），而 `round <单个长度>` 会像 `border-radius:50%` 一样**按比例缩放**：宽 124 / 高 232 的盒子上，半径变成 rx 62 / ry 116。收起态它恰好等于胶囊轮廓（这没问题）；展开态外壳随歌词面板长高到 232px，环就变成一条 116px 半径的高槽——底部圆弧悬在卡片下方很远的地方，看起来就是"拖了一条长长的 U"。
+
+半高在 CSS 里取不到（`.dnl-island` 是 `max-width` + 内容决定高度），JS 渲染期也不知道像素尺寸，所以不去算半径，改成**不让它解析到高盒子上**：
+
+- 星尘环固定 collapsed-only：新增 `.dnl-shell-expanded .dnl-wave-stardust>.w1, .dnl-shell-expanded .dnl-wave-stardust>.dnl-dustpulse{display:none}`。原先的 `dnl-wave-both`（音波环范围=收起+展开）对星尘环不再生效，只保留给 SVG 环（点阵环/波形环按 `viewBox` 自己缩放，不受影响）。
+- 设置里星尘环的「音波环范围」下拉换成一句说明，避免留一个点了没用的控件。
+
+测试：`halo-wave` 新增两条断言（展开态星尘环必须 display:none；不得存在 `dnl-wave-both` × 星尘环的逃生口）与两条设置断言（下拉被说明取代、说明文案在）。
+
 ## 0.4.56 - 2026-11-14 (dev)
 
 修复：粒子密度高时的"下垂"。**前三轮都判断错了**，这次是解析几何证明的。
