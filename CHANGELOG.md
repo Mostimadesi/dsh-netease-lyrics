@@ -16,6 +16,32 @@
 
 另修：test/style-balance-guard.test.mjs 复制 test/ 到临时目录时被外观会话留下的在用 Chromium 探针 profile（test/_geo/u*/Default/Network/Cookies 被活进程独占锁）绊死 EPIPE——守卫现在只拷贝真实测试文件，跳过下划线前缀的探针产物。
 
+## 0.4.54 - 2026-11-14 (dev)
+
+修复：星尘环在胶囊上/下鼓起来、左/右却贴着（用户 m13602「垂着的长轨迹并没有消失，只是变得
+"更扁"了；且这个现象与胶囊长度大小无关」）。
+
+真凶不在位移幅度，而在 **offset-path 的 inset 不对称**：
+
+    inset(calc(-1 * var(--off,0px)) 4px round 999px)
+
+只生长了竖向 inset。CSS 的 `round <单值>` 会像 border-radius 一样**按比例缩放**，于是路径的半径
+变成 pathH/2 = capH/2 + 4 + off，而半宽仍是 capW/2 —— 环带只在胶囊的两个赤道点与轮廓相接，上下
+浮出 4+off px。用户截图（132×78）实测：W/SW 方向 1px、N/S 方向 12–14px、NW 最远 26px，与公式
+推算的 min 0.2 / p50 10.3 / max 13.0 吻合。数量越多，冻结在向外相位的粒子越多，所以"越多的粒子
+在飞"，看起来随数量加剧。
+
+改成对称 inset，两轴同时外扩：
+
+    inset(calc(4px - var(--off,0px)) round 999px)
+
+半径与半宽同步增长，环带宽度恒为 4+off px，off=0 时仍贴住轮廓。回退档 `.dnl-hug-slight` 的
+路径同步改成 `calc(0px - ...)`（9px 外扩由 `.dnl-wave.dnl-hug-slight>.w1{inset:-9px}` 提供，
+路径再缩 9px 会变成双倍）。
+
+测试：`test/dust-hug.test.mjs` 第 1 节新增 doesNotMatch（禁止回到只长竖向的形式），第 3 节整段
+重写为「常数环带」契约；`test/halo-wave.test.mjs` 的两处长断言同步。
+
 ## 0.4.52 - 2026-11-14 (dev)
 
 修复：粒子数量高时"粒子外溢"（用户 m13378 第二次反馈，此前 v0.4.51 只解决了变亮/变糊）。

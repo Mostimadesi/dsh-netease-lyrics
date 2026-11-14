@@ -53,9 +53,14 @@ assert.doesNotMatch(grain, /inset:calc\(-1 \* var\(--off/,
 assert.doesNotMatch(grain, /inset:0;contain/,
 	'a full-bleed carrier is no longer needed: the ring shape comes from inset() resolving against the '
 	+ 'containing block, not from the grain box (v0.4.48)');
-assert.match(grain, /offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) 4px round 999px\);/,
+assert.match(grain, /offset-path:inset\(calc\(4px - var\(--off,0px\)\) round 999px\);/,
 	'each grain carries its own outward offset inside the path expression, so raising the count '
 	+ 'thickens the band instead of piling every grain on one line');
+assert.doesNotMatch(grain, /offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) 4px/,
+	'the path insets must stay SYMMETRIC: growing only the vertical inset made the stadium radius '
+	+ 'capH/2+off while the half-width stayed capW/2, so the ring met the capsule only at the two '
+	+ 'equators and floated above/below it (v0.4.54; measured 1px band at W/SW vs 12-14px at N/S '
+	+ 'on the user 132x78 capsule, m13602 "只是变得更扁了")');
 assert.match(grain, /offset-distance:var\(--at,0%\);/,
 	'grains are placed by arc-length distance around the capsule');
 assert.match(grain, /offset-anchor:center;/,
@@ -74,21 +79,27 @@ assert.match(CSS, /\.dnl-wave>\.w1\{mix-blend-mode:plus-lighter\}/,
 	'overlaps accumulate light like the official additive particle field — applied ONCE on the group, '
 	+ 'because probe v5 measured per-grain and group blending as indistinguishable in cost and look');
 
-// ---- 3. ring-vs-band geometry: the ring lands outside the pill rim ----------
+// ---- 3. ring-vs-band geometry: a CONSTANT band all the way round ------------
 const bandOut = Number(CSS.match(/\.dnl-wave\.dnl-wave-stardust>\.w1\{inset:(-?\d+)px/)?.[1]);
 assert.equal(bandOut, -4, 'the band extends 4px past the pill on every side');
-const pathInset = Number(CSS.match(/offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) (\d+)px round 999px\)/)?.[1]);
-assert.equal(pathInset, 4, 'the path is inset 4px inside the band, on top of each grain\'s own --off');
-// band = pill + 4px each side; path inset 4px inside the band => the ring is
-// exactly pill-width horizontally and 8px taller vertically: straight runs sit
-// 4px out, and the caps wrap back to touch the pill at its widest points.
-assert.equal(bandOut + pathInset, 0, 'horizontally the ring is flush with the capsule width');
+const pathIn = CSS.match(/offset-path:inset\(calc\((\d+)px - var\(--off,0px\)\) round 999px\)/);
+assert.ok(pathIn, 'the path inset must be written as calc(<n>px - var(--off,0px)) so both axes '
+	+ 'grow together — a single round length is scaled proportionally, so symmetric insets give a '
+	+ 'stadium of radius capH/2 + n + off, i.e. the outline pushed out by exactly n + off px');
+assert.equal(Number(pathIn[1]), 4, 'the path sits 4px inside the band, which lands it on the pill rim');
+// band = pill + 4px each side, path inset 4px inside the band => radius and
+// half-width are both pill/2 + 4 + off: the band width is CONSTANT. Before
+// v0.4.54 the horizontal inset was pinned at 4px while the vertical grew, so
+// the ring only touched the pill at the equators (1px there, 12-14px at N/S).
+assert.equal(bandOut + Number(pathIn[1]), 0,
+	'path box == pill box at off=0: the ring hugs the rim with zero standoff');
 
 // ---- 4. fallback hug mode is wired end to end -------------------------------
 assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-9px\}/,
 	'fallback mode is a visibly wider uniform 9px outset (v0.4.46: 3px read identical to wrap, user m11591 #4)');
-assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) round 999px\)\}/,
-	'fallback mode keeps the per-grain --off inside a uniform 9px band edge');
+assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(calc\(0px - var\(--off,0px\)\) round 999px\)\}/,
+	'fallback mode keeps the per-grain --off inside its uniform 9px band edge, and its path may '
+	+ 'not widen on its own (that would break the constant band width the same way v0.4.52 did)');
 assert.match(src, /if \(raw\?\.glowDustHug === "wrap" \|\| raw\?\.glowDustHug === "slight"\) out\.glowDustHug = raw\.glowDustHug;/,
 	'the hug choice round-trips through the sanitizer whitelist');
 assert.match(src, /prefs\.glowWaveStyle === "stardust" && prefs\.glowDustHug === "slight" \? " dnl-hug-slight" : ""/,
@@ -226,4 +237,4 @@ assert.ok(Math.min(...legs) >= 1.5,
 assert.ok(new Set(legs.map((v) => v.toFixed(1))).size >= 3,
 	'leg lengths vary, so the drift does not read as a mechanical pulse');
 
-console.log('ok — dust ring hugs the capsule (v0.4.52 contract)');
+console.log('ok — dust ring hugs the capsule (v0.4.54 contract)');

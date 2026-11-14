@@ -82,16 +82,16 @@ assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.22 \+ min\(var\(--dnl-b
 assert.doesNotMatch(CSS, /\.dnl-wave-stardust>\.w2/,
 	'the two-orbit pair stays gone (user m07563: 合成一条宽带)');
 // The geometric contract that fixes the 6:1 squash:
-assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;left:0;top:0;width:var\(--sz,3px\);height:var\(--sz,3px\);border-radius:50%;contain:layout style paint;offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) 4px round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;/,
-	'the grain box IS the dot, and its --off lives INSIDE the path expression — inset() resolves against the containing block, so the ring shape is independent of the box (pixel probe 16 renders dot-sized and full-bleed carriers identically) while a band-sized box per grain was the only cost scaling with the grain count (user m12299 #2)');
+assert.match(CSS, /\.dnl-wave \.dnl-dust\{position:absolute;left:0;top:0;width:var\(--sz,3px\);height:var\(--sz,3px\);border-radius:50%;contain:layout style paint;offset-path:inset\(calc\(4px - var\(--off,0px\)\) round 999px\);offset-distance:var\(--at,0%\);offset-rotate:0deg;offset-anchor:center;/,
+	'the grain box IS the dot, and its --off lives INSIDE the path expression — inset() resolves against the containing block, so the ring shape is independent of the box (pixel probe 16 renders dot-sized and full-bleed carriers identically) while a band-sized box per grain was the only cost scaling with the grain count (user m12299 #2). The insets are SYMMETRIC on purpose: a single round length is scaled proportionally, so growing only the vertical inset gave radius capH/2+off against half-width capW/2 and the ring floated above/below the capsule (v0.4.54)');
 assert.doesNotMatch(CSS, /\.dnl-wave \.dnl-dust::after/,
 	'there is no ::after any more — the gradient paints on the element itself, halving the painted nodes (v0.4.48)');
 assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*contain:layout style paint;/,
 	'each grain is layout/paint contained so it cannot dirty the whole band');
 assert.match(CSS, /\.dnl-wave\.dnl-hug-slight>\.w1\{inset:-9px\}/,
 	'the plain-outset hug mode survives as the fallback and is now visibly wider than wrap (m11591 #4)');
-assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(calc\(-1 \* var\(--off,0px\)\) round 999px\)\}/,
-	'fallback mode drops the end pinch and rides the band edge');
+assert.match(CSS, /\.dnl-wave\.dnl-hug-slight \.dnl-dust\{offset-path:inset\(calc\(0px - var\(--off,0px\)\) round 999px\)\}/,
+	'fallback mode drops the end pinch and rides its own 9px band edge with symmetric insets');
 assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*background-image:radial-gradient\(circle,rgba\(255,255,255,\.95\) 0%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 42%,#d8e4ff\) 32%,color-mix\(in srgb,var\(--dnl-halo,var\(--dsw-alias-brand-primary\)\) 26%,transparent\) 64%,transparent 100%\)/,
 	'a feathered radial core (bright centre → transparent rim) instead of a hard-edged solid disc');
 assert.doesNotMatch(CSS, /\.dnl-wave \.dnl-dust\{[^}]*animation:dnl-dust-life/,
