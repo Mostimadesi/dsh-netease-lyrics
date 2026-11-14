@@ -103,8 +103,8 @@ assert.doesNotMatch(CSS, /\.dnl-wave\.dnl-wave-stardust>\.w1\{[^}]*filter:bright
 	'the grain group carries no beat-driven filter (v0.4.45: it re-rasters the whole chain)');
 assert.match(CSS, /\.dnl-dustpulse\{[^}]*opacity:calc\(\.22 \+ min\(var\(--dnl-beat-gain,0\),1\.2\) \* var\(--dnl-beat-slow,0\) \* \.32\)/,
 	'the bloom rides the SLOW lane and its gain is capped at 1.2 (v0.4.46: the 60 Hz lane made the halo tremble, 200% buried the pill — user m11591 #1/#3)');
-assert.match(CSS, /100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\)/,
-	'the outward drift distance swells with the SLOW beat lane (m08390 #2b, v0.4.45 detune)');
+assert.match(CSS, /100%\{translate:calc\(var\(--dx,6px\) \* min\(1\.7, 1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\)/,
+	'the outward drift still swells with the SLOW beat lane, but capped at 1.7x (m08390 #2b; v0.4.52: at 200% strength the uncapped 3x turned a 9px leg into a 27px thread hanging off an 84px-tall capsule — user m13378)');
 assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 /,
 	'twinkle was pushed back to weak background noise (m08390 #4: 保留但压弱)');
 
@@ -207,4 +207,23 @@ const moving = plugin.__test.dustGrains(300, 'medium', 0.45)
 assert.ok(moving.every((g) => g.props.style.translate === undefined),
 	'animated grains must NOT take the static translate — it would fight the keyframe');
 
-console.log('ok — dust ring hugs the capsule (v0.4.51 contract)');
+/* ---- 10. the outward leg has to fit inside the capsule (v0.4.52) ----------
+ * Every probe before this painted a 440x38 capsule — 11.6:1 — while the real
+ * one is about 150x84. On that squat shape a grain thrown 5-9px along a
+ * golden-angle bearing is a fifth of the height and frequently points straight
+ * down, which is exactly the hanging thread the user photographed twice
+ * (m13125, m13378). The leg is now 2-4.2px and the beat can only stretch it to
+ * 1.7x, so the worst case stays near 7px — under a tenth of the capsule. */
+const legs = plugin.__test.dustGrains(300, 'medium', 0.45).map((g) => {
+	const dx = parseFloat(g.props.style['--dx']);
+	const dy = parseFloat(g.props.style['--dy']);
+	return Math.hypot(dx, dy);
+});
+assert.ok(Math.max(...legs) <= 4.5,
+	'the base leg never exceeds ~4px, so a grain cannot hang a thread off the band');
+assert.ok(Math.min(...legs) >= 1.5,
+	'the leg never collapses to zero, so the field still drifts instead of freezing');
+assert.ok(new Set(legs.map((v) => v.toFixed(1))).size >= 3,
+	'leg lengths vary, so the drift does not read as a mechanical pulse');
+
+console.log('ok — dust ring hugs the capsule (v0.4.52 contract)');

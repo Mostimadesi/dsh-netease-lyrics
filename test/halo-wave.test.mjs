@@ -100,8 +100,8 @@ assert.match(CSS, /\.dnl-wave \.dnl-dust\.dnl-dust-live\{animation:dnl-dust-life
 	'the grains that DID get an animation slot still run their own lifecycle; --dur/--del are baked per grain so density stays constant');
 assert.match(CSS, /\.dnl-wave \.dnl-dust\{[^}]*opacity:var\(--fade,\.6\)/,
 	'grains outside the budget hold a fixed per-grain brightness (--fade) instead of cycling, so the field keeps its uneven, dusty look');
-assert.match(CSS, /@keyframes dnl-dust-life\{0%\{translate:0 0;opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\)\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\) \* \.55\)\}100%\{translate:calc\(var\(--dx,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\) calc\(var\(--dy,6px\) \* \(1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\);opacity:0\}\}/,
-	'born on the band → drift OUTWARD → fade → respawn; the outward distance swells with the SLOW beat lane (m08390 #2, v0.4.45 detune)');
+assert.match(CSS, /@keyframes dnl-dust-life\{0%\{translate:0 0;opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\)\)\}70%\{opacity:calc\(var\(--peak,\.9\) \* var\(--dnl-dust-glow,1\) \* \.55\)\}100%\{translate:calc\(var\(--dx,6px\) \* min\(1\.7, 1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\) calc\(var\(--dy,6px\) \* min\(1\.7, 1 \+ var\(--dnl-beat-slow,0\) \* var\(--dnl-beat-gain,0\)\)\);opacity:0\}\}/,
+	'born on the band → drift OUTWARD → fade → respawn; the outward distance swells with the SLOW beat lane, capped at 1.7x (m08390 #2, v0.4.45 detune; v0.4.52 cap — see dust-hug.test.mjs section 10)');
 assert.match(CSS, /@keyframes dnl-wave-twinkle\{0%,100%\{opacity:calc\(\.74 \* var\(--dnl-wave-hi\)\)\}50%\{opacity:calc\(\.92 \* var\(--dnl-wave-hi\)\)\}\}/,
 	'the twinkle survives only as weak background noise (m08390 #4: 保留但压弱), so the beat pulse reads as the main motion');
 assert.doesNotMatch(CSS, /dnl-wave-orbit-g|\.dnl-wave \.dg|class="dp"/,
